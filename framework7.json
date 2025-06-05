@@ -1,0 +1,18 @@
+{
+  "cwd": "C:\\Users\\Dev-07\\Desktop\\nuevo",
+  "type": [
+    "pwa"
+  ],
+  "name": "My App",
+  "framework": "core",
+  "template": "split-view",
+  "bundler": "vite",
+  "cssPreProcessor": "scss",
+  "theming": {
+    "customColor": false,
+    "color": "#007aff",
+    "darkMode": false,
+    "iconFonts": true
+  },
+  "customBuild": false
+}

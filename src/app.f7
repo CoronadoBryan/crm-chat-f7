@@ -1,0 +1,262 @@
+<template>
+  <div id="app">
+    <!-- Panel izquierdo-->
+    <div
+      class="panel panel-left panel-cover dark panel-init"
+      data-visible-breakpoint="960"
+    >
+      <div class="view view-init" data-name="left">
+        <div class="page" data-name="home">
+          <!-- Top Navbar -->
+          <div class="navbar navbar-large">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner sliding">
+              <div class="title">MyApp</div>
+              <div class="title-large">
+                <div class="title-large-text">Conversaciones</div>
+              </div>
+              <div
+                class="subnavbar"
+                style="
+                  display: flex;
+                  justify-content: flex-end;
+                  padding: 0 10px;
+                "
+              >
+                <form
+                  class="searchbar searchbar-init"
+                  style="max-width: 300px; width: 100%"
+                  onsubmit="return false;"
+                >
+                  <div class="searchbar-inner">
+                    <div class="searchbar-input-wrap">
+                      <input
+                        id="search-input"
+                        type="search"
+                        placeholder="Buscar por teléfono"
+                        autocomplete="off"
+                      />
+                      <i class="searchbar-icon"></i>
+                      <span class="input-clear-button" id="clear-button"></span>
+                    </div>
+                    <span class="searchbar-disable-button">Cancel</span>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          <!-- Agregar el contenido del panel -->
+          <div class="page-content">
+            <div class="list">
+              <ul id="lista-conversaciones">
+                <!-- Las conversaciones se renderizan aquí -->
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel derecho -->
+    <div class="panel panel-right panel-reveal dark">
+      <div class="view">
+        <div class="page">
+          <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner">
+              <div class="title">Panel derecho</div>
+            </div>
+          </div>
+          <div class="page-content">
+            <div class="block">Right panel content goes here</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Your main view, should have "view-main" class -->
+    <div class="view view-main view-init safe-areas" data-url="/"></div>
+  </div>
+</template>
+
+<script>
+  import api from "./js/api.js";
+
+  export default (props, { $on, $f7 }) => {
+    let conversaciones = [];
+    let clientes = [];
+
+    $on("pageInit", () => {
+      console.log("Página inicializada");
+
+      api
+        .get("/conversacion/listado")
+        .then((res) => {
+          conversaciones = res.data.data;
+          return api.get("/cliente/listado");
+        })
+        .then((res) => {
+          clientes = res.data.data;
+          renderConversaciones(conversaciones, clientes);
+          initSearch();
+        })
+        .catch((err) => {
+          console.error("Error al obtener datos:", err);
+        });
+    });
+
+    const showOptions = (conversacionId, telefono) => {
+      const actions = $f7.actions.create({
+        buttons: [
+          {
+            text: "Opciones para " + telefono,
+            label: true,
+          },
+          {
+            text: "Abrir Chat",
+            icon: '<i class="icon f7-icons">chat_bubble_2</i>',
+            onClick: () => {
+              // Navegar al chat
+              $f7.views.main.router.navigate("/messages/");
+            },
+          },
+          {
+            text: "Ver Información",
+            icon: '<i class="icon f7-icons">info_circle</i>',
+            onClick: () => {
+              $f7.dialog.alert(
+                "Información del cliente con teléfono: " + telefono
+              );
+            },
+          },
+          {
+            text: "Marcar como No Leído",
+            icon: '<i class="icon f7-icons">envelope_badge</i>',
+            onClick: () => {
+              $f7.toast
+                .create({
+                  text: "Marcado como no leído",
+                  position: "center",
+                  closeTimeout: 2000,
+                })
+                .open();
+            },
+          },
+          {
+            text: "Eliminar Conversación",
+            icon: '<i class="icon f7-icons">trash</i>',
+            color: "red",
+            onClick: () => {
+              $f7.dialog.confirm(
+                "¿Estás seguro de que quieres eliminar esta conversación?",
+                "Confirmar eliminación",
+                () => {
+                  // Aquí iría la lógica para eliminar
+                  $f7.toast
+                    .create({
+                      text: "Conversación eliminada",
+                      position: "center",
+                      closeTimeout: 2000,
+                    })
+                    .open();
+                }
+              );
+            },
+          },
+          {
+            text: "Cancelar",
+            color: "red",
+          },
+        ],
+      });
+      actions.open();
+    };
+
+    const renderConversaciones = (convs, clis) => {
+      const lista = document.querySelector("#lista-conversaciones");
+      if (!lista) return;
+
+      if (convs.length === 0) {
+        lista.innerHTML = `
+          <li class="item-content-center">
+            <div class="item-inner">
+              <div class="item-title-row">
+                <i class="icon f7-icons size-48 text-color-gray margin-bottom-16">chat_bubble_2</i>
+                <div class="text-color-gray">No se encontraron conversaciones</div>
+              </div>
+            </div>
+          </li>`;
+        return;
+      }
+
+      lista.innerHTML = convs
+        .map((conv) => {
+          const cliente = clis.find((cli) => cli.id === conv.id_cliente);
+          const telefono = cliente
+            ? cliente.telefono ?? "Sin número"
+            : "Sin número";
+
+          return `
+          <li>
+            <div class="item-content">
+              <div class="item-media">
+                <div class="avatar color-blue">
+                  ${telefono.slice(-2)}
+                </div>
+              </div>
+              <div class="item-inner">
+                <div class="item-title-row">
+                  <div class="item-title">${telefono}</div>
+                  <div class="item-after">
+                    <a href="#" onclick="showOptionsForConv(${
+                      conv.id
+                    }, '${telefono}')">
+                      <i class="icon f7-icons text-color-gray">ellipsis_vertical</i>
+                    </a>
+                  </div>
+                </div>
+                <div class="item-subtitle text-color-gray">Última actividad reciente</div>
+              </div>
+            </div>
+          </li>
+        `;
+        })
+        .join("");
+    };
+
+    // Función global para manejar los clics
+    window.showOptionsForConv = (conversacionId, telefono) => {
+      showOptions(conversacionId, telefono);
+    };
+
+    const initSearch = () => {
+      const input = document.querySelector("#search-input");
+      const clearBtn = document.querySelector("#clear-button");
+
+      input.addEventListener("input", () => {
+        const query = input.value.trim().toLowerCase();
+
+        if (query === "") {
+          renderConversaciones(conversaciones, clientes);
+          return;
+        }
+
+        const filtradas = conversaciones.filter((conv) => {
+          const cliente = clientes.find((cli) => cli.id === conv.id_cliente);
+          if (!cliente || !cliente.telefono) return false;
+          return cliente.telefono.toLowerCase().includes(query);
+        });
+
+        renderConversaciones(filtradas, clientes);
+      });
+
+      clearBtn.addEventListener("click", () => {
+        input.value = "";
+        renderConversaciones(conversaciones, clientes);
+        input.focus();
+      });
+    };
+
+    return $render;
+  };
+</script>
