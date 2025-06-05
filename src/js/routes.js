@@ -24,7 +24,7 @@ var routes = [
     component: FormPage,
   },
    {
-    path: '/messages/',
+    path: '/messages/:conversacionId/',
     component: MessagesPage,
   },
   

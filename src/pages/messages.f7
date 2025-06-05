@@ -6,190 +6,143 @@
         <div class="left">
           <a href="#" class="link back">
             <i class="icon icon-back"></i>
-            <span class="if-not-md">Back</span>
+            <span class="if-not-md">Volver</span>
           </a>
         </div>
-        <div class="title">Chat</div>
+        <div class="title">${telefono}</div>
       </div>
     </div>
-    
+
     <div class="toolbar messagebar">
       <div class="toolbar-inner">
-        <a class="link icon-only" @click=${sheetToggle}>
-          <i class="icon f7-icons if-not-md">camera_fill</i>
-          <i class="icon material-icons md-only">camera_alt</i>
-        </a>
         <div class="messagebar-area">
-          <textarea class="resizable" placeholder="Mensaje"></textarea>
+          <textarea
+            class="resizable"
+            placeholder="Escribe un mensaje..."
+          ></textarea>
         </div>
-        <a class="link icon-only demo-send-message-link" @click=${sendMessage}>
-          <i class="icon f7-icons if-not-md">arrow_up_circle_fill</i>
-          <i class="icon material-icons md-only">send</i>
+        <a
+          class="link icon-only demo-send-message-link"
+          @click="${sendMessage}"
+        >
+          <i class="icon f7-icons">arrow_up_circle_fill</i>
         </a>
-      </div>
-      <div class="messagebar-sheet">
-        ${images.map((image) => $h`
-        <label class="checkbox messagebar-sheet-image" @change=${handleAttachment}>
-          <input type="checkbox" />
-          <i class="icon icon-checkbox"></i>
-          <img src=${image} />
-        </label>
-        `)}
       </div>
     </div>
-    
+
     <div class="page-content messages-content">
       <div class="messages">
-        <div class="messages-title"><b>Hoy</b></div>
-        <div class="message message-sent">
-          <div class="message-content">
-            <div class="message-bubble">
-              <div class="message-text">Hola, ¿cómo estás?</div>
-            </div>
-          </div>
-        </div>
-        <div class="message message-received">
-          <div class="message-avatar" style="background-image:url(https://cdn.framework7.io/placeholder/people-100x100-9.jpg)"></div>
-          <div class="message-content">
-            <div class="message-name">Cliente</div>
-            <div class="message-bubble">
-              <div class="message-text">¡Hola! Todo bien, gracias</div>
-            </div>
-          </div>
-        </div>
+        <!-- Los mensajes se cargarán aquí -->
       </div>
     </div>
   </div>
 </template>
 
 <script>
-  export default (props, { $f7, $el, $on, $ }) => {
-    const images = [
-      'https://cdn.framework7.io/placeholder/cats-300x300-1.jpg',
-      'https://cdn.framework7.io/placeholder/cats-200x300-2.jpg',
-      'https://cdn.framework7.io/placeholder/cats-400x300-3.jpg',
-    ];
+  import api from "../js/api.js";
 
-    const answers = [
-      'Perfecto!',
-      'Entendido',
-      'Déjame verificar eso',
-      '¿Podrías dar más detalles?',
-      'Gracias por contactarnos',
-      'Te ayudo con eso',
-    ];
-
-    let responseInProgress = false;
+  export default (props, { $f7, $el, $on }) => {
     let messagebar;
     let messages;
+    let conversacionId;
+    let telefono = "Chat";
+    let mensajesData = [];
 
-    const sheetToggle = () => {
-      messagebar.sheetToggle();
+    const loadMessages = async () => {
+      try {
+        const response = await api.get(
+          `/mensaje/listar-por-conversacion/${conversacionId}`
+        );
+        mensajesData = response.data.data;
+
+        const clienteResponse = await api.get("/cliente/listado");
+        const conversacionResponse = await api.get("/conversacion/listado");
+
+        const conversacion = conversacionResponse.data.data.find(
+          (conv) => conv.id == conversacionId
+        );
+        if (conversacion) {
+          const cliente = clienteResponse.data.data.find(
+            (cli) => cli.id === conversacion.id_cliente
+          );
+          if (cliente && cliente.telefono) {
+            telefono = cliente.telefono;
+            const titleEl = document.querySelector(".navbar .title");
+            if (titleEl) titleEl.textContent = telefono;
+          }
+        }
+
+        renderMessages();
+      } catch (error) {
+        console.error("Error al cargar mensajes:", error);
+        $f7.dialog.alert("Error al cargar los mensajes");
+      }
     };
 
-    const handleAttachment = (e) => {
-      var index = $(e.target).parents('label.checkbox').index();
-      var image = images[index];
-      if (e.target.checked) {
-        messagebar.attachments.unshift(image);
-      } else {
-        messagebar.attachments.splice(messagebar.attachments.indexOf(image), 1);
-      }
-      messagebar.renderAttachments();
-      checkAttachments();
-    };
+    const renderMessages = () => {
+      if (!messages || !mensajesData.length) return;
 
-    const checkAttachments = () => {
-      if (messagebar.attachments.length > 0) {
-        messagebar.attachmentsShow();
-        messagebar.setPlaceholder('Agregar comentario o Enviar');
-      } else {
-        messagebar.attachmentsHide();
-        messagebar.setPlaceholder('Mensaje');
-      }
+      messages.removeMessages();
+
+      const messagesToAdd = mensajesData.map((msg) => {
+        const isReceived = msg.contesta === "cliente";
+
+        return {
+          text: msg.mensaje,
+          type: isReceived ? "received" : "sent",
+          name: isReceived ? "Cliente" : "Bot",
+          avatar: isReceived
+            ? "https://cdn.framework7.io/placeholder/people-100x100-9.jpg"
+            : null,
+        };
+      });
+
+      messages.addMessages(messagesToAdd);
     };
 
     const sendMessage = () => {
-      var text = messagebar.getValue().replace(/\n/g, '<br />').trim();
-      var messagesToSend = [];
+      const text = messagebar.getValue().trim();
+      if (!text) return;
 
-      messagebar.attachments.forEach(function (attachment) {
-        var size = attachment.split('placeholder/cats-')[1].split('-')[0].split('x');
-        messagesToSend.push({
-          image: '<img src="' + attachment + '" style="width: ' + (size[0] / 2) + 'px; height: ' + (size[1] / 2) + 'px">'
-        });
+      // Agregar mensaje al chat
+      messages.addMessage({
+        text: text,
+        type: "sent",
+        name: "Yo",
       });
 
-      if (text.trim().length) {
-        messagesToSend.push({
-          text: text
-        });
-      }
-
-      messagebar.attachments = [];
-      checkAttachments();
-      messagebar.sheetHide();
-      messagebar.$sheetEl.find('input').prop('checked', false);
+      // Limpiar el campo
       messagebar.clear();
-
-      if (text.length) messagebar.focus();
-      if (!messagesToSend.length) return;
-
-      messages.addMessages(messagesToSend);
-
-      // Respuesta automática simulada
-      if (responseInProgress) return;
-      responseInProgress = true;
-      
-      setTimeout(function () {
-        var answer = answers[Math.floor(Math.random() * answers.length)];
-        messages.showTyping({
-          header: 'Cliente escribiendo...',
-          avatar: 'https://cdn.framework7.io/placeholder/people-100x100-9.jpg'
-        });
-        
-        setTimeout(function () {
-          messages.addMessage({
-            text: answer,
-            type: 'received',
-            name: 'Cliente',
-            avatar: 'https://cdn.framework7.io/placeholder/people-100x100-9.jpg'
-          });
-          messages.hideTyping();
-          responseInProgress = false;
-        }, 2000);
-      }, 1000);
+      messagebar.focus();
     };
 
-    $on('pageInit', () => {
+    $on("pageInit", (page) => {
+      // Usar la API de Framework7 para obtener parámetros
+      conversacionId =
+        page.route?.params?.conversacionId ||
+        $f7.views.main.router.currentRoute?.params?.conversacionId;
+
+      console.log("Conversación ID:", conversacionId);
+
+      if (!conversacionId) {
+        $f7.dialog.alert("No se pudo obtener el ID de conversación");
+        return;
+      }
+
       messagebar = $f7.messagebar.create({
-        el: $el.value.find('.messagebar'),
-        attachments: []
+        el: $el.value.find(".messagebar"),
       });
-      
+
       messages = $f7.messages.create({
-        el: $el.value.find('.messages'),
-        firstMessageRule: function (message, previousMessage, nextMessage) {
-          if (message.isTitle) return false;
-          if (!previousMessage || previousMessage.type !== message.type || previousMessage.name !== message.name) return true;
-          return false;
-        },
-        lastMessageRule: function (message, previousMessage, nextMessage) {
-          if (message.isTitle) return false;
-          if (!nextMessage || nextMessage.type !== message.type || nextMessage.name !== message.name) return true;
-          return false;
-        },
-        tailMessageRule: function (message, previousMessage, nextMessage) {
-          if (message.isTitle) return false;
-          if (!nextMessage || nextMessage.type !== message.type || nextMessage.name !== message.name) return true;
-          return false;
-        }
+        el: $el.value.find(".messages"),
       });
+
+      loadMessages();
     });
 
-    $on('pageBeforeRemove', () => {
-      messagebar.destroy();
-      messages.destroy();
+    $on("pageBeforeRemove", () => {
+      if (messagebar) messagebar.destroy();
+      if (messages) messages.destroy();
     });
 
     return $render;

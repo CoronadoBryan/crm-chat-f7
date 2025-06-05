@@ -117,7 +117,7 @@
             icon: '<i class="icon f7-icons">chat_bubble_2</i>',
             onClick: () => {
               // Navegar al chat
-              $f7.views.main.router.navigate("/messages/");
+              $f7.views.main.router.navigate(`/messages/${conversacionId}/`);
             },
           },
           {
@@ -129,40 +129,7 @@
               );
             },
           },
-          {
-            text: "Marcar como No Leído",
-            icon: '<i class="icon f7-icons">envelope_badge</i>',
-            onClick: () => {
-              $f7.toast
-                .create({
-                  text: "Marcado como no leído",
-                  position: "center",
-                  closeTimeout: 2000,
-                })
-                .open();
-            },
-          },
-          {
-            text: "Eliminar Conversación",
-            icon: '<i class="icon f7-icons">trash</i>',
-            color: "red",
-            onClick: () => {
-              $f7.dialog.confirm(
-                "¿Estás seguro de que quieres eliminar esta conversación?",
-                "Confirmar eliminación",
-                () => {
-                  // Aquí iría la lógica para eliminar
-                  $f7.toast
-                    .create({
-                      text: "Conversación eliminada",
-                      position: "center",
-                      closeTimeout: 2000,
-                    })
-                    .open();
-                }
-              );
-            },
-          },
+          
           {
             text: "Cancelar",
             color: "red",
@@ -215,7 +182,6 @@
                     </a>
                   </div>
                 </div>
-                <div class="item-subtitle text-color-gray">Última actividad reciente</div>
               </div>
             </div>
           </li>
