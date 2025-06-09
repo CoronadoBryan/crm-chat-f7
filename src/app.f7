@@ -84,20 +84,15 @@
 
   export default (props, { $on, $f7 }) => {
     let conversaciones = [];
-    let clientes = [];
 
     $on("pageInit", () => {
       console.log("Página inicializada");
 
       api
-        .get("/conversacion/listado")
+        .get("/conversacion/listadoTelefonos")
         .then((res) => {
           conversaciones = res.data.data;
-          return api.get("/cliente/listado");
-        })
-        .then((res) => {
-          clientes = res.data.data;
-          renderConversaciones(conversaciones, clientes);
+          renderConversaciones(conversaciones);
           initSearch();
         })
         .catch((err) => {
@@ -105,41 +100,7 @@
         });
     });
 
-    const showOptions = (conversacionId, telefono) => {
-      const actions = $f7.actions.create({
-        buttons: [
-          {
-            text: "Opciones para " + telefono,
-            label: true,
-          },
-          {
-            text: "Abrir Chat",
-            icon: '<i class="icon f7-icons">chat_bubble_2</i>',
-            onClick: () => {
-              // Navegar al chat
-              $f7.views.main.router.navigate(`/messages/${conversacionId}/`);
-            },
-          },
-          {
-            text: "Ver Información",
-            icon: '<i class="icon f7-icons">info_circle</i>',
-            onClick: () => {
-              $f7.dialog.alert(
-                "Información del cliente con teléfono: " + telefono
-              );
-            },
-          },
-          
-          {
-            text: "Cancelar",
-            color: "red",
-          },
-        ],
-      });
-      actions.open();
-    };
-
-    const renderConversaciones = (convs, clis) => {
+    const renderConversaciones = (convs) => {
       const lista = document.querySelector("#lista-conversaciones");
       if (!lista) return;
 
@@ -157,14 +118,10 @@
       }
 
       lista.innerHTML = convs
-        .map((conv, idx) => {
-          const cliente = clis.find((cli) => cli.id === conv.id_cliente);
-          const telefono = cliente
-            ? cliente.telefono ?? "Sin número"
-            : "Sin número";
-
+        .map((conv) => {
+          const telefono = conv.telefono ?? "Sin número";
           return `
-      <li class="abrir-chat" data-conv-id="${conv.id}" style="cursor:pointer;">
+      <li class="abrir-chat" data-conv-id="${conv.conversacionId}" style="cursor:pointer;">
         <div class="item-content">
           <div class="item-media">
             <div class="avatar color-blue">
@@ -184,7 +141,6 @@
         })
         .join("");
 
-      // Ahora el evento va en el <li>:
       lista.querySelectorAll(".abrir-chat").forEach((el) => {
         el.addEventListener("click", (e) => {
           e.preventDefault();
@@ -196,11 +152,6 @@
       });
     };
 
-    // Función global para manejar los clics
-    window.showOptionsForConv = (conversacionId, telefono) => {
-      showOptions(conversacionId, telefono);
-    };
-
     const initSearch = () => {
       const input = document.querySelector("#search-input");
       const clearBtn = document.querySelector("#clear-button");
@@ -209,22 +160,21 @@
         const query = input.value.trim().toLowerCase();
 
         if (query === "") {
-          renderConversaciones(conversaciones, clientes);
+          renderConversaciones(conversaciones);
           return;
         }
 
         const filtradas = conversaciones.filter((conv) => {
-          const cliente = clientes.find((cli) => cli.id === conv.id_cliente);
-          if (!cliente || !cliente.telefono) return false;
-          return cliente.telefono.toLowerCase().includes(query);
+          if (!conv.telefono) return false;
+          return conv.telefono.toLowerCase().includes(query);
         });
 
-        renderConversaciones(filtradas, clientes);
+        renderConversaciones(filtradas);
       });
 
       clearBtn.addEventListener("click", () => {
         input.value = "";
-        renderConversaciones(conversaciones, clientes);
+        renderConversaciones(conversaciones);
         input.focus();
       });
     };

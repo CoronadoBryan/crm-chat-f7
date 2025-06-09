@@ -134,7 +134,6 @@
     };
 
     $on("pageInit", (page) => {
-      // Usar la API de Framework7 para obtener parámetros
       conversacionId =
         page.route?.params?.conversacionId ||
         $f7.views.main.router.currentRoute?.params?.conversacionId;
