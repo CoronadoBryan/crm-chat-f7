@@ -102,7 +102,7 @@
 
       // Envía el mensaje al backend
       try {
-        await api.post("/mensaje/crear", {
+        await api.post("/mensaje/crear-y-enviar-whatsapp", {
           id_conversacion: conversacionId,
           mensaje: text,
           contesta: "usuario",
