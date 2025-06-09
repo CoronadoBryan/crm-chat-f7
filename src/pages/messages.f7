@@ -42,36 +42,20 @@
   import api from "../js/api.js";
 
   export default (props, { $f7, $el, $on }) => {
+    // Variables principales
     let messagebar;
     let messages;
     let conversacionId;
     let telefono = "Chat";
     let mensajesData = [];
 
+    // Carga los mensajes de la conversación desde el backend
     const loadMessages = async () => {
       try {
         const response = await api.get(
           `/mensaje/listar-por-conversacion/${conversacionId}`
         );
         mensajesData = response.data.data;
-
-        const clienteResponse = await api.get("/cliente/listado");
-        const conversacionResponse = await api.get("/conversacion/listado");
-
-        const conversacion = conversacionResponse.data.data.find(
-          (conv) => conv.id == conversacionId
-        );
-        if (conversacion) {
-          const cliente = clienteResponse.data.data.find(
-            (cli) => cli.id === conversacion.id_cliente
-          );
-          if (cliente && cliente.telefono) {
-            telefono = cliente.telefono;
-            const titleEl = document.querySelector(".navbar .title");
-            if (titleEl) titleEl.textContent = telefono;
-          }
-        }
-
         renderMessages();
       } catch (error) {
         console.error("Error al cargar mensajes:", error);
@@ -79,53 +63,54 @@
       }
     };
 
+    // Renderiza los mensajes en el chat visual de Framework7
     const renderMessages = () => {
       if (!messages || !mensajesData.length) return;
 
       messages.removeMessages();
 
+      // Prepara los mensajes para el componente visual, siempre con avatar
       const messagesToAdd = mensajesData.map((msg) => {
         const isReceived = msg.contesta === "cliente";
-
         return {
           text: msg.mensaje,
           type: isReceived ? "received" : "sent",
           name: isReceived ? "Cliente" : "Bot",
-          avatar: isReceived
-            ? "https://cdn.framework7.io/placeholder/people-100x100-9.jpg"
-            : null,
+          avatar: "https://cdn.framework7.io/placeholder/people-100x100-9.jpg", // Avatar siempre visible
         };
       });
 
       messages.addMessages(messagesToAdd);
     };
 
+    // Envía un mensaje
     const sendMessage = async () => {
       const text = messagebar.getValue().trim();
       if (!text) return;
 
-      // Agregar mensaje al chat localmente
+      // Agrega el mensaje localmente al chat, siempre con avatar
       messages.addMessage({
         text: text,
         type: "sent",
         name: "Yo",
+        avatar: "https://cdn.framework7.io/placeholder/people-100x100-9.jpg",
       });
 
-      // Limpiar el campo
+      // Limpia el campo de texto
       messagebar.clear();
       messagebar.focus();
 
-      // Enviar mensaje al backend
+      // Envía el mensaje al backend
       try {
         await api.post("/mensaje/crear", {
           id_conversacion: conversacionId,
           mensaje: text,
-          contesta: "usuario", // o "cliente" según tu lógica
+          contesta: "usuario",
           id_mensaje_whatsapp: null,
           id_mensaje_responde: null,
           id_estado: 1,
         });
-        // Opcional: recargar mensajes del backend si quieres refrescar el chat
+        // Si quieres recargar los mensajes del backend, descomenta la siguiente línea:
         // await loadMessages();
       } catch (error) {
         $f7.dialog.alert("No se pudo enviar el mensaje");
@@ -133,6 +118,7 @@
       }
     };
 
+    // Inicialización al entrar a la página
     $on("pageInit", (page) => {
       conversacionId =
         page.route?.params?.conversacionId ||
@@ -145,17 +131,19 @@
         return;
       }
 
+      // Inicializa el messagebar y el componente visual de mensajes
       messagebar = $f7.messagebar.create({
         el: $el.value.find(".messagebar"),
       });
-
       messages = $f7.messages.create({
         el: $el.value.find(".messages"),
       });
 
+      // Carga los mensajes de la conversación
       loadMessages();
     });
 
+    // Limpia los componentes al salir de la página
     $on("pageBeforeRemove", () => {
       if (messagebar) messagebar.destroy();
       if (messages) messages.destroy();
