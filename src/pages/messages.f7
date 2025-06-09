@@ -4,7 +4,7 @@
       <div class="navbar-bg"></div>
       <div class="navbar-inner sliding">
         <div class="left">
-          <a href="#" class="link back">
+          <a href="#" class="link" @click="${() => $f7.views.main.router.navigate('/')}">
             <i class="icon icon-back"></i>
             <span class="if-not-md">Volver</span>
           </a>
@@ -100,11 +100,11 @@
       messages.addMessages(messagesToAdd);
     };
 
-    const sendMessage = () => {
+    const sendMessage = async () => {
       const text = messagebar.getValue().trim();
       if (!text) return;
 
-      // Agregar mensaje al chat
+      // Agregar mensaje al chat localmente
       messages.addMessage({
         text: text,
         type: "sent",
@@ -114,6 +114,23 @@
       // Limpiar el campo
       messagebar.clear();
       messagebar.focus();
+
+      // Enviar mensaje al backend
+      try {
+        await api.post("/mensaje/crear", {
+          id_conversacion: conversacionId,
+          mensaje: text,
+          contesta: "usuario", // o "cliente" según tu lógica
+          id_mensaje_whatsapp: null,
+          id_mensaje_responde: null,
+          id_estado: 1,
+        });
+        // Opcional: recargar mensajes del backend si quieres refrescar el chat
+        // await loadMessages();
+      } catch (error) {
+        $f7.dialog.alert("No se pudo enviar el mensaje");
+        console.error(error);
+      }
     };
 
     $on("pageInit", (page) => {

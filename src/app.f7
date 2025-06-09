@@ -157,37 +157,43 @@
       }
 
       lista.innerHTML = convs
-        .map((conv) => {
+        .map((conv, idx) => {
           const cliente = clis.find((cli) => cli.id === conv.id_cliente);
           const telefono = cliente
             ? cliente.telefono ?? "Sin número"
             : "Sin número";
 
           return `
-          <li>
-            <div class="item-content">
-              <div class="item-media">
-                <div class="avatar color-blue">
-                  ${telefono.slice(-2)}
-                </div>
-              </div>
-              <div class="item-inner">
-                <div class="item-title-row">
-                  <div class="item-title">${telefono}</div>
-                  <div class="item-after">
-                    <a href="#" onclick="showOptionsForConv(${
-                      conv.id
-                    }, '${telefono}')">
-                      <i class="icon f7-icons text-color-gray">ellipsis_vertical</i>
-                    </a>
-                  </div>
-                </div>
+      <li class="abrir-chat" data-conv-id="${conv.id}" style="cursor:pointer;">
+        <div class="item-content">
+          <div class="item-media">
+            <div class="avatar color-blue">
+              ${telefono.slice(-2)}
+            </div>
+          </div>
+          <div class="item-inner">
+            <div class="item-title-row">
+              <div class="item-title">
+                ${telefono}
               </div>
             </div>
-          </li>
-        `;
+          </div>
+        </div>
+      </li>
+    `;
         })
         .join("");
+
+      // Ahora el evento va en el <li>:
+      lista.querySelectorAll(".abrir-chat").forEach((el) => {
+        el.addEventListener("click", (e) => {
+          e.preventDefault();
+          const convId = el.getAttribute("data-conv-id");
+          $f7.views.main.router.navigate(`/messages/${convId}/`, {
+            reloadAll: true,
+          });
+        });
+      });
     };
 
     // Función global para manejar los clics
