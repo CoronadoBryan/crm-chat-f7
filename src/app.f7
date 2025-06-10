@@ -81,13 +81,97 @@
 
 <script>
   import api from "./js/api.js";
+  import io from "socket.io-client";
 
   export default (props, { $on, $f7 }) => {
     let conversaciones = [];
+    let socket = null;
+    let userInteracted = false;
 
     $on("pageInit", () => {
       console.log("Página inicializada");
 
+      // Detectar primera interacción del usuario
+      const detectFirstInteraction = () => {
+        userInteracted = true;
+        console.log("👆 Usuario interactuó - Vibración habilitada");
+        document.removeEventListener("click", detectFirstInteraction);
+        document.removeEventListener("touchstart", detectFirstInteraction);
+      };
+
+      document.addEventListener("click", detectFirstInteraction);
+      document.addEventListener("touchstart", detectFirstInteraction);
+
+      // Conectar a Socket.IO para tiempo real
+      socket = io("https://3qww78fl-3000.use.devtunnels.ms");
+
+      socket.on("connect", () => {
+        console.log("✅ Conectado en tiempo real");
+      });
+
+      socket.on("disconnect", () => {
+        console.log("❌ Desconectado");
+      });
+
+      // Escuchar nueva conversación
+      socket.on("nueva_conversacion", (data) => {
+        console.log("📱 Nueva conversación:", data);
+        cargarDatos();
+
+        $f7.toast
+          .create({
+            text: "Nueva conversación recibida",
+            closeTimeout: 2000,
+            position: "top",
+          })
+          .open();
+
+        vibrarSiPermitido([200, 100, 200]);
+      });
+
+      // Escuchar nuevo mensaje
+      socket.on("mensaje_nuevo", (data) => {
+        console.log("💬 Nuevo mensaje:", data);
+        actualizarConversacion(data);
+
+        $f7.toast
+          .create({
+            text: `Mensaje: ${data.texto.substring(0, 30)}...`,
+            closeTimeout: 2000,
+            position: "top",
+          })
+          .open();
+
+        vibrarSiPermitido([100, 50, 100]);
+      });
+
+      // Cargar datos iniciales
+      cargarDatos();
+    });
+
+    $on("pageBeforeRemove", () => {
+      if (socket) {
+        console.log("🔌 Desconectando Socket.IO...");
+        socket.disconnect();
+        socket = null;
+      }
+    });
+
+    // Función segura para vibrar
+    const vibrarSiPermitido = (pattern) => {
+      if (userInteracted && "vibrate" in navigator) {
+        try {
+          navigator.vibrate(pattern);
+          console.log("📳 Vibración activada");
+        } catch (error) {
+          console.log("❌ Error en vibración:", error);
+        }
+      } else {
+        console.log("⚠️ Vibración no disponible (sin interacción del usuario)");
+      }
+    };
+
+    const cargarDatos = () => {
       api
         .get("/conversacion/listadoTelefonos")
         .then((res) => {
@@ -97,20 +181,32 @@
         })
         .catch((err) => {
           console.error("Error al obtener datos:", err);
+          $f7.toast
+            .create({
+              text: "Error al cargar conversaciones",
+              closeTimeout: 3000,
+            })
+            .open();
         });
-    });
+    };
+
+    const actualizarConversacion = (data) => {
+      cargarDatos();
+    };
 
     const renderConversaciones = (convs) => {
       const lista = document.querySelector("#lista-conversaciones");
+
       if (!lista) return;
 
       if (convs.length === 0) {
         lista.innerHTML = `
           <li class="item-content-center">
-            <div class="item-inner">
-              <div class="item-title-row">
-                <i class="icon f7-icons size-48 text-color-gray margin-bottom-16">chat_bubble_2</i>
-                <div class="text-color-gray">No se encontraron conversaciones</div>
+            <div class="item-inner" style="text-align: center; padding: 40px 20px;">
+              <i class="icon f7-icons size-64 text-color-gray margin-bottom-16">chat_bubble_2</i>
+              <div class="text-color-gray" style="font-size: 16px;">No hay conversaciones</div>
+              <div class="text-color-gray" style="font-size: 14px; margin-top: 8px;">
+                Las nuevas conversaciones aparecerán aquí
               </div>
             </div>
           </li>`;
@@ -121,23 +217,28 @@
         .map((conv) => {
           const telefono = conv.telefono ?? "Sin número";
           return `
-      <li class="abrir-chat" data-conv-id="${conv.conversacionId}" style="cursor:pointer;">
-        <div class="item-content">
-          <div class="item-media">
-            <div class="avatar color-blue">
-              ${telefono.slice(-2)}
-            </div>
-          </div>
-          <div class="item-inner">
-            <div class="item-title-row">
-              <div class="item-title">
-                ${telefono}
+          <li class="abrir-chat" data-conv-id="${
+            conv.conversacionId
+          }" style="cursor:pointer;">
+            <div class="item-content">
+              <div class="item-media">
+                <div class="avatar color-blue" style="background: linear-gradient(45deg, #007aff, #5856d6);">
+                  <span style="font-weight: 600;">${telefono.slice(-2)}</span>
+                </div>
+              </div>
+              <div class="item-inner">
+                <div class="item-title-row">
+                  <div class="item-title" style="font-weight: 500; color: var(--f7-text-color);">
+                    ${telefono}
+                  </div>
+                  <div class="item-after">
+                    <i class="icon f7-icons color-gray">chevron_right</i>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </li>
-    `;
+          </li>
+        `;
         })
         .join("");
 
@@ -145,6 +246,7 @@
         el.addEventListener("click", (e) => {
           e.preventDefault();
           const convId = el.getAttribute("data-conv-id");
+          console.log(`🚀 Abriendo chat: ${convId}`);
           $f7.views.main.router.navigate(`/messages/${convId}/`, {
             reloadAll: true,
           });
@@ -156,6 +258,11 @@
       const input = document.querySelector("#search-input");
       const clearBtn = document.querySelector("#clear-button");
 
+      if (!input || !clearBtn) {
+        console.warn("⚠️ Elementos de búsqueda no encontrados");
+        return;
+      }
+
       input.addEventListener("input", () => {
         const query = input.value.trim().toLowerCase();
 
@@ -166,7 +273,10 @@
 
         const filtradas = conversaciones.filter((conv) => {
           if (!conv.telefono) return false;
-          return conv.telefono.toLowerCase().includes(query);
+          return (
+            conv.telefono.toLowerCase().includes(query) ||
+            conv.conversacionId.toString().includes(query)
+          );
         });
 
         renderConversaciones(filtradas);

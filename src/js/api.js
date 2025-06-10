@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://60cf-38-43-109-54.ngrok-free.app/crm-api/public/api/v1",
+  baseURL: "https://prueba1.yourkate.net/public/api/v1",
   headers: {
     "Content-Type": "application/json",
     // Authorization: 'Bearer TU_TOKEN' // si usas JWT
