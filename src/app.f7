@@ -86,24 +86,12 @@
   export default (props, { $on, $f7 }) => {
     let conversaciones = [];
     let socket = null;
-    let userInteracted = false;
 
     $on("pageInit", () => {
       console.log("Página inicializada");
 
-      // Detectar primera interacción del usuario
-      const detectFirstInteraction = () => {
-        userInteracted = true;
-        console.log("👆 Usuario interactuó - Vibración habilitada");
-        document.removeEventListener("click", detectFirstInteraction);
-        document.removeEventListener("touchstart", detectFirstInteraction);
-      };
-
-      document.addEventListener("click", detectFirstInteraction);
-      document.addEventListener("touchstart", detectFirstInteraction);
-
       // Conectar a Socket.IO para tiempo real
-      socket = io("https://3qww78fl-3000.use.devtunnels.ms");
+      socket = io("http://82.180.163.151:3000");
 
       socket.on("connect", () => {
         console.log("✅ Conectado en tiempo real");
@@ -125,26 +113,9 @@
             position: "top",
           })
           .open();
-
-        vibrarSiPermitido([200, 100, 200]);
       });
 
-      // Escuchar nuevo mensaje
-      socket.on("mensaje_nuevo", (data) => {
-        console.log("💬 Nuevo mensaje:", data);
-        actualizarConversacion(data);
-
-        $f7.toast
-          .create({
-            text: `Mensaje: ${data.texto.substring(0, 30)}...`,
-            closeTimeout: 2000,
-            position: "top",
-          })
-          .open();
-
-        vibrarSiPermitido([100, 50, 100]);
-      });
-
+    
       // Cargar datos iniciales
       cargarDatos();
     });
@@ -156,20 +127,6 @@
         socket = null;
       }
     });
-
-    // Función segura para vibrar
-    const vibrarSiPermitido = (pattern) => {
-      if (userInteracted && "vibrate" in navigator) {
-        try {
-          navigator.vibrate(pattern);
-          console.log("📳 Vibración activada");
-        } catch (error) {
-          console.log("❌ Error en vibración:", error);
-        }
-      } else {
-        console.log("⚠️ Vibración no disponible (sin interacción del usuario)");
-      }
-    };
 
     const cargarDatos = () => {
       api
@@ -190,10 +147,6 @@
         });
     };
 
-    const actualizarConversacion = (data) => {
-      cargarDatos();
-    };
-
     const renderConversaciones = (convs) => {
       const lista = document.querySelector("#lista-conversaciones");
 
@@ -203,8 +156,6 @@
         lista.innerHTML = `
           <li class="item-content-center">
             <div class="item-inner" style="text-align: center; padding: 40px 20px;">
-              <i class="icon f7-icons size-64 text-color-gray margin-bottom-16">chat_bubble_2</i>
-              <div class="text-color-gray" style="font-size: 16px;">No hay conversaciones</div>
               <div class="text-color-gray" style="font-size: 14px; margin-top: 8px;">
                 Las nuevas conversaciones aparecerán aquí
               </div>
