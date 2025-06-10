@@ -4,7 +4,11 @@
       <div class="navbar-bg"></div>
       <div class="navbar-inner sliding">
         <div class="left">
-          <a href="#" class="link" @click="${() => $f7.views.main.router.navigate('/')}">
+          <a
+            href="#"
+            class="link"
+            @click="${() => $f7.views.main.router.navigate('/')}"
+          >
             <i class="icon icon-back"></i>
             <span class="if-not-md">Volver</span>
           </a>
@@ -13,140 +17,302 @@
       </div>
     </div>
 
+    <!-- ✅ Messagebar simplificado -->
     <div class="toolbar messagebar">
       <div class="toolbar-inner">
         <div class="messagebar-area">
           <textarea
+            id="message-input"
             class="resizable"
             placeholder="Escribe un mensaje..."
           ></textarea>
         </div>
-        <a
-          class="link icon-only demo-send-message-link"
-          @click="${sendMessage}"
-        >
+        <!-- ✅ Botón con evento directo -->
+        <a class="link icon-only" @click="${handleSendClick}">
           <i class="icon f7-icons">arrow_up_circle_fill</i>
         </a>
       </div>
     </div>
 
     <div class="page-content messages-content">
-      <div class="messages">
-        <!-- Los mensajes se cargarán aquí -->
-      </div>
+      <div class="messages"></div>
     </div>
   </div>
 </template>
 
 <script>
   import api from "../js/api.js";
+  import io from "socket.io-client";
 
   export default (props, { $f7, $el, $on }) => {
-    // Variables principales
-    let messagebar;
-    let messages;
-    let conversacionId;
-    let telefono = "Chat";
-    let mensajesData = [];
+    let messagebar,
+      messages,
+      conversacionId,
+      telefono = "Chat";
+    let mensajesData = [],
+      socket = null;
+    let enviandoMensaje = false; // ✅ Flag para evitar duplicados
 
-    // Carga los mensajes de la conversación desde el backend
+    const conectarSocket = () => {
+      socket = io("http://82.180.163.151:3000/");
+
+      socket.on("nuevo_mensaje", (data) => {
+        console.log("📨 Mensaje recibido por socket:", data);
+
+        if (data.id_conversacion != conversacionId) {
+          console.log("❌ Mensaje de otra conversación, ignorando");
+          return;
+        }
+
+        // ✅ FILTRAR mensajes enviados por nosotros mismos
+        if (data.contesta === "usuario" && enviandoMensaje) {
+          console.log(
+            "⚠️ Mensaje propio detectado via socket, ignorando duplicado"
+          );
+          return;
+        }
+
+        // ✅ Solo procesar mensajes del cliente
+        if (data.contesta === "cliente") {
+          const nuevoMensaje = {
+            mensaje: data.mensaje || data.texto,
+            contesta: data.contesta,
+            created_at: data.created_at || new Date().toISOString(),
+          };
+
+          mensajesData.push(nuevoMensaje);
+
+          messages.addMessage({
+            text: nuevoMensaje.mensaje,
+            type: "received",
+            name: "Cliente",
+          });
+
+          console.log("✅ Mensaje del CLIENTE agregado");
+
+          $f7.toast
+            .create({
+              text: "Nuevo mensaje del cliente",
+              closeTimeout: 2000,
+              position: "top",
+            })
+            .open();
+        } else {
+          console.log("⚠️ Mensaje propio ignorado (contesta: usuario)");
+        }
+      });
+    };
+
     const loadMessages = async () => {
       try {
         const response = await api.get(
           `/mensaje/listar-por-conversacion/${conversacionId}`
         );
-        mensajesData = response.data.data;
+        mensajesData = response.data.data || [];
+
+        console.log(`📋 Cargando ${mensajesData.length} mensajes históricos`);
         renderMessages();
       } catch (error) {
-        console.error("Error al cargar mensajes:", error);
+        console.error("❌ Error al cargar mensajes:", error);
         $f7.dialog.alert("Error al cargar los mensajes");
       }
     };
 
-    // Renderiza los mensajes en el chat visual de Framework7
     const renderMessages = () => {
-      if (!messages || !mensajesData.length) return;
+      if (!messages || !mensajesData.length) {
+        console.log("📭 No hay mensajes para mostrar");
+        return;
+      }
 
       messages.removeMessages();
 
-      // Prepara los mensajes para el componente visual, siempre con avatar
-      const messagesToAdd = mensajesData.map((msg) => {
+      const mensajesOrdenados = [...mensajesData].sort(
+        (a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0)
+      );
+
+      const messagesToAdd = mensajesOrdenados.map((msg) => {
         const isReceived = msg.contesta === "cliente";
         return {
           text: msg.mensaje,
           type: isReceived ? "received" : "sent",
-          name: isReceived ? "Cliente" : "Bot",
-          avatar: "https://cdn.framework7.io/placeholder/people-100x100-9.jpg", // Avatar siempre visible
+          name: isReceived ? "Cliente" : "Yo",
         };
       });
 
       messages.addMessages(messagesToAdd);
+      console.log(`🎨 Renderizados ${messagesToAdd.length} mensajes`);
     };
 
-    // Envía un mensaje
-    const sendMessage = async () => {
-      const text = messagebar.getValue().trim();
-      if (!text) return;
+    const sendMessage = async (messageText) => {
+      if (!messageText || !messageText.trim()) {
+        console.log("⚠️ Mensaje vacío, no enviando");
+        return;
+      }
 
-      // Agrega el mensaje localmente al chat, siempre con avatar
+      // ✅ Activar flag para evitar duplicados
+      enviandoMensaje = true;
+
+      console.log("📤 ENVIANDO mensaje del usuario:", messageText);
+
+      // Agregar mensaje localmente INMEDIATAMENTE
       messages.addMessage({
-        text: text,
+        text: messageText,
         type: "sent",
         name: "Yo",
-        avatar: "https://cdn.framework7.io/placeholder/people-100x100-9.jpg",
       });
 
-      // Limpia el campo de texto
-      messagebar.clear();
-      messagebar.focus();
+      const mensajeLocal = {
+        mensaje: messageText,
+        contesta: "usuario",
+        created_at: new Date().toISOString(),
+      };
 
-      // Envía el mensaje al backend
+      mensajesData.push(mensajeLocal);
+      console.log("✅ Mensaje agregado localmente");
+
       try {
-        await api.post("/mensaje/crear-y-enviar-whatsapp", {
+        const payload = {
           id_conversacion: conversacionId,
-          mensaje: text,
+          mensaje: messageText,
           contesta: "usuario",
           id_mensaje_whatsapp: null,
           id_mensaje_responde: null,
           id_estado: 1,
-        });
-        // Si quieres recargar los mensajes del backend, descomenta la siguiente línea:
-        // await loadMessages();
+        };
+
+        console.log("🚀 Enviando al servidor:", payload);
+
+        const response = await api.post(
+          "/mensaje/crear-y-enviar-whatsapp",
+          payload
+        );
+
+        console.log("✅ Respuesta del servidor:", response.data);
+        console.log("📨 Mensaje enviado exitosamente por WhatsApp");
+
+        // ✅ Desactivar flag después de 2 segundos
+        setTimeout(() => {
+          enviandoMensaje = false;
+          console.log("🔓 Flag de envío desactivado");
+        }, 2000);
       } catch (error) {
+        console.error("❌ Error al enviar mensaje:", error);
+        console.error(
+          "❌ Detalles del error:",
+          error.response?.data || error.message
+        );
+
         $f7.dialog.alert("No se pudo enviar el mensaje");
-        console.error(error);
+
+        // ✅ Remover mensaje local si falla
+        const lastMessage = messages.messages[messages.messages.length - 1];
+        if (lastMessage && lastMessage.text === messageText) {
+          messages.removeMessage(lastMessage);
+          console.log("🗑️ Mensaje visual removido por error");
+        }
+
+        const index = mensajesData.findIndex(
+          (msg) => msg.mensaje === messageText && msg.contesta === "usuario"
+        );
+        if (index !== -1) {
+          mensajesData.splice(index, 1);
+          console.log("🗑️ Mensaje de datos removido por error");
+        }
+
+        // ✅ Desactivar flag en caso de error
+        enviandoMensaje = false;
       }
     };
 
-    // Inicialización al entrar a la página
+    const handleSendClick = () => {
+      console.log("🖱️ Botón de envío clickeado");
+
+      const textarea = document.getElementById("message-input");
+      if (!textarea) {
+        console.error("❌ No se encontró el textarea");
+        return;
+      }
+
+      const messageText = textarea.value.trim();
+      console.log("📝 Texto del mensaje:", messageText);
+
+      if (!messageText) {
+        console.log("⚠️ El textarea está vacío");
+        return;
+      }
+
+      // Enviar mensaje
+      sendMessage(messageText);
+
+      // Limpiar textarea
+      textarea.value = "";
+      textarea.focus();
+    };
+
+    const handleKeyPress = (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSendClick();
+      }
+    };
+
     $on("pageInit", (page) => {
       conversacionId =
         page.route?.params?.conversacionId ||
         $f7.views.main.router.currentRoute?.params?.conversacionId;
-
-      console.log("Conversación ID:", conversacionId);
 
       if (!conversacionId) {
         $f7.dialog.alert("No se pudo obtener el ID de conversación");
         return;
       }
 
-      // Inicializa el messagebar y el componente visual de mensajes
+      console.log(`🚀 Iniciando chat para conversación: ${conversacionId}`);
+
       messagebar = $f7.messagebar.create({
         el: $el.value.find(".messagebar"),
       });
+
       messages = $f7.messages.create({
         el: $el.value.find(".messages"),
       });
 
-      // Carga los mensajes de la conversación
-      loadMessages();
+      setTimeout(() => {
+        const textarea = document.getElementById("message-input");
+        if (textarea) {
+          textarea.addEventListener("keypress", handleKeyPress);
+          console.log("✅ Event listener agregado al textarea");
+        }
+      }, 100);
+
+      conectarSocket();
+      setTimeout(loadMessages, 100);
     });
 
-    // Limpia los componentes al salir de la página
     $on("pageBeforeRemove", () => {
-      if (messagebar) messagebar.destroy();
-      if (messages) messages.destroy();
+      console.log("🧹 Cerrando chat...");
+
+      // ✅ Limpiar flags
+      enviandoMensaje = false;
+
+      const textarea = document.getElementById("message-input");
+      if (textarea) {
+        textarea.removeEventListener("keypress", handleKeyPress);
+      }
+
+      if (messagebar) {
+        messagebar.destroy();
+        messagebar = null;
+      }
+      if (messages) {
+        messages.destroy();
+        messages = null;
+      }
+      if (socket) {
+        socket.disconnect();
+        socket = null;
+      }
+
+      mensajesData = [];
     });
 
     return $render;
