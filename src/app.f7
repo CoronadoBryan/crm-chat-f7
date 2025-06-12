@@ -82,7 +82,7 @@
 </template>
 
 <script>
-  import api from "./js/api.js";
+  import { getClientes, getPerfiles, getConversaciones } from "./js/services/index.js";
   import io from "socket.io-client";
 
   export default (props, { $on, $f7 }) => {
@@ -131,28 +131,21 @@
       }
     });
 
-    const cargarDatos = () => {
-      Promise.all([
-        api.get("/conversacion/listadoTelefonos"),
-        api.get("/cliente/listado"),
-        api.get("/cliente/perfil/listado"),
-      ])
-        .then(([convsRes, clisRes, perfRes]) => {
-          conversaciones = convsRes.data.data;
-          clientes = clisRes.data.data;
-          perfiles = perfRes.data.data;
-          renderConversaciones(conversaciones);
-          initSearch();
-        })
-        .catch((err) => {
-          console.error("Error al obtener datos:", err);
-          $f7.toast
-            .create({
-              text: "Error al cargar conversaciones",
-              closeTimeout: 3000,
-            })
-            .open();
-        });
+    const cargarDatos = async () => {
+      try {
+        [conversaciones, clientes, perfiles] = await Promise.all([
+          getConversaciones(),
+          getClientes(),
+          getPerfiles(),
+        ]);
+        renderConversaciones(conversaciones);
+        initSearch();
+      } catch (err) {
+        $f7.toast.create({
+          text: "Error al cargar conversaciones",
+          closeTimeout: 3000,
+        }).open();
+      }
     };
 
     const renderConversaciones = (convs) => {
@@ -228,18 +221,81 @@
           // 3. Mostrar datos en el panel derecho
           const panelDatos = document.getElementById("panel-datos-cliente");
           if (panelDatos) {
-            panelDatos.innerHTML = `
-              <div><b>Teléfono:</b> ${conv.telefono}</div>
-              <div><b>ID Conversación:</b> ${conv.conversacionId}</div>
-              ${cliente ? `<div><b>ID Cliente:</b> ${cliente.id}</div>` : ""}
-              ${perfil ? `
-                <div><b>Nombre:</b> ${perfil.nombre || "-"}</div>
-                <div><b>Apellido:</b> ${perfil.apellido || "-"}</div>
-                <div><b>Marca:</b> ${perfil.marca || "-"}</div>
-                <div><b>Modelo:</b> ${perfil.modelo || "-"}</div>
-                <div><b>Placa:</b> ${perfil.placa || "-"}</div>
-              ` : "<div>No hay perfil registrado</div>"}
-            `;
+            if (perfil) {
+              const camposCompletos =
+                perfil.nombre && perfil.apellido && perfil.marca && perfil.modelo && perfil.placa;
+              panelDatos.innerHTML = `
+                <div class="block-title" style="margin-bottom:0;">
+                  <i class="icon f7-icons" style="color:#007aff; vertical-align:middle;">person_fill</i>
+                  <span style="font-size:18px; font-weight:600;">${perfil.nombre || ""} ${perfil.apellido || ""}</span>
+                </div>
+                <div class="list no-hairlines">
+                  <ul>
+                    <li>
+                      <div class="item-content">
+                        <div class="item-inner">
+                          <div class="item-title"><b>Teléfono</b></div>
+                          <div class="item-after">${conv.telefono}</div>
+                        </div>
+                      </div>
+                    </li>
+                    <li>
+                      <div class="item-content">
+                        <div class="item-inner">
+                          <div class="item-title"><b>Marca</b></div>
+                          <div class="item-after">${perfil.marca || "-"}</div>
+                        </div>
+                      </div>
+                    </li>
+                    <li>
+                      <div class="item-content">
+                        <div class="item-inner">
+                          <div class="item-title"><b>Modelo</b></div>
+                          <div class="item-after">${perfil.modelo || "-"}</div>
+                        </div>
+                      </div>
+                    </li>
+                    <li>
+                      <div class="item-content">
+                        <div class="item-inner">
+                          <div class="item-title"><b>Placa</b></div>
+                          <div class="item-after">${perfil.placa || "-"}</div>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <div class="block" style="margin-top:12px; text-align:center;">
+                  ${
+                    camposCompletos
+                      ? `<span style="color:green; font-weight:600;"><i class="icon f7-icons" style="vertical-align:middle;">checkmark_circle_fill</i> Registro completo</span>`
+                      : `<span style="color:#ff9500; font-weight:600;"><i class="icon f7-icons" style="vertical-align:middle;">exclamationmark_triangle_fill</i> Registro incompleto</span>`
+                  }
+                </div>
+              `;
+            } else {
+              panelDatos.innerHTML = `
+                <div class="block-title" style="margin-bottom:0;">
+                  <i class="icon f7-icons" style="color:#007aff; vertical-align:middle;">person_fill</i>
+                  <span style="font-size:18px; font-weight:600;">Sin datos de perfil</span>
+                </div>
+                <div class="list no-hairlines">
+                  <ul>
+                    <li>
+                      <div class="item-content">
+                        <div class="item-inner">
+                          <div class="item-title"><b>Teléfono</b></div>
+                          <div class="item-after">${conv.telefono}</div>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <div class="block" style="margin-top:12px; text-align:center; color:#ff3b30;">
+                  <i class="icon f7-icons" style="vertical-align:middle;">xmark_circle_fill</i> No hay perfil registrado
+                </div>
+              `;
+            }
           }
 
           // Navega al chat si quieres

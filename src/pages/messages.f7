@@ -49,6 +49,7 @@
 <script>
   import api from "../js/api.js";
   import io from "socket.io-client";
+  import { getMensajesPorConversacion, enviarMensaje } from "../js/services/index.js";
 
   export default (props, { $f7, $el, $on }) => {
     let messagebar,
@@ -111,11 +112,7 @@
 
     const loadMessages = async () => {
       try {
-        const response = await api.get(
-          `/mensaje/listar-por-conversacion/${conversacionId}`
-        );
-        mensajesData = response.data.data || [];
-
+        mensajesData = await getMensajesPorConversacion(conversacionId) || [];
         console.log(`📋 Cargando ${mensajesData.length} mensajes históricos`);
         renderMessages();
       } catch (error) {
@@ -185,18 +182,11 @@
           id_mensaje_responde: null,
           id_estado: 1,
         };
-
         console.log("🚀 Enviando al servidor:", payload);
-
-        const response = await api.post(
-          "/mensaje/crear-y-enviar-whatsapp",
-          payload
-        );
-
-        console.log("✅ Respuesta del servidor:", response.data);
+        const response = await enviarMensaje(payload); // <--- CORREGIDO
+        console.log("✅ Respuesta del servidor:", response); // <--- CORREGIDO
         console.log("📨 Mensaje enviado exitosamente por WhatsApp");
 
-        // ✅ Desactivar flag después de 2 segundos
         setTimeout(() => {
           enviandoMensaje = false;
           console.log("🔓 Flag de envío desactivado");
