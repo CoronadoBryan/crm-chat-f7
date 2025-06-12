@@ -46,6 +46,9 @@
   </div>
 </template>
 
+
+
+
 <script>
   import api from "../js/api.js";
   import io from "socket.io-client";
