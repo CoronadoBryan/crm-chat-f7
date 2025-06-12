@@ -64,11 +64,13 @@
           <div class="navbar">
             <div class="navbar-bg"></div>
             <div class="navbar-inner">
-              <div class="title">Panel derecho</div>
+              <div class="title">Datos del Cliente</div>
             </div>
           </div>
           <div class="page-content">
-            <div class="block">Right panel content goes here</div>
+            <div class="block" id="panel-datos-cliente">
+              Selecciona una conversación para ver los datos del cliente.
+            </div>
           </div>
         </div>
       </div>
@@ -85,6 +87,8 @@
 
   export default (props, { $on, $f7 }) => {
     let conversaciones = [];
+    let clientes = [];
+    let perfiles = [];
     let socket = null;
 
     $on("pageInit", () => {
@@ -115,7 +119,6 @@
           .open();
       });
 
-    
       // Cargar datos iniciales
       cargarDatos();
     });
@@ -129,10 +132,15 @@
     });
 
     const cargarDatos = () => {
-      api
-        .get("/conversacion/listadoTelefonos")
-        .then((res) => {
-          conversaciones = res.data.data;
+      Promise.all([
+        api.get("/conversacion/listadoTelefonos"),
+        api.get("/cliente/listado"),
+        api.get("/cliente/perfil/listado"),
+      ])
+        .then(([convsRes, clisRes, perfRes]) => {
+          conversaciones = convsRes.data.data;
+          clientes = clisRes.data.data;
+          perfiles = perfRes.data.data;
           renderConversaciones(conversaciones);
           initSearch();
         })
@@ -194,10 +202,47 @@
         .join("");
 
       lista.querySelectorAll(".abrir-chat").forEach((el) => {
-        el.addEventListener("click", (e) => {
+        el.addEventListener("click", async (e) => {
           e.preventDefault();
           const convId = el.getAttribute("data-conv-id");
-          console.log(`🚀 Abriendo chat: ${convId}`);
+          const conv = conversaciones.find((c) => c.conversacionId == convId);
+
+          // 1. Buscar cliente por teléfono
+          let cliente = null;
+          try {
+            cliente = clientes.find(c => c.telefono === conv.telefono);
+          } catch (err) {
+            console.error("Error buscando cliente:", err);
+          }
+
+          // 2. Buscar perfil por id_cliente
+          let perfil = null;
+          if (cliente) {
+            try {
+              perfil = perfiles.find(p => p.id_cliente === cliente.id);
+            } catch (err) {
+              console.error("Error buscando perfil:", err);
+            }
+          }
+
+          // 3. Mostrar datos en el panel derecho
+          const panelDatos = document.getElementById("panel-datos-cliente");
+          if (panelDatos) {
+            panelDatos.innerHTML = `
+              <div><b>Teléfono:</b> ${conv.telefono}</div>
+              <div><b>ID Conversación:</b> ${conv.conversacionId}</div>
+              ${cliente ? `<div><b>ID Cliente:</b> ${cliente.id}</div>` : ""}
+              ${perfil ? `
+                <div><b>Nombre:</b> ${perfil.nombre || "-"}</div>
+                <div><b>Apellido:</b> ${perfil.apellido || "-"}</div>
+                <div><b>Marca:</b> ${perfil.marca || "-"}</div>
+                <div><b>Modelo:</b> ${perfil.modelo || "-"}</div>
+                <div><b>Placa:</b> ${perfil.placa || "-"}</div>
+              ` : "<div>No hay perfil registrado</div>"}
+            `;
+          }
+
+          // Navega al chat si quieres
           $f7.views.main.router.navigate(`/messages/${convId}/`, {
             reloadAll: true,
           });
