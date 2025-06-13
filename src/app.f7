@@ -7,7 +7,6 @@
     >
       <div class="view view-init" data-name="left">
         <div class="page" data-name="home">
-          <!-- Top Navbar -->
           <div class="navbar navbar-large">
             <div class="navbar-bg"></div>
             <div class="navbar-inner sliding">
@@ -84,6 +83,7 @@
 <script>
   import { getClientes, getPerfiles, getConversaciones } from "./js/services/index.js";
   import io from "socket.io-client";
+  import { panelDerecho, panelIzquierdo } from "./js/components/index.js";
 
   export default (props, { $on, $f7 }) => {
     let conversaciones = [];
@@ -119,6 +119,21 @@
           .open();
       });
 
+
+      socket.on("perfil_actualizado", (perfilActualizado) => {
+        console.log("🔄 Evento perfil_actualizado recibido:", perfilActualizado);
+        const idx = perfiles.findIndex(p => p.id_cliente === perfilActualizado.id_cliente);
+        if (idx !== -1) {
+          console.log("🔄 Actualizando perfil existente en array perfiles");
+          perfiles[idx] = perfilActualizado;
+        } else {
+          console.log("🆕 Agregando nuevo perfil al array perfiles");
+          perfiles.push(perfilActualizado);
+        }
+        console.log("👀 Array perfiles después de actualizar:", perfiles);
+        renderConversaciones(conversaciones);
+      });
+
       // Cargar datos iniciales
       cargarDatos();
     });
@@ -150,159 +165,14 @@
 
     const renderConversaciones = (convs) => {
       const lista = document.querySelector("#lista-conversaciones");
-
-      if (!lista) return;
-
-      if (convs.length === 0) {
-        lista.innerHTML = `
-          <li class="item-content-center">
-            <div class="item-inner" style="text-align: center; padding: 40px 20px;">
-              <div class="text-color-gray" style="font-size: 14px; margin-top: 8px;">
-                Las nuevas conversaciones aparecerán aquí
-              </div>
-            </div>
-          </li>`;
-        return;
-      }
-
-      lista.innerHTML = convs
-        .map((conv) => {
-          const telefono = conv.telefono ?? "Sin número";
-          return `
-          <li class="abrir-chat" data-conv-id="${
-            conv.conversacionId
-          }" style="cursor:pointer;">
-            <div class="item-content">
-              <div class="item-media">
-                <div class="avatar color-blue" style="background: linear-gradient(45deg, #007aff, #5856d6);">
-                  <span style="font-weight: 600;">${telefono.slice(-2)}</span>
-                </div>
-              </div>
-              <div class="item-inner">
-                <div class="item-title-row">
-                  <div class="item-title" style="font-weight: 500; color: var(--f7-text-color);">
-                    ${telefono}
-                  </div>
-                  <div class="item-after">
-                    <i class="icon f7-icons color-gray">chevron_right</i>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </li>
-        `;
-        })
-        .join("");
-
-      lista.querySelectorAll(".abrir-chat").forEach((el) => {
-        el.addEventListener("click", async (e) => {
-          e.preventDefault();
-          const convId = el.getAttribute("data-conv-id");
-          const conv = conversaciones.find((c) => c.conversacionId == convId);
-
-          // 1. Buscar cliente por teléfono
-          let cliente = null;
-          try {
-            cliente = clientes.find(c => c.telefono === conv.telefono);
-          } catch (err) {
-            console.error("Error buscando cliente:", err);
-          }
-
-          // 2. Buscar perfil por id_cliente
-          let perfil = null;
-          if (cliente) {
-            try {
-              perfil = perfiles.find(p => p.id_cliente === cliente.id);
-            } catch (err) {
-              console.error("Error buscando perfil:", err);
-            }
-          }
-
-          // 3. Mostrar datos en el panel derecho
-          const panelDatos = document.getElementById("panel-datos-cliente");
-          if (panelDatos) {
-            if (perfil) {
-              const camposCompletos =
-                perfil.nombre && perfil.apellido && perfil.marca && perfil.modelo && perfil.placa;
-              panelDatos.innerHTML = `
-                <div class="block-title" style="margin-bottom:0;">
-                  <i class="icon f7-icons" style="color:#007aff; vertical-align:middle;">person_fill</i>
-                  <span style="font-size:18px; font-weight:600;">${perfil.nombre || ""} ${perfil.apellido || ""}</span>
-                </div>
-                <div class="list no-hairlines">
-                  <ul>
-                    <li>
-                      <div class="item-content">
-                        <div class="item-inner">
-                          <div class="item-title"><b>Teléfono</b></div>
-                          <div class="item-after">${conv.telefono}</div>
-                        </div>
-                      </div>
-                    </li>
-                    <li>
-                      <div class="item-content">
-                        <div class="item-inner">
-                          <div class="item-title"><b>Marca</b></div>
-                          <div class="item-after">${perfil.marca || "-"}</div>
-                        </div>
-                      </div>
-                    </li>
-                    <li>
-                      <div class="item-content">
-                        <div class="item-inner">
-                          <div class="item-title"><b>Modelo</b></div>
-                          <div class="item-after">${perfil.modelo || "-"}</div>
-                        </div>
-                      </div>
-                    </li>
-                    <li>
-                      <div class="item-content">
-                        <div class="item-inner">
-                          <div class="item-title"><b>Placa</b></div>
-                          <div class="item-after">${perfil.placa || "-"}</div>
-                        </div>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-                <div class="block" style="margin-top:12px; text-align:center;">
-                  ${
-                    camposCompletos
-                      ? `<span style="color:green; font-weight:600;"><i class="icon f7-icons" style="vertical-align:middle;">checkmark_circle_fill</i> Registro completo</span>`
-                      : `<span style="color:#ff9500; font-weight:600;"><i class="icon f7-icons" style="vertical-align:middle;">exclamationmark_triangle_fill</i> Registro incompleto</span>`
-                  }
-                </div>
-              `;
-            } else {
-              panelDatos.innerHTML = `
-                <div class="block-title" style="margin-bottom:0;">
-                  <i class="icon f7-icons" style="color:#007aff; vertical-align:middle;">person_fill</i>
-                  <span style="font-size:18px; font-weight:600;">Sin datos de perfil</span>
-                </div>
-                <div class="list no-hairlines">
-                  <ul>
-                    <li>
-                      <div class="item-content">
-                        <div class="item-inner">
-                          <div class="item-title"><b>Teléfono</b></div>
-                          <div class="item-after">${conv.telefono}</div>
-                        </div>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-                <div class="block" style="margin-top:12px; text-align:center; color:#ff3b30;">
-                  <i class="icon f7-icons" style="vertical-align:middle;">xmark_circle_fill</i> No hay perfil registrado
-                </div>
-              `;
-            }
-          }
-
-          // Navega al chat si quieres
-          $f7.views.main.router.navigate(`/messages/${convId}/`, {
-            reloadAll: true,
-          });
-        });
+      panelIzquierdo({
+        lista,
+        conversaciones: convs,
+        clientes,
+        perfiles,
+        panelIzquierdo,
+        panelDerecho,
+        $f7
       });
     };
 

@@ -83,7 +83,7 @@
         }
 
         // ✅ Solo procesar mensajes del cliente
-        if (data.contesta === "cliente") {
+        if (data.contesta === "cliente" || data.contesta === "bot") {
           const nuevoMensaje = {
             mensaje: data.mensaje || data.texto,
             contesta: data.contesta,
@@ -94,19 +94,23 @@
 
           messages.addMessage({
             text: nuevoMensaje.mensaje,
-            type: "received",
-            name: "Cliente",
+            type: data.contesta === "bot" ? "sent" : "received",
+            name: data.contesta === "bot" ? "Bot" : "Cliente",
           });
 
-          console.log("✅ Mensaje del CLIENTE agregado");
+          console.log(
+            `✅ Mensaje del ${data.contesta === "bot" ? "BOT" : "CLIENTE"} agregado`
+          );
 
-          $f7.toast
-            .create({
-              text: "Nuevo mensaje del cliente",
-              closeTimeout: 2000,
-              position: "top",
-            })
-            .open();
+          if (data.contesta === "cliente") {
+            $f7.toast
+              .create({
+                text: "Nuevo mensaje del cliente",
+                closeTimeout: 2000,
+                position: "top",
+              })
+              .open();
+          }
         } else {
           console.log("⚠️ Mensaje propio ignorado (contesta: usuario)");
         }
