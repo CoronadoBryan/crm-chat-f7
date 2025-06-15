@@ -115,7 +115,52 @@
           console.log("⚠️ Mensaje propio ignorado (contesta: usuario)");
         }
       });
+
+      socket.on("mensaje_actualizado", (data) => {
+        console.log("📦 Estado de mensaje actualizado:", data);
+
+        const mensajeIndex = mensajesData.findIndex(
+          (msg) => msg.id === data.id
+        );
+
+        if (mensajeIndex !== -1) {
+          mensajesData[mensajeIndex].id_estado = data.id_estado;
+          console.log("✅ Estado actualizado localmente");
+
+          actualizarEstadoEnUI(data.id, data.id_estado);
+        } else {
+          console.log("❌ No se encontró el mensaje localmente");
+        }
+      });
     };
+
+    const actualizarEstadoEnUI = (id, id_estado) => {
+      const messageEls = $el.value.querySelectorAll('.message');
+      messageEls.forEach((el) => {
+        const mensajeId = el.dataset.messageId; // <-- Framework7 guarda el id como data-message-id
+        if (mensajeId == id) {
+          const textEl = el.querySelector('.message-text');
+          if (textEl) {
+            // Extraemos el texto original quitando cualquier estado previo
+            const textoOriginal = textEl.innerText.replace(/✔.*/, "").trim();
+            textEl.innerHTML = textoOriginal + getEstadoIcono(id_estado);
+          }
+        }
+      });
+    }
+
+    const getEstadoIcono = (id_estado) => {
+      if (id_estado === 1) {
+        return ` <span style="font-size: 12px; color: gray;">✔</span>`;
+      } else if (id_estado === 3) {
+        return ` <span style="font-size: 12px; color: #2196f3;">✔✔</span>`;
+      } else if (id_estado === 4) {
+        return ` <span style="font-size: 12px; color: red;">✔✔</span>`;
+      } else {
+        return "";
+      }
+    };
+
 
     const loadMessages = async () => {
       try {
