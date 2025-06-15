@@ -4,22 +4,18 @@
       <div class="navbar-bg"></div>
       <div class="navbar-inner sliding">
         <div class="left">
-          <a
-            href="#"
-            class="link"
-            @click="${() => $f7.views.main.router.navigate('/')}"
-          >
+          <a href="#" class="link" @click="${() => $f7.views.main.router.navigate('/')}">
             <i class="icon icon-back"></i>
             <span class="if-not-md">Volver</span>
           </a>
         </div>
         <div class="title">${telefono}</div>
-          <div class="right">
-            <a href="#" class="link icon-only panel-open" data-panel="right">
-              <i class="icon f7-icons if-not-md">menu</i>
-              <i class="icon material-icons if-md">menu</i>
-            </a>
-          </div>
+        <div class="right">
+          <a href="#" class="link icon-only panel-open" data-panel="right">
+            <i class="icon f7-icons if-not-md">menu</i>
+            <i class="icon material-icons if-md">menu</i>
+          </a>
+        </div>
       </div>
     </div>
 
@@ -27,11 +23,7 @@
     <div class="toolbar messagebar">
       <div class="toolbar-inner">
         <div class="messagebar-area">
-          <textarea
-            id="message-input"
-            class="resizable"
-            placeholder="Escribe un mensaje..."
-          ></textarea>
+          <textarea id="message-input" class="resizable" placeholder="Escribe un mensaje..."></textarea>
         </div>
         <!-- ✅ Botón con evento directo -->
         <a class="link icon-only" @click="${handleSendClick}">
@@ -128,6 +120,7 @@
           console.log("✅ Estado actualizado localmente");
 
           actualizarEstadoEnUI(data.id, data.id_estado);
+
         } else {
           console.log("❌ No se encontró el mensaje localmente");
         }
@@ -151,15 +144,18 @@
 
     const getEstadoIcono = (id_estado) => {
       if (id_estado === 1) {
+        return ` <span style="font-size: 12px; color: gray;">🕓</span>`;
+      } else if (id_estado === 2) {
         return ` <span style="font-size: 12px; color: gray;">✔</span>`;
       } else if (id_estado === 3) {
-        return ` <span style="font-size: 12px; color: #2196f3;">✔✔</span>`;
+        return ` <span style="font-size: 12px; color: rgba(139,69,19,0.6);">✔✔</span>`;
       } else if (id_estado === 4) {
-        return ` <span style="font-size: 12px; color: red;">✔✔</span>`;
+        return ` <span style="font-size: 12px; color: #2196f3;">✔✔</span>`;
       } else {
         return "";
       }
     };
+
 
 
     const loadMessages = async () => {
@@ -188,11 +184,13 @@
       const messagesToAdd = mensajesOrdenados.map((msg) => {
         const isReceived = msg.contesta === "cliente";
         return {
-          text: msg.mensaje,
+          text: msg.mensaje + getEstadoIcono(msg.id_estado),
           type: isReceived ? "received" : "sent",
           name: isReceived ? "Cliente" : "Yo",
+          isHtml: true,
         };
       });
+      console.log(' hola ${messagesToAdd.map(m => m.text)');
 
       messages.addMessages(messagesToAdd);
       console.log(`🎨 Renderizados ${messagesToAdd.length} mensajes`);
@@ -220,6 +218,7 @@
         mensaje: messageText,
         contesta: "usuario",
         created_at: new Date().toISOString(),
+        id_estado: 1, // Estado inicial
       };
 
       mensajesData.push(mensajeLocal);
@@ -233,6 +232,7 @@
           id_mensaje_whatsapp: null,
           id_mensaje_responde: null,
           id_estado: 1,
+          created_at: new Date().toISOString(),
         };
         console.log("🚀 Enviando al servidor:", payload);
         const response = await enviarMensaje(payload); // <--- CORREGIDO
