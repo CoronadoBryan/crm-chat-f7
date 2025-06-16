@@ -62,17 +62,16 @@
       }
     };
 
-    const actualizarEstadoEnUI = (id, id_estado) => {
+    const actualizarEstadoEnUI = (key, id_estado) => {
       const messageEls = $el.value[0].querySelectorAll('.message');
-      messageEls.forEach((el) => {
-        if (el.dataset.messageId == id) {
-          const textEl = el.querySelector('.message-text');
-          if (textEl) {
-            const textoOriginal = textEl.innerText.replace(/✔.*/, "").trim();
-            textEl.innerHTML = textoOriginal + getEstadoIcono(id_estado);
-          }
+      const messageEl = messageEls[key];
+      if (messageEl) {
+        const textEl = messageEl.querySelector('.message-text');
+        if (textEl) {
+          const textoOriginal = textEl.innerText.replace(/✔.*/, "").trim();
+          textEl.innerHTML = textoOriginal + getEstadoIcono(id_estado);
         }
-      });
+      }
     };
 
     // --- Renderizado de mensajes ---
@@ -110,8 +109,9 @@
       enviandoMensaje = true;
       console.log("📤 Enviando:", messageText);
 
-      messages.addMessage({ text: messageText, type: "sent", name: "Yo" });
+      messages.addMessage({ text: messageText, type: "sent", name: "Yo" }); //
       mensajesData.push({
+        id:null, // ID será asignado por el servidor
         mensaje: messageText,
         contesta: "usuario",
         created_at: new Date().toISOString(),
@@ -172,6 +172,7 @@
             mensaje: data.mensaje || data.texto,
             contesta: data.contesta,
             created_at: data.created_at || new Date().toISOString(),
+
           };
           mensajesData.push(nuevoMensaje);
 
@@ -193,11 +194,36 @@
 
       socket.on("mensaje_actualizado", (data) => {
         console.log("📦 Estado actualizado:", data);
-        const idx = mensajesData.findIndex(msg => msg.id === data.id);
-        if (idx !== -1) {
+        console.log("🔍 Mensajes actuales:", mensajesData);
+        console.log("🔍 Mensaje actualizado:", data.id);
+
+
+
+        let idx = mensajesData.findIndex(msg => msg.id === data.id);
+
+
+        console.log("🔍 Índice del mensaje actualizado:", idx);
+        if (idx == 1) {
           mensajesData[idx].id_estado = data.id_estado;
-          actualizarEstadoEnUI(data.id, data.id_estado);
+        }else if (idx < 0) {
+          console.warn("⚠️ No se encontró el mensaje para actualizar");
+
+          idx = mensajesData.findIndex(msg => msg.id === null);
+
+          mensajesData.splice(idx,1);
+
+          mensajesData.push({
+            id: data.id,
+            mensaje: data.mensaje,
+            contesta: data.contesta,
+            created_at: data.created_at || new Date().toISOString(),
+            id_estado: data.id_estado,
+          });
+
         }
+        actualizarEstadoEnUI(idx, data.id_estado);
+
+        
       });
     };
 
