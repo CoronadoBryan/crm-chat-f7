@@ -32,7 +32,7 @@ export function panelIzquierdo({
         ? `${perfil.nombre} ${perfil.apellido}`
         : conv.telefono ?? "Sin número";
 
-      console.log(`[panelIzquierdo] convId: ${conv.conversacionId}, telefono: ${conv.telefono}, perfilCompleto: ${perfilCompleto}, displayName: ${displayName}`);
+      // console.log(`[panelIzquierdo] convId: ${conv.conversacionId}, telefono: ${conv.telefono}, perfilCompleto: ${perfilCompleto}, displayName: ${displayName}`);
 
       return `
       <li class="abrir-chat" data-conv-id="${conv.conversacionId}" style="cursor:pointer;">

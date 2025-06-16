@@ -92,24 +92,11 @@
     let socket = null;
 
     $on("pageInit", () => {
-      console.log("Página inicializada");
-
       // Conectar a Socket.IO para tiempo real
       socket = io("http://82.180.163.151:3000");
 
-      socket.on("connect", () => {
-        console.log("✅ Conectado en tiempo real");
-      });
-
-      socket.on("disconnect", () => {
-        console.log("❌ Desconectado");
-      });
-
-      // Escuchar nueva conversación
       socket.on("nueva_conversacion", (data) => {
-        console.log("📱 Nueva conversación:", data);
         cargarDatos();
-
         $f7.toast
           .create({
             text: "Nueva conversación recibida",
@@ -119,28 +106,21 @@
           .open();
       });
 
-
       socket.on("perfil_actualizado", (perfilActualizado) => {
-        console.log("🔄 Evento perfil_actualizado recibido:", perfilActualizado);
         const idx = perfiles.findIndex(p => p.id_cliente === perfilActualizado.id_cliente);
         if (idx !== -1) {
-          console.log("🔄 Actualizando perfil existente en array perfiles");
           perfiles[idx] = perfilActualizado;
         } else {
-          console.log("🆕 Agregando nuevo perfil al array perfiles");
           perfiles.push(perfilActualizado);
         }
-        console.log("👀 Array perfiles después de actualizar:", perfiles);
         renderConversaciones(conversaciones);
       });
 
-      // Cargar datos iniciales
       cargarDatos();
     });
 
     $on("pageBeforeRemove", () => {
       if (socket) {
-        console.log("🔌 Desconectando Socket.IO...");
         socket.disconnect();
         socket = null;
       }
@@ -180,10 +160,7 @@
       const input = document.querySelector("#search-input");
       const clearBtn = document.querySelector("#clear-button");
 
-      if (!input || !clearBtn) {
-        console.warn("⚠️ Elementos de búsqueda no encontrados");
-        return;
-      }
+      if (!input || !clearBtn) return;
 
       input.addEventListener("input", () => {
         const query = input.value.trim().toLowerCase();

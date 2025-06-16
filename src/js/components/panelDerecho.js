@@ -30,7 +30,7 @@ export function panelDerecho(panelDatos, conv, perfil) {
           </li>
           <li>
             <div class="item-content">
-              <div class="item-media"><i class="icon f7-icons" style="color:#ff9500;">car</i></div>
+              <div class="item-media"><i class="icon f7-icons" style="color:#ff9500;">square_favorites_alt</i></div>
               <div class="item-inner">
                 <div class="item-title">Modelo</div>
                 <div class="item-after">${perfil.modelo || "-"}</div>

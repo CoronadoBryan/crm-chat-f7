@@ -25,7 +25,8 @@
     "material-icons": "^1.13.14",
     "skeleton-elements": "^4.0.1",
     "socket.io-client": "^4.8.1",
-    "swiper": "^11.2.8"
+    "swiper": "^11.2.8",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "cpy-cli": "^5.0.0",
