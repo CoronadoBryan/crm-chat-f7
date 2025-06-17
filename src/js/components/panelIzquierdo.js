@@ -1,3 +1,6 @@
+// Importa solo lo que necesitas aquí
+import { aceptarConversacion } from "../services/conversacionService.js";
+
 export function panelIzquierdo({
   lista,
   conversaciones,
@@ -8,19 +11,33 @@ export function panelIzquierdo({
 }) {
   if (!lista) return;
 
-  if (conversaciones.length === 0) {
+  const usuarioId = Number(localStorage.getItem("usuarioId"));
+  console.log("usuarioId desde localStorage:", usuarioId);
+
+  console.log("Total conversaciones recibidas:", conversaciones.length);
+  console.log("Conversaciones recibidas:", conversaciones);
+
+  // Solo muestra las conversaciones asignadas a este usuario
+  const conversacionesFiltradas = conversaciones.filter(conv =>
+    conv.usuarioId == usuarioId
+  );
+
+  console.log("Conversaciones filtradas para usuarioId", usuarioId, ":", conversacionesFiltradas.length);
+  console.log("Conversaciones filtradas:", conversacionesFiltradas);
+
+  if (conversacionesFiltradas.length === 0) {
     lista.innerHTML = `
       <li class="item-content-center">
         <div class="item-inner" style="text-align: center; padding: 40px 20px;">
           <div class="text-color-gray" style="font-size: 14px; margin-top: 8px;">
-            Las nuevas conversaciones aparecerán aquí
+            No tienes conversaciones asignadas.
           </div>
         </div>
       </li>`;
     return;
   }
 
-  lista.innerHTML = conversaciones
+  lista.innerHTML = conversacionesFiltradas
     .map((conv) => {
       // Buscar cliente y perfil para cada conversación
       const cliente = clientes.find(c => c.telefono === conv.telefono);
@@ -62,7 +79,23 @@ export function panelIzquierdo({
     el.addEventListener("click", async (e) => {
       e.preventDefault();
       const convId = el.getAttribute("data-conv-id");
-      const conv = conversaciones.find((c) => c.conversacionId == convId);
+      const conv = conversaciones.find(c => c.conversacionId == convId);
+      const usuarioId = Number(localStorage.getItem("usuarioId"));
+
+      // Solo permitir si corresponde
+      if (conv.usuarioId && conv.usuarioId != usuarioId) {
+        $f7.dialog.alert("No tienes permiso para acceder a esta conversación.");
+        return;
+      }
+
+      if (!convId || !usuarioId) {
+        $f7.dialog.alert("No se puede aceptar la conversación: faltan datos.");
+        return;
+      }
+
+      // Aquí defines conv:
+
+      await aceptarConversacion(convId, usuarioId);
 
       // Buscar cliente y perfil
       let cliente = null;

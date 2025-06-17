@@ -1,10 +1,7 @@
 <template>
   <div id="app">
-    <!-- Panel izquierdo-->
-    <div
-      class="panel panel-left panel-cover dark panel-init"
-      data-visible-breakpoint="960"
-    >
+    <!-- Panel izquierdo: Lista de conversaciones -->
+    <div class="panel panel-left panel-cover dark panel-init" data-visible-breakpoint="960">
       <div class="view view-init" data-name="left">
         <div class="page" data-name="home">
           <div class="navbar navbar-large">
@@ -14,27 +11,11 @@
               <div class="title-large">
                 <div class="title-large-text">Conversaciones</div>
               </div>
-              <div
-                class="subnavbar"
-                style="
-                  display: flex;
-                  justify-content: flex-end;
-                  padding: 0 10px;
-                "
-              >
-                <form
-                  class="searchbar searchbar-init"
-                  style="max-width: 300px; width: 100%"
-                  onsubmit="return false;"
-                >
+              <div class="subnavbar" style="display: flex; justify-content: flex-end; padding: 0 10px;">
+                <form class="searchbar searchbar-init" style="max-width: 300px; width: 100%" onsubmit="return false;">
                   <div class="searchbar-inner">
                     <div class="searchbar-input-wrap">
-                      <input
-                        id="search-input"
-                        type="search"
-                        placeholder="Buscar por teléfono"
-                        autocomplete="off"
-                      />
+                      <input id="search-input" type="search" placeholder="Buscar por teléfono" autocomplete="off" />
                       <i class="searchbar-icon"></i>
                       <span class="input-clear-button" id="clear-button"></span>
                     </div>
@@ -44,7 +25,6 @@
               </div>
             </div>
           </div>
-          <!-- Agregar el contenido del panel -->
           <div class="page-content">
             <div class="list">
               <ul id="lista-conversaciones">
@@ -56,7 +36,7 @@
       </div>
     </div>
 
-    <!-- Panel derecho -->
+    <!-- Panel derecho: Datos del cliente -->
     <div class="panel panel-right panel-reveal dark">
       <div class="view">
         <div class="page">
@@ -75,37 +55,44 @@
       </div>
     </div>
 
-    <!-- Your main view, should have "view-main" class -->
+    <!-- Vista principal -->
     <div class="view view-main view-init safe-areas" data-url="/"></div>
   </div>
 </template>
 
 <script>
+  // --- Importaciones ---
   import { getClientes, getPerfiles, getConversaciones } from "./js/services/index.js";
   import io from "socket.io-client";
   import { panelDerecho, panelIzquierdo } from "./js/components/index.js";
 
   export default (props, { $on, $f7 }) => {
+    // --- Variables de estado ---
     let conversaciones = [];
     let clientes = [];
     let perfiles = [];
     let socket = null;
 
+    // --- Ciclo de vida: Al iniciar la página ---
     $on("pageInit", () => {
-      // Conectar a Socket.IO para tiempo real
+      // Conexión en tiempo real con el servidor
       socket = io("http://82.180.163.151:3000");
 
-      socket.on("nueva_conversacion", (data) => {
-        cargarDatos();
-        $f7.toast
-          .create({
+      // Evento: Nueva conversación recibida
+      socket.on("conversacion_asignada", (data) => {
+        const usuarioId = Number(localStorage.getItem("usuarioId"));
+        console.log("Evento conversacion_asignada recibido:", data);
+        if (data.usuarioId && data.usuarioId == usuarioId) {
+          cargarDatos();
+          $f7.toast.create({
             text: "Nueva conversación recibida",
             closeTimeout: 2000,
             position: "top",
-          })
-          .open();
+          }).open();
+        }
       });
 
+      // Evento: Perfil de cliente actualizado
       socket.on("perfil_actualizado", (perfilActualizado) => {
         const idx = perfiles.findIndex(p => p.id_cliente === perfilActualizado.id_cliente);
         if (idx !== -1) {
@@ -116,9 +103,11 @@
         renderConversaciones(conversaciones);
       });
 
+      // Carga inicial de datos
       cargarDatos();
     });
 
+    // --- Ciclo de vida: Al salir de la página ---
     $on("pageBeforeRemove", () => {
       if (socket) {
         socket.disconnect();
@@ -126,6 +115,7 @@
       }
     });
 
+    // --- Función: Cargar datos desde el servidor ---
     const cargarDatos = async () => {
       try {
         [conversaciones, clientes, perfiles] = await Promise.all([
@@ -143,11 +133,15 @@
       }
     };
 
+    // --- Función: Renderizar la lista de conversaciones ---
     const renderConversaciones = (convs) => {
+      const usuarioId = Number(localStorage.getItem("usuarioId"));
+      const convsFiltradas = convs.filter(conv => conv.usuarioId && conv.usuarioId == usuarioId);
+
       const lista = document.querySelector("#lista-conversaciones");
       panelIzquierdo({
         lista,
-        conversaciones: convs,
+        conversaciones: convsFiltradas,
         clientes,
         perfiles,
         panelIzquierdo,
@@ -156,6 +150,7 @@
       });
     };
 
+    // --- Función: Inicializar la búsqueda de conversaciones ---
     const initSearch = () => {
       const input = document.querySelector("#search-input");
       const clearBtn = document.querySelector("#clear-button");
@@ -170,11 +165,14 @@
           return;
         }
 
+        const usuarioId = Number(localStorage.getItem("usuarioId"));
         const filtradas = conversaciones.filter((conv) => {
           if (!conv.telefono) return false;
+          // Solo buscar entre las que ya tienen usuario asignado y corresponden al usuario actual
           return (
-            conv.telefono.toLowerCase().includes(query) ||
-            conv.conversacionId.toString().includes(query)
+            conv.usuarioId && conv.usuarioId == usuarioId &&
+            (conv.telefono.toLowerCase().includes(query) ||
+             conv.conversacionId.toString().includes(query))
           );
         });
 
@@ -188,6 +186,7 @@
       });
     };
 
+    // --- Render de Framework7 ---
     return $render;
   };
 </script>
