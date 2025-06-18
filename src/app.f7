@@ -152,6 +152,7 @@
           .open();
       }
     };
+    window.cargarDatos = cargarDatos; 
 
     let conversacionSeleccionadaId = null;
     const handleSeleccionarConversacion = (convId) => {

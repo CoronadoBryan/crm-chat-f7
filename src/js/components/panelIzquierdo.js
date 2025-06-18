@@ -21,7 +21,7 @@ export function panelIzquierdo({
 
   // Solo muestra las conversaciones asignadas a este usuario
   const conversacionesFiltradas = conversaciones.filter(conv =>
-    conv.usuarioId == usuarioId
+    conv.usuarioId == usuarioId && (conv.estadoId == 2 || conv.estadoId == 3)
   );
 
   console.log("Conversaciones filtradas para usuarioId", usuarioId, ":", conversacionesFiltradas.length);
@@ -51,11 +51,11 @@ export function panelIzquierdo({
         ? `${perfil.nombre} ${perfil.apellido}`
         : conv.telefono ?? "Sin número";
 
-       const isSelected = conv.conversacionId == conversacionSeleccionadaId;   
+      const isSelected = conv.conversacionId == conversacionSeleccionadaId;
       // console.log(`[panelIzquierdo] convId: ${conv.conversacionId}, telefono: ${conv.telefono}, perfilCompleto: ${perfilCompleto}, displayName: ${displayName}`);
-       const mostrarNotificacion = conv.estadoMensajeUltNoLeido == 3 && conv.nroMensajesUltNoLeidos > 0;
+      const mostrarNotificacion = conv.estadoMensajeUltNoLeido == 3 && conv.nroMensajesUltNoLeidos > 0;
       return `
-      <li class="abrir-chat${isSelected ? ' seleccionada' : ''}" data-conv-id="${conv.conversacionId}" style="cursor:pointer; background-color: ${isSelected && 'rgba(100, 112, 238, 0.64)' };">
+      <li class="abrir-chat${isSelected ? ' seleccionada' : ''}" data-conv-id="${conv.conversacionId}" style="cursor:pointer; background-color: ${isSelected && 'rgba(100, 112, 238, 0.64)'};">
         <div class="item-content">
           <div class="item-media">
             <div class="avatar color-blue" style="background: linear-gradient(45deg, #007aff, #5856d6);">
@@ -79,14 +79,16 @@ export function panelIzquierdo({
     })
     .join("");
 
-  
+
   lista.querySelectorAll(".abrir-chat").forEach((el) => {
     el.addEventListener("click", async (e) => {
       e.preventDefault();
       const convId = el.getAttribute("data-conv-id");
-      if (onSeleccionar) onSeleccionar(convId); 
+      if (onSeleccionar) onSeleccionar(convId);
       const conv = conversaciones.find(c => c.conversacionId == convId);
       const usuarioId = Number(localStorage.getItem("usuarioId"));
+
+    
 
       // Solo permitir si corresponde
       if (conv.usuarioId && conv.usuarioId != usuarioId) {
