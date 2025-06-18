@@ -29,3 +29,17 @@
   content: '';
   z-index: 6000;
 }
+
+.badge-notificacion {
+  display: inline-block;
+  min-width: 20px;
+  padding: 2px 8px;
+  margin-left: 8px;
+  background: #007aff;
+  color: #fff;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+}

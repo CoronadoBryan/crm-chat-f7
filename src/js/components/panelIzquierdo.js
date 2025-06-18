@@ -7,7 +7,9 @@ export function panelIzquierdo({
   clientes,
   perfiles,
   panelDerecho,
-  $f7
+  $f7,
+  onSeleccionar,
+  conversacionSeleccionadaId
 }) {
   if (!lista) return;
 
@@ -49,10 +51,11 @@ export function panelIzquierdo({
         ? `${perfil.nombre} ${perfil.apellido}`
         : conv.telefono ?? "Sin número";
 
+       const isSelected = conv.conversacionId == conversacionSeleccionadaId;   
       // console.log(`[panelIzquierdo] convId: ${conv.conversacionId}, telefono: ${conv.telefono}, perfilCompleto: ${perfilCompleto}, displayName: ${displayName}`);
-
+       const mostrarNotificacion = conv.estadoMensajeUltNoLeido == 3 && conv.nroMensajesUltNoLeidos > 0;
       return `
-      <li class="abrir-chat" data-conv-id="${conv.conversacionId}" style="cursor:pointer;">
+      <li class="abrir-chat${isSelected ? ' seleccionada' : ''}" data-conv-id="${conv.conversacionId}" style="cursor:pointer; background-color: ${isSelected && 'rgba(100, 112, 238, 0.64)' };">
         <div class="item-content">
           <div class="item-media">
             <div class="avatar color-blue" style="background: linear-gradient(45deg, #007aff, #5856d6);">
@@ -63,6 +66,7 @@ export function panelIzquierdo({
             <div class="item-title-row">
               <div class="item-title" style="font-weight: 500; color: var(--f7-text-color);">
                 ${displayName}
+                 ${mostrarNotificacion ? `<span class="badge-notificacion">${conv.nroMensajesUltNoLeidos}</span>` : ""}
               </div>
               <div class="item-after">
                 <i class="icon f7-icons color-gray">chevron_right</i>
@@ -75,10 +79,12 @@ export function panelIzquierdo({
     })
     .join("");
 
+  
   lista.querySelectorAll(".abrir-chat").forEach((el) => {
     el.addEventListener("click", async (e) => {
       e.preventDefault();
       const convId = el.getAttribute("data-conv-id");
+      if (onSeleccionar) onSeleccionar(convId); 
       const conv = conversaciones.find(c => c.conversacionId == convId);
       const usuarioId = Number(localStorage.getItem("usuarioId"));
 

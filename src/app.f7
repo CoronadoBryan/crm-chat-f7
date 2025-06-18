@@ -115,13 +115,13 @@
             .open();
         }
       });
-      
+
       socket.on("nuevo_mensaje", (data) => {
         console.log("Evento nuevo_mensaje recibido:", data);
         cargarDatos(); 
       });
 
-      // Carga inicial de datos
+    
       cargarDatos();
     });
 
@@ -153,6 +153,12 @@
       }
     };
 
+    let conversacionSeleccionadaId = null;
+    const handleSeleccionarConversacion = (convId) => {
+      conversacionSeleccionadaId = convId;
+      renderConversaciones(conversaciones);
+    };
+
     // --- Función: Renderizar la lista de conversaciones ---
     const renderConversaciones = (convs) => {
       const usuarioId = Number(localStorage.getItem("usuarioId"));
@@ -169,6 +175,8 @@
         panelIzquierdo,
         panelDerecho,
         $f7,
+        onSeleccionar: handleSeleccionarConversacion,
+        conversacionSeleccionadaId
       });
     };
 
