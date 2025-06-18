@@ -101,7 +101,6 @@
       // Conexión en tiempo real con el servidor
       socket = io("http://82.180.163.151:3000");
 
-      // Evento: Nueva conversación recibida
       socket.on("conversacion_asignada", (data) => {
         const usuarioId = Number(localStorage.getItem("usuarioId"));
         console.log("Evento conversacion_asignada recibido:", data);
@@ -115,19 +114,6 @@
             })
             .open();
         }
-      });
-
-      // Evento: Perfil de cliente actualizado
-      socket.on("perfil_actualizado", (perfilActualizado) => {
-        const idx = perfiles.findIndex(
-          (p) => p.id_cliente === perfilActualizado.id_cliente
-        );
-        if (idx !== -1) {
-          perfiles[idx] = perfilActualizado;
-        } else {
-          perfiles.push(perfilActualizado);
-        }
-        renderConversaciones(conversaciones);
       });
 
       // Carga inicial de datos
