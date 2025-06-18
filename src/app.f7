@@ -1,7 +1,10 @@
 <template>
   <div id="app">
     <!-- Panel izquierdo: Lista de conversaciones -->
-    <div class="panel panel-left panel-cover dark panel-init" data-visible-breakpoint="960">
+    <div
+      class="panel panel-left panel-cover dark panel-init"
+      data-visible-breakpoint="960"
+    >
       <div class="view view-init" data-name="left">
         <div class="page" data-name="home">
           <div class="navbar navbar-large">
@@ -11,11 +14,27 @@
               <div class="title-large">
                 <div class="title-large-text">Conversaciones</div>
               </div>
-              <div class="subnavbar" style="display: flex; justify-content: flex-end; padding: 0 10px;">
-                <form class="searchbar searchbar-init" style="max-width: 300px; width: 100%" onsubmit="return false;">
+              <div
+                class="subnavbar"
+                style="
+                  display: flex;
+                  justify-content: flex-end;
+                  padding: 0 10px;
+                "
+              >
+                <form
+                  class="searchbar searchbar-init"
+                  style="max-width: 300px; width: 100%"
+                  onsubmit="return false;"
+                >
                   <div class="searchbar-inner">
                     <div class="searchbar-input-wrap">
-                      <input id="search-input" type="search" placeholder="Buscar por teléfono" autocomplete="off" />
+                      <input
+                        id="search-input"
+                        type="search"
+                        placeholder="Buscar por teléfono"
+                        autocomplete="off"
+                      />
                       <i class="searchbar-icon"></i>
                       <span class="input-clear-button" id="clear-button"></span>
                     </div>
@@ -62,7 +81,11 @@
 
 <script>
   // --- Importaciones ---
-  import { getClientes, getPerfiles, getConversaciones } from "./js/services/index.js";
+  import {
+    getClientes,
+    getPerfiles,
+    getConversaciones,
+  } from "./js/services/index.js";
   import io from "socket.io-client";
   import { panelDerecho, panelIzquierdo } from "./js/components/index.js";
 
@@ -84,17 +107,21 @@
         console.log("Evento conversacion_asignada recibido:", data);
         if (data.usuarioId && data.usuarioId == usuarioId) {
           cargarDatos();
-          $f7.toast.create({
-            text: "Nueva conversación recibida",
-            closeTimeout: 2000,
-            position: "top",
-          }).open();
+          $f7.toast
+            .create({
+              text: "Nueva conversación recibida",
+              closeTimeout: 2000,
+              position: "top",
+            })
+            .open();
         }
       });
 
       // Evento: Perfil de cliente actualizado
       socket.on("perfil_actualizado", (perfilActualizado) => {
-        const idx = perfiles.findIndex(p => p.id_cliente === perfilActualizado.id_cliente);
+        const idx = perfiles.findIndex(
+          (p) => p.id_cliente === perfilActualizado.id_cliente
+        );
         if (idx !== -1) {
           perfiles[idx] = perfilActualizado;
         } else {
@@ -126,17 +153,21 @@
         renderConversaciones(conversaciones);
         initSearch();
       } catch (err) {
-        $f7.toast.create({
-          text: "Error al cargar conversaciones",
-          closeTimeout: 3000,
-        }).open();
+        $f7.toast
+          .create({
+            text: "Error al cargar conversaciones",
+            closeTimeout: 3000,
+          })
+          .open();
       }
     };
 
     // --- Función: Renderizar la lista de conversaciones ---
     const renderConversaciones = (convs) => {
       const usuarioId = Number(localStorage.getItem("usuarioId"));
-      const convsFiltradas = convs.filter(conv => conv.usuarioId && conv.usuarioId == usuarioId);
+      const convsFiltradas = convs.filter(
+        (conv) => conv.usuarioId && conv.usuarioId == usuarioId
+      );
 
       const lista = document.querySelector("#lista-conversaciones");
       panelIzquierdo({
@@ -146,7 +177,7 @@
         perfiles,
         panelIzquierdo,
         panelDerecho,
-        $f7
+        $f7,
       });
     };
 
@@ -170,9 +201,10 @@
           if (!conv.telefono) return false;
           // Solo buscar entre las que ya tienen usuario asignado y corresponden al usuario actual
           return (
-            conv.usuarioId && conv.usuarioId == usuarioId &&
+            conv.usuarioId &&
+            conv.usuarioId == usuarioId &&
             (conv.telefono.toLowerCase().includes(query) ||
-             conv.conversacionId.toString().includes(query))
+              conv.conversacionId.toString().includes(query))
           );
         });
 

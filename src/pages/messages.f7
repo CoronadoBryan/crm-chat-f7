@@ -5,13 +5,34 @@
       <div class="navbar-bg"></div>
       <div class="navbar-inner sliding">
         <div class="left">
-          <a href="#" class="link" @click="${() => $f7.views.main.router.navigate('/')}">
+          <a
+            href="#"
+            class="link"
+            @click="${() => $f7.views.main.router.navigate('/')}"
+          >
             <i class="icon icon-back"></i>
             <span class="if-not-md">Volver</span>
           </a>
         </div>
         <div class="title">${telefono}</div>
+
         <div class="right">
+          <!-- Botón para finalizar conversación -->
+          <button
+            class="button button-fill color-red"
+            @click="${handleFinalizarConversacion}"
+          >
+            Finalizar Conversación
+          </button>
+
+           <a class="link icon-only" @click="${handleHistorialFinalizada}">
+            <i class="icon f7-icons">history</i>
+          <i class="icon f7-icons">clock_fill</i>
+        </a>
+
+         
+
+        
           <a href="#" class="link icon-only panel-open" data-panel="right">
             <i class="icon f7-icons if-not-md">menu</i>
             <i class="icon material-icons if-md">menu</i>
@@ -24,7 +45,11 @@
     <div class="toolbar messagebar">
       <div class="toolbar-inner">
         <div class="messagebar-area">
-          <textarea id="message-input" class="resizable" placeholder="Escribe un mensaje..."></textarea>
+          <textarea
+            id="message-input"
+            class="resizable"
+            placeholder="Escribe un mensaje..."
+          ></textarea>
         </div>
         <a class="link icon-only" @click="${handleSendClick}">
           <i class="icon f7-icons">arrow_up_circle_fill</i>
@@ -39,39 +64,109 @@
   </div>
 </template>
 
-
 <script>
   import io from "socket.io-client";
-  import { getMensajesPorConversacion, enviarMensaje } from "../js/services/index.js";
+  import {
+    getMensajesPorConversacion,
+    enviarMensaje,
+    finalizarConversacion,
+  } from "../js/services/index.js";
 
   export default (props, { $f7, $el, $on }) => {
     // --- Variables de estado ---
-    let messagebar, messages, socket = null;
+    let messagebar,
+      messages,
+      socket = null;
     let mensajesData = [];
     let enviandoMensaje = false;
-    let conversacionId, telefono = "Chat";
+    let conversacionId,
+      telefono = "Chat";
 
     // --- Utilidades de UI ---
     const getEstadoIcono = (id_estado) => {
       switch (id_estado) {
-        case 1: return ` <span style="font-size:12px;color:gray;">🕓</span>`;
-        case 2: return ` <span style="font-size:12px;color:gray;">✔</span>`;
-        case 3: return ` <span style="font-size:12px;color:rgba(139,69,19,0.6);">✔✔</span>`;
-        case 4: return ` <span style="font-size:12px;color:#2196f3;">✔✔</span>`;
-        default: return "";
+        case 1:
+          return ` <span style="font-size:12px;color:gray;">🕓</span>`;
+        case 2:
+          return ` <span style="font-size:12px;color:gray;">✔</span>`;
+        case 3:
+          return ` <span style="font-size:12px;color:rgba(139,69,19,0.6);">✔✔</span>`;
+        case 4:
+          return ` <span style="font-size:12px;color:#2196f3;">✔✔</span>`;
+        default:
+          return "";
       }
     };
 
     const actualizarEstadoEnUI = (key, id_estado) => {
-      const messageEls = $el.value[0].querySelectorAll('.message');
+      const messageEls = $el.value[0].querySelectorAll(".message");
       const messageEl = messageEls[key];
       if (messageEl) {
-        const textEl = messageEl.querySelector('.message-text');
+        const textEl = messageEl.querySelector(".message-text");
         if (textEl) {
           const textoOriginal = textEl.innerText.replace(/✔.*/, "").trim();
           textEl.innerHTML = textoOriginal + getEstadoIcono(id_estado);
         }
       }
+    };
+
+    // --- Finalizar conversación ---
+    const handleFinalizarConversacion = () => {
+      $f7.dialog.confirm(
+        "¿Estás seguro de que deseas finalizar esta conversación?",
+        "Finalizar Conversación",
+        async () => {
+          try {
+            // Mostrar loading
+            $f7.preloader.show();
+
+            // Obtener usuarioId
+            const usuarioId = Number(localStorage.getItem("usuarioId"));
+
+            // Llamar al endpoint para finalizar
+            const response = await finalizarConversacion(
+              conversacionId,
+              usuarioId
+            );
+
+            if (response.success) {
+              // Mostrar mensaje de éxito
+              $f7.toast
+                .create({
+                  text: "Conversación finalizada exitosamente",
+                  closeTimeout: 2000,
+                  position: "top",
+                })
+                .open();
+
+              // Navegar de vuelta a la página principal
+              setTimeout(() => {
+                $f7.views.main.router.navigate("/", {
+                  reloadAll: true,
+                });
+              }, 1000);
+            } else {
+              throw new Error(
+                response.message || "Error al finalizar conversación"
+              );
+            }
+          } catch (error) {
+            console.error("❌ Error al finalizar conversación:", error);
+            $f7.dialog.alert(
+              "No se pudo finalizar la conversación. Intenta nuevamente."
+            );
+          } finally {
+            $f7.preloader.hide();
+          }
+        }
+      );
+    };
+
+    const handleHistorialFinalizada = () => {
+      $f7.views.main.router.navigate("/historial-finalizado", {
+        reloadAll: true,
+        reloadCurrent: true,
+      });
     };
 
     // --- Renderizado de mensajes ---
@@ -94,7 +189,7 @@
     // --- Carga de mensajes históricos ---
     const loadMessages = async () => {
       try {
-        mensajesData = await getMensajesPorConversacion(conversacionId) || [];
+        mensajesData = (await getMensajesPorConversacion(conversacionId)) || [];
         console.log(`📋 Cargados ${mensajesData.length} mensajes`);
         renderMessages();
       } catch (error) {
@@ -109,9 +204,9 @@
       enviandoMensaje = true;
       console.log("📤 Enviando:", messageText);
 
-      messages.addMessage({ text: messageText, type: "sent", name: "Yo" }); //
+      messages.addMessage({ text: messageText, type: "sent", name: "Yo" });
       mensajesData.push({
-        id:null, // ID será asignado por el servidor
+        id: null,
         mensaje: messageText,
         contesta: "usuario",
         created_at: new Date().toISOString(),
@@ -130,7 +225,9 @@
         };
         const response = await enviarMensaje(payload);
         console.log("✅ Servidor respondió:", response);
-        setTimeout(() => { enviandoMensaje = false; }, 2000);
+        setTimeout(() => {
+          enviandoMensaje = false;
+        }, 2000);
       } catch (error) {
         console.error("❌ Error al enviar:", error);
         $f7.dialog.alert("No se pudo enviar el mensaje");
@@ -161,6 +258,7 @@
     // --- Socket: conexión y eventos ---
     const conectarSocket = () => {
       socket = io("http://82.180.163.151:3000/");
+
       socket.on("nuevo_mensaje", (data) => {
         console.log("📨 Mensaje recibido:", data);
 
@@ -172,7 +270,6 @@
             mensaje: data.mensaje || data.texto,
             contesta: data.contesta,
             created_at: data.created_at || new Date().toISOString(),
-
           };
           mensajesData.push(nuevoMensaje);
 
@@ -183,11 +280,13 @@
           });
 
           if (data.contesta === "cliente") {
-            $f7.toast.create({
-              text: "Nuevo mensaje del cliente",
-              closeTimeout: 2000,
-              position: "top",
-            }).open();
+            $f7.toast
+              .create({
+                text: "Nuevo mensaje del cliente",
+                closeTimeout: 2000,
+                position: "top",
+              })
+              .open();
           }
         }
       });
@@ -197,20 +296,17 @@
         console.log("🔍 Mensajes actuales:", mensajesData);
         console.log("🔍 Mensaje actualizado:", data.id);
 
-
-
-        let idx = mensajesData.findIndex(msg => msg.id === data.id);
-
+        let idx = mensajesData.findIndex((msg) => msg.id === data.id);
 
         console.log("🔍 Índice del mensaje actualizado:", idx);
         if (idx == 1) {
           mensajesData[idx].id_estado = data.id_estado;
-        }else if (idx < 0) {
+        } else if (idx < 0) {
           console.warn("⚠️ No se encontró el mensaje para actualizar");
 
-          idx = mensajesData.findIndex(msg => msg.id === null);
+          idx = mensajesData.findIndex((msg) => msg.id === null);
 
-          mensajesData.splice(idx,1);
+          mensajesData.splice(idx, 1);
 
           mensajesData.push({
             id: data.id,
@@ -219,11 +315,8 @@
             created_at: data.created_at || new Date().toISOString(),
             id_estado: data.id_estado,
           });
-
         }
         actualizarEstadoEnUI(idx, data.id_estado);
-
-        
       });
     };
 
