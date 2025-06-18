@@ -115,6 +115,11 @@
             .open();
         }
       });
+      
+      socket.on("nuevo_mensaje", (data) => {
+        console.log("Evento nuevo_mensaje recibido:", data);
+        cargarDatos(); 
+      });
 
       // Carga inicial de datos
       cargarDatos();
