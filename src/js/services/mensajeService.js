@@ -2,6 +2,7 @@ import api from "../api.js";
 
 export async function getMensajesPorConversacion(conversacionId) {
   const res = await api.get(`/mensaje/listar-por-conversacion/${conversacionId}`);
+  console.log("Respuesta de mensajes:", res.data);
   return res.data.data;
 }
 

@@ -15,9 +15,7 @@
           </a>
         </div>
         <div class="title">${telefono}</div>
-
         <div class="right">
-          <!-- Botón para finalizar conversación - Solo si NO está finalizada -->
           <button
             class="button button-fill color-red"
             @click="${handleFinalizarConversacion}"
@@ -26,12 +24,10 @@
           >
             Finalizar Conversación
           </button>
-
           <a class="link icon-only" @click="${handleHistorialFinalizada}">
             <i class="icon f7-icons">history</i>
             <i class="icon f7-icons">clock_fill</i>
           </a>
-
           <a href="#" class="link icon-only panel-open" data-panel="right">
             <i class="icon f7-icons if-not-md">menu</i>
             <i class="icon material-icons if-md">menu</i>
@@ -40,7 +36,7 @@
       </div>
     </div>
 
-    <!-- Messagebar - Solo si NO está finalizada -->
+    <!-- Messagebar -->
     <div
       class="toolbar messagebar"
       id="messagebar-container"
@@ -63,18 +59,9 @@
     <!-- Mensajes -->
     <div class="page-content messages-content" id="messages-content">
       <!-- Mensaje de conversación finalizada -->
-      <div
-        id="mensaje-finalizada"
-        style="
-          display: none;
-          background: #f5f5f5;
-          padding: 15px;
-          text-align: center;
-          border-bottom: 1px solid #ddd;
-        "
-      >
-        <p style="margin: 0; color: #666; font-size: 14px">
-          <i class="icon f7-icons" style="color: #4caf50"
+      <div id="mensaje-finalizada" class="mensaje-finalizada-container">
+        <p class="mensaje-finalizada-text">
+          <i class="icon f7-icons mensaje-finalizada-icon"
             >checkmark_circle_fill</i
           >
           Esta conversación ha sido finalizada
@@ -85,8 +72,30 @@
   </div>
 </template>
 
+<style>
+  .mensaje-finalizada-container {
+    display: none;
+    background: #f5f5f5;
+    padding: 15px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .mensaje-finalizada-text {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+  }
+
+  .mensaje-finalizada-icon {
+    color: #4caf50;
+  }
+</style>
+
 <script>
   import io from "socket.io-client";
+  import moment from "moment";
+  import "moment/locale/es";
   import {
     getMensajesPorConversacion,
     enviarMensaje,
@@ -96,7 +105,7 @@
   } from "../js/services/index.js";
 
   export default (props, { $f7, $el, $on }) => {
-    // --- Variables de estado ---
+    // --- Estado de la aplicación ---
     let messagebar,
       messages,
       socket = null;
@@ -105,57 +114,83 @@
     let conversacionId,
       telefono = "Chat";
     let conversacionData = null;
-    let conversacionFinalizada = false; // Nueva variable para controlar el estado
+    let conversacionFinalizada = false;
 
-    // --- Función para verificar y actualizar UI según estado ---
-    const actualizarUISegunEstado = () => {
-      const btnFinalizar = document.getElementById("btn-finalizar");
-      const messagebarContainer = document.getElementById(
-        "messagebar-container"
-      );
-      const mensajeFinalizada = document.getElementById("mensaje-finalizada");
-      const messagesContent = document.getElementById("messages-content");
+    // Configurar Moment.js
+    moment.locale("es");
 
-      if (conversacionFinalizada) {
-        // Conversación finalizada: ocultar controles
-        if (btnFinalizar) btnFinalizar.style.display = "none";
-        if (messagebarContainer) messagebarContainer.style.display = "none";
-        if (mensajeFinalizada) mensajeFinalizada.style.display = "block";
+    // --- Utilidades ---
+    const formatearFecha = (fecha) => {
+      let dateString = fecha?.date || fecha;
+      const momentDate = moment(dateString);
 
-        // Ajustar el contenido de mensajes para que ocupe todo el espacio
-        if (messagesContent) {
-          messagesContent.style.paddingBottom = "0px";
-        }
-
-        console.log("🔒 Conversación finalizada - Controles deshabilitados");
-      } else {
-        // Conversación activa: mostrar controles
-        if (btnFinalizar) btnFinalizar.style.display = "block";
-        if (messagebarContainer) messagebarContainer.style.display = "block";
-        if (mensajeFinalizada) mensajeFinalizada.style.display = "none";
-
-        // Restaurar padding para el messagebar
-        if (messagesContent) {
-          messagesContent.style.paddingBottom = "44px"; // Altura del messagebar
-        }
-
-        console.log("✅ Conversación activa - Controles habilitados");
+      if (!momentDate.isValid()) {
+        console.error("Fecha inválida:", fecha);
+        return { hora: "--:--", completa: "Fecha inválida" };
       }
+
+      const ahora = moment();
+      let hora;
+
+      if (momentDate.isSame(ahora, "day")) {
+        hora = momentDate.format("HH:mm");
+      } else if (momentDate.isSame(moment().subtract(1, "day"), "day")) {
+        hora = `Ayer ${momentDate.format("HH:mm")}`;
+      } else if (momentDate.isSame(ahora, "week")) {
+        const dia =
+          momentDate.format("dddd").charAt(0).toUpperCase() +
+          momentDate.format("dddd").slice(1);
+        hora = `${dia} ${momentDate.format("HH:mm")}`;
+      } else if (momentDate.isSame(ahora, "year")) {
+        hora = `${momentDate.format("DD/MM")} ${momentDate.format("HH:mm")}`;
+      } else {
+        hora = `${momentDate.format("DD/MM/YY")} ${momentDate.format("HH:mm")}`;
+      }
+
+      return {
+        hora: hora,
+        completa: momentDate.format("DD/MM/YYYY HH:mm"),
+        timestamp: momentDate.valueOf(),
+      };
     };
 
-    // --- Utilidades de UI ---
+    const crearFooterTiempo = (fecha) => {
+      const tiempoFormateado = formatearFecha(fecha);
+      return `<span style="font-size: 11px; color: #999; opacity: 0.7; font-weight: 400;">${tiempoFormateado.hora}</span>`;
+    };
+
     const getEstadoIcono = (id_estado) => {
-      switch (id_estado) {
-        case 1:
-          return ` <span style="font-size:12px;color:gray;">🕓</span>`;
-        case 2:
-          return ` <span style="font-size:12px;color:gray;">✔</span>`;
-        case 3:
-          return ` <span style="font-size:12px;color:rgba(139,69,19,0.6);">✔✔</span>`;
-        case 4:
-          return ` <span style="font-size:12px;color:#2196f3;">✔✔</span>`;
-        default:
-          return "";
+      const iconos = {
+        1: ` <span style="font-size:12px;color:gray;">🕓</span>`,
+        2: ` <span style="font-size:12px;color:gray;">✔</span>`,
+        3: ` <span style="font-size:12px;color:rgba(139,69,19,0.6);">✔✔</span>`,
+        4: ` <span style="font-size:12px;color:#2196f3;">✔✔</span>`,
+      };
+      return iconos[id_estado] || "";
+    };
+
+    const getElementosPorId = () => ({
+      btnFinalizar: document.getElementById("btn-finalizar"),
+      messagebarContainer: document.getElementById("messagebar-container"),
+      mensajeFinalizada: document.getElementById("mensaje-finalizada"),
+      messagesContent: document.getElementById("messages-content"),
+    });
+
+    const actualizarUISegunEstado = () => {
+      const elementos = getElementosPorId();
+
+      if (conversacionFinalizada) {
+        elementos.btnFinalizar?.style.setProperty("display", "none");
+        elementos.messagebarContainer?.style.setProperty("display", "none");
+        elementos.mensajeFinalizada?.style.setProperty("display", "block");
+        elementos.messagesContent?.style.setProperty("paddingBottom", "0px");
+        console.log("🔒 Conversación finalizada - Controles deshabilitados");
+      } else {
+        elementos.btnFinalizar?.style.setProperty("display", "block");
+        elementos.messagebarContainer?.style.setProperty("display", "block");
+        elementos.mensajeFinalizada?.style.setProperty("display", "none");
+        elementos.messagesContent?.style.setProperty("paddingBottom", "44px");
+        console.log("✅ Conversación activa - Controles habilitados");
       }
     };
 
@@ -171,8 +206,9 @@
       }
     };
 
+    // --- Funciones principales ---
     const handleFinalizarConversacion = () => {
-            $f7.dialog.confirm(
+      $f7.dialog.confirm(
         "¿Estás seguro de que deseas finalizar esta conversación?",
         "Finalizar Conversación",
         async () => {
@@ -194,9 +230,7 @@
                 .open();
 
               setTimeout(() => {
-                $f7.views.main.router.navigate("/", {
-                  reloadAll: true,
-                });
+                $f7.views.main.router.navigate("/", { reloadAll: true });
               }, 1000);
             } else {
               throw new Error(
@@ -220,11 +254,11 @@
         conversacionData = conversaciones.find(
           (conv) => conv.conversacionId == conversacionId
         );
+
         if (conversacionData) {
           telefono = conversacionData.telefono || "Sin teléfono";
-
-          // Verificar si la conversación está finalizada
           conversacionFinalizada = conversacionData.estadoId === 4;
+
           console.log(
             `📊 Estado de conversación ${conversacionId}: ${conversacionData.estadoId} (Finalizada: ${conversacionFinalizada})`
           );
@@ -235,15 +269,10 @@
               telefono + (conversacionFinalizada ? " (Finalizada)" : "");
           }
 
-          // Actualizar UI según el estado
           actualizarUISegunEstado();
         } else {
           console.warn(
             `⚠️ No se encontraron datos para conversación ${conversacionId}`
-          );
-          console.log(
-            "🔍 IDs disponibles:",
-            conversaciones.map((c) => c.conversacionId)
           );
         }
       } catch (error) {
@@ -255,7 +284,6 @@
       console.log(
         `📜 Navegando al historial de conversación: ${conversacionId}`
       );
-
       $f7.views.main.router.navigate(
         `/historial-finalizado/${conversacionId}/`
       );
@@ -264,37 +292,39 @@
     const renderMessages = () => {
       if (!messages || !mensajesData.length) return;
       messages.removeMessages();
+
       const mensajesOrdenados = [...mensajesData].sort(
         (a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0)
       );
-      const messagesToAdd = mensajesOrdenados.map((msg) => ({
-        text:
-          msg.contesta === "cliente"
-            ? msg.mensaje
-            : msg.mensaje + getEstadoIcono(msg.id_estado),
-        type: msg.contesta === "cliente" ? "received" : "sent",
-        name: msg.contesta === "cliente" ? "Cliente" : "Yo",
-        isHtml: msg.contesta !== "cliente",
-      }));
+
+      const messagesToAdd = mensajesOrdenados.map((msg) => {
+        const esEnviado = msg.contesta !== "cliente";
+        return {
+          text: esEnviado
+            ? msg.mensaje + getEstadoIcono(msg.id_estado)
+            : msg.mensaje,
+          type: esEnviado ? "sent" : "received",
+          name: msg.contesta === "cliente" ? "Cliente" : "Yo",
+          isHtml: esEnviado,
+          footer: crearFooterTiempo(msg.created_at),
+        };
+      });
+
       messages.addMessages(messagesToAdd);
-      console.log(`🎨 Renderizados ${messagesToAdd.length} mensajes`);
+      console.log(
+        `🎨 Renderizados ${messagesToAdd.length} mensajes con timestamps individuales`
+      );
     };
 
-    // --- Carga de mensajes históricos ---
     const loadMessages = async () => {
       try {
         mensajesData = (await getMensajesPorConversacion(conversacionId)) || [];
         console.log(`📋 Cargados ${mensajesData.length} mensajes`);
         renderMessages();
 
-        // Solo marcar como leídos si la conversación NO está finalizada
         if (!conversacionFinalizada) {
           const mensajesNoLeidos = mensajesData.filter(
             (msg) => msg.id_estado === 3
-          );
-          console.log(
-            `Mensajes no leídos a marcar como leídos${conversacionId}:`,
-            mensajesNoLeidos
           );
           if (mensajesNoLeidos.length > 0) {
             await Promise.all(
@@ -312,17 +342,29 @@
     };
 
     const sendMessage = async (messageText) => {
-      if (!messageText || !messageText.trim()) return;
+      if (!messageText?.trim()) return;
+
       enviandoMensaje = true;
       console.log("📤 Enviando:", messageText);
 
-      messages.addMessage({ text: messageText, type: "sent", name: "Yo" });
+      const ahora = moment();
+      const tiempoActual = ahora.toISOString();
+
+      // Agregar mensaje inmediatamente a la UI
+      messages.addMessage({
+        text: messageText,
+        type: "sent",
+        name: "Yo",
+        footer: crearFooterTiempo(tiempoActual),
+      });
+
+      // Agregar a los datos locales
       mensajesData.push({
         id: null,
         mensaje: messageText,
         contesta: "usuario",
-        created_at: new Date().toISOString(),
         id_estado: 1,
+        created_at: tiempoActual,
       });
 
       try {
@@ -333,9 +375,8 @@
           id_mensaje_whatsapp: null,
           id_mensaje_responde: null,
           id_estado: 1,
-          created_at: new Date().toISOString(),
         };
-        const response = await enviarMensaje(payload);
+        await enviarMensaje(payload);
         setTimeout(() => {
           enviandoMensaje = false;
         }, 2000);
@@ -347,29 +388,29 @@
       }
     };
 
-    // --- Eventos de UI ---
     const handleSendClick = () => {
-      if (conversacionFinalizada) return; // Bloquear si está finalizada
+      if (conversacionFinalizada) return;
 
       const textarea = document.getElementById("message-input");
       if (!textarea) return;
+
       const messageText = textarea.value.trim();
       if (!messageText) return;
+
       sendMessage(messageText);
       textarea.value = "";
       textarea.focus();
     };
 
     const handleKeyPress = (e) => {
-      if (conversacionFinalizada) return; // Bloquear si está finalizada
-
+      if (conversacionFinalizada) return;
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSendClick();
       }
     };
 
-    // --- Socket: conexión y eventos ---
+    // --- Socket ---
     const conectarSocket = () => {
       socket = io("http://82.180.163.151:3000/");
 
@@ -383,17 +424,20 @@
           const nuevoMensaje = {
             mensaje: data.mensaje || data.texto,
             contesta: data.contesta,
-            created_at: data.created_at || new Date().toISOString(),
+            created_at: data.created_at || moment().toISOString(),
             id: data.id,
             id_estado: data.id_estado,
           };
           mensajesData.push(nuevoMensaje);
+
+          const footerTiempo = crearFooterTiempo(nuevoMensaje.created_at);
 
           if (data.contesta === "cliente") {
             messages.addMessage({
               text: nuevoMensaje.mensaje,
               type: "received",
               name: "Cliente",
+              footer: footerTiempo,
             });
           } else if (data.contesta === "bot") {
             messages.addMessage({
@@ -401,10 +445,10 @@
               type: "sent",
               name: "Bot",
               isHtml: true,
+              footer: footerTiempo,
             });
           }
 
-          // Solo marcar como leído si la conversación NO está finalizada
           if (
             data.contesta === "cliente" &&
             data.id &&
@@ -415,7 +459,6 @@
                 `🔵 Marcando mensaje ${data.id} como leído automáticamente`
               );
               await mensajeLeido(data.id);
-
               setTimeout(() => {
                 if (window.cargarDatos) window.cargarDatos();
               }, 200);
@@ -438,42 +481,39 @@
 
       socket.on("mensaje_actualizado", (data) => {
         console.log("📦 Estado actualizado:", data);
-        console.log("🔍 Mensajes actuales:", mensajesData);
-        console.log("🔍 Mensaje actualizado:", data.id);
-
         let idx = mensajesData.findIndex((msg) => msg.id === data.id);
 
-        console.log("🔍 Índice del mensaje actualizado:", idx);
-        if (idx == 1) {
+        if (idx >= 0) {
           mensajesData[idx].id_estado = data.id_estado;
-        } else if (idx < 0) {
-          console.warn("⚠️ No se encontró el mensaje para actualizar");
-
+        } else {
           idx = mensajesData.findIndex((msg) => msg.id === null);
-
-          mensajesData.splice(idx, 1);
-
-          mensajesData.push({
-            id: data.id,
-            mensaje: data.mensaje,
-            contesta: data.contesta,
-            created_at: data.created_at || new Date().toISOString(),
-            id_estado: data.id_estado,
-          });
+          if (idx >= 0) {
+            mensajesData.splice(idx, 1);
+            mensajesData.push({
+              id: data.id,
+              mensaje: data.mensaje,
+              contesta: data.contesta,
+              created_at: data.created_at || moment().toISOString(),
+              id_estado: data.id_estado,
+            });
+          }
         }
-        actualizarEstadoEnUI(idx, data.id_estado);
+
+        if (idx >= 0) actualizarEstadoEnUI(idx, data.id_estado);
       });
     };
 
-    // --- Ciclo de vida de la página ---
+    // --- Ciclo de vida ---
     $on("pageInit", async (page) => {
       conversacionId =
         page.route?.params?.conversacionId ||
         $f7.views.main.router.currentRoute?.params?.conversacionId;
+
       if (!conversacionId) {
         $f7.dialog.alert("No se pudo obtener el ID de conversación");
         return;
       }
+
       console.log(`🚀 Chat para conversación: ${conversacionId}`);
 
       messagebar = $f7.messagebar.create({ el: $el.value.find(".messagebar") });
