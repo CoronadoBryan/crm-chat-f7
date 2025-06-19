@@ -13,18 +13,11 @@
           </a>
         </div>
         <div class="title" id="page-title">Historial de Cliente</div>
-        <div class="right">
-          <a href="#" class="link" @click="${mostrarInfoCliente}">
-            <span>Info</span>
-          </a>
-        </div>
       </div>
     </div>
 
     <div class="page-content">
       <div class="block-title">Conversaciones Finalizadas</div>
-
-      <!-- Contenedor para el historial -->
       <div id="historial-container">
         <div class="block block-strong text-align-center">
           <p>Cargando historial...</p>
@@ -37,59 +30,46 @@
 <script>
   import { getConversaciones } from "../js/services/index.js";
 
-  export default (props, { $f7, $on, $el }) => {
+  export default (props, { $f7, $on }) => {
     let conversacionesFinalizadas = [];
-    let clienteInfo = null;
     let telefonoCliente = "";
 
-    // Funciones de formato
-    const formatearDia = (fechaObj) => {
-      const fecha = fechaObj?.date || fechaObj;
-      return new Date(fecha).getDate().toString().padStart(2, "0");
+    // Utilidades de formato - Simplificadas
+    const formatearFecha = (fecha) => {
+      const date = new Date(fecha?.date || fecha);
+      return {
+        dia: date.getDate().toString().padStart(2, "0"),
+        mes: [
+          "ENE",
+          "FEB",
+          "MAR",
+          "ABR",
+          "MAY",
+          "JUN",
+          "JUL",
+          "AGO",
+          "SEP",
+          "OCT",
+          "NOV",
+          "DIC",
+        ][date.getMonth()],
+        hora: date.toLocaleTimeString("es-ES", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        completa: date.toLocaleDateString("es-ES", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
     };
 
-    const formatearMes = (fechaObj) => {
-      const meses = [
-        "ENE",
-        "FEB",
-        "MAR",
-        "ABR",
-        "MAY",
-        "JUN",
-        "JUL",
-        "AGO",
-        "SEP",
-        "OCT",
-        "NOV",
-        "DIC",
-      ];
-      const fecha = fechaObj?.date || fechaObj;
-      return meses[new Date(fecha).getMonth()];
-    };
-
-    const formatearHora = (fechaObj) => {
-      const fecha = fechaObj?.date || fechaObj;
-      return new Date(fecha).toLocaleTimeString("es-ES", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    };
-
-    const formatearFechaCompleta = (fechaObj) => {
-      const fecha = fechaObj?.date || fechaObj;
-      return new Date(fecha).toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    };
-
-    const calcularDuracion = (inicioObj, finObj) => {
-      const inicio = inicioObj?.date || inicioObj;
-      const fin = finObj?.date || finObj;
-      const diffMs = new Date(fin) - new Date(inicio);
+    const calcularDuracion = (inicio, fin) => {
+      const diffMs =
+        new Date(fin?.date || fin) - new Date(inicio?.date || inicio);
       const diffMins = Math.floor(diffMs / 60000);
 
       if (diffMins < 1) return "< 1 min";
@@ -97,226 +77,143 @@
       const diffHours = Math.floor(diffMins / 60);
       const remainingMins = diffMins % 60;
 
-      if (diffHours > 0) {
-        return `${diffHours}h ${remainingMins}min`;
-      }
-      return `${diffMins} min`;
+      return diffHours > 0
+        ? `${diffHours}h ${remainingMins}min`
+        : `${diffMins} min`;
     };
 
-    // Función para obtener elemento del DOM de forma compatible
-    const getElement = (selector) => {
-      // Opción 1: Usar document.querySelector directamente
-      if (document.querySelector) {
-        return document.querySelector(selector);
+    // Renderizar historial - Simplificado
+    const renderizarHistorial = () => {
+      const container = document.getElementById("historial-container");
+      const titulo = document.getElementById("page-title");
+
+      if (titulo)
+        titulo.textContent = `Historial de conversacion de  ${telefonoCliente}`;
+
+      if (!container) return;
+
+      if (conversacionesFinalizadas.length === 0) {
+        container.innerHTML = `
+          <div class="block block-strong text-align-center">
+            <p>Este cliente no tiene conversaciones finalizadas</p>
+          </div>`;
+        return;
       }
 
-      // Opción 2: Si $el está disponible y tiene métodos jQuery-like
-      if ($el && typeof $el === "function") {
-        return $el(selector)[0];
-      }
+      const historialHTML = conversacionesFinalizadas
+        .map((conv) => {
+          const fecha = formatearFecha(conv.fechaActualizacion);
+          const fechaCreacion = formatearFecha(conv.fechaCreacion);
 
-      // Opción 3: Si $el.value está disponible
-      if ($el && $el.value) {
-        return $el.value.querySelector
-          ? $el.value.querySelector(selector)
-          : $el.value.find
-          ? $el.value.find(selector)[0]
-          : null;
-      }
-
-      return null;
-    };
-
-    // Función para actualizar la UI
-    const actualizarUI = () => {
-      try {
-        // Actualizar título
-        const titleEl = getElement("#page-title");
-        if (titleEl) {
-          titleEl.textContent = `Historial: ${telefonoCliente}`;
-        }
-
-        // Actualizar historial
-        const historialContainer = getElement("#historial-container");
-        if (historialContainer) {
-          if (conversacionesFinalizadas.length > 0) {
-            historialContainer.innerHTML = `
-              <div class="timeline">
-                ${conversacionesFinalizadas
-                  .map(
-                    (conversacion) => `
-                  <div class="timeline-item">
-                    <div class="timeline-item-date">
-                      ${formatearDia(conversacion.fechaActualizacion)} 
-                      <small>${formatearMes(
-                        conversacion.fechaActualizacion
-                      )}</small>
-                    </div>
-                    <div class="timeline-item-divider"></div>
-                    <div class="timeline-item-content">
-                      <div class="timeline-item-inner">
-                        <div class="timeline-item-title">
-                          <strong>Conversación #${
-                            conversacion.conversacionId
-                          }</strong>
-                          <span style="float: right; font-size: 12px; color: #666;">
-                            ${formatearHora(conversacion.fechaActualizacion)}
-                          </span>
-                        </div>
-                        <div class="timeline-item-subtitle" style="color: #4CAF50;">
-                          ✓ Finalizada - Estado ${conversacion.estadoId}
-                        </div>
-                        <div class="timeline-item-text">
-                          Iniciada: ${formatearFechaCompleta(
-                            conversacion.fechaCreacion
-                          )}<br>
-                          Finalizada: ${formatearFechaCompleta(
-                            conversacion.fechaActualizacion
-                          )}<br>
-                          Mensajes: ${conversacion.nroMensajes}
-                        </div>
-                        <div style="margin-top: 8px;">
-                          <button class="button button-small button-outline" 
-                                  onclick="window.verConversacionHistorial(${
-                                    conversacion.conversacionId
-                                  })">
-                            Ver Chat Completo
-                          </button>
-                          <span style="margin-left: 10px; font-size: 12px; color: #666;">
-                            Duración: ${calcularDuracion(
-                              conversacion.fechaCreacion,
-                              conversacion.fechaActualizacion
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                `
-                  )
-                  .join("")}
+          return `
+          <div class="timeline-item">
+            <div class="timeline-item-date">
+              ${fecha.dia} <small>${fecha.mes}</small>
+            </div>
+            <div class="timeline-item-divider"></div>
+            <div class="timeline-item-content">
+              <div class="timeline-item-inner">
+                <div class="timeline-item-title">
+                  <strong>Conversación #${conv.conversacionId}</strong>
+                  <span style="float: right; font-size: 12px; color: #666;">
+                    ${fecha.hora}
+                  </span>
+                </div>
+                <div class="timeline-item-subtitle" style="color: #4CAF50;">
+                  ✓ Finalizada
+                </div>
+                <div class="timeline-item-text">
+                  Iniciada: ${fechaCreacion.completa}<br>
+                  Finalizada: ${fecha.completa}<br>
+                  Mensajes: ${conv.nroMensajes || 0}
+                </div>
+                <div style="margin-top: 8px;">
+                  <button class="button button-small button-outline" 
+                          onclick="window.verConversacion(${
+                            conv.conversacionId
+                          })">
+                    Ver Chat
+                  </button>
+                  <span style="margin-left: 10px; font-size: 12px; color: #666;">
+                    Duración: ${calcularDuracion(
+                      conv.fechaCreacion,
+                      conv.fechaActualizacion
+                    )}
+                  </span>
+                </div>
               </div>
-            `;
-          } else {
-            historialContainer.innerHTML = `
-              <div class="block block-strong text-align-center">
-                <p>Este cliente no tiene conversaciones finalizadas</p>
-              </div>
-            `;
-          }
-        }
+            </div>
+          </div>`;
+        })
+        .join("");
 
-        console.log("✅ UI actualizada correctamente");
-      } catch (error) {
-        console.error("❌ Error al actualizar UI:", error);
-      }
+      container.innerHTML = `<div class="timeline">${historialHTML}</div>`;
     };
 
-    const cargarHistorialCliente = async (conversacionIdActual) => {
+    // Cargar datos - Simplificado
+    const cargarHistorial = async (conversacionId) => {
       try {
         $f7.preloader.show();
-        const todasConversaciones = await getConversaciones();
-        const conversacionActual = todasConversaciones.find(
-          (conv) => conv.conversacionId == conversacionIdActual
+
+        const conversaciones = await getConversaciones();
+        const conversacionActual = conversaciones.find(
+          (c) => c.conversacionId == conversacionId
         );
 
         if (!conversacionActual) {
-          throw new Error(
-            `No se encontró la conversación ${conversacionIdActual}`
-          );
+          throw new Error("Conversación no encontrada");
         }
 
         telefonoCliente = conversacionActual.telefono;
-    
 
-        conversacionesFinalizadas = todasConversaciones.filter((conv) => {
-          const esDelMismoCliente = conv.telefono === telefonoCliente;
+        // Filtrar conversaciones finalizadas del mismo cliente
+        conversacionesFinalizadas = conversaciones
+          .filter((c) => c.telefono === telefonoCliente && c.estadoId === 4)
+          .sort(
+            (a, b) =>
+              new Date(b.fechaActualizacion.date) -
+              new Date(a.fechaActualizacion.date)
+          );
 
-          const estaFinalizada = conv.estadoId === 4;
-
-
-          return esDelMismoCliente && estaFinalizada;
-        });
-
-      
-        clienteInfo = conversacionActual; 
-
-        conversacionesFinalizadas.sort(
-          (a, b) =>
-            new Date(b.fechaActualizacion.date) -
-            new Date(a.fechaActualizacion.date)
-        );
-
-        actualizarUI();
+        renderizarHistorial();
 
         console.log(
-          `📋 Conversaciones finalizadas encontradas para ${telefonoCliente}:`,
-          conversacionesFinalizadas.length
+          `📋 ${conversacionesFinalizadas.length} conversaciones finalizadas para ${telefonoCliente}`
         );
       } catch (error) {
-        console.error("❌ Error al cargar historial:", error);
-        $f7.dialog.alert("Error al cargar el historial del cliente");
-        conversacionesFinalizadas = [];
+        console.error("❌ Error:", error);
+        $f7.dialog.alert("Error al cargar el historial");
 
-        const historialContainer = getElement("#historial-container");
-        if (historialContainer) {
-          historialContainer.innerHTML = `
+        const container = document.getElementById("historial-container");
+        if (container) {
+          container.innerHTML = `
             <div class="block block-strong text-align-center">
-              <p>Error al cargar el historial del cliente</p>
-            </div>
-          `;
+              <p>Error al cargar el historial</p>
+            </div>`;
         }
       } finally {
         $f7.preloader.hide();
       }
     };
 
-    window.verConversacionHistorial = (conversacionId) => {
-      $f7.views.main.router.navigate(`/messages/${conversacionId}/`);
+    // Funciones globales
+    window.verConversacion = (id) => {
+      $f7.views.main.router.navigate(`/messages/${id}/`);
     };
 
-    const mostrarInfoCliente = () => {
-      const totalConv = conversacionesFinalizadas.length;
-      const primeraConv = conversacionesFinalizadas[totalConv - 1];
-      const ultimaConv = conversacionesFinalizadas[0];
-
-      $f7.dialog.alert(
-        `
-        📋 Información del Cliente:
-        • Teléfono: ${telefonoCliente}
-        • Total conversaciones finalizadas: ${totalConv}
-        ${
-          primeraConv
-            ? `• Primera conversación: ${formatearFechaCompleta(
-                primeraConv.fechaCreacion
-              )}`
-            : ""
-        }
-        ${
-          ultimaConv
-            ? `• Última conversación: ${formatearFechaCompleta(
-                ultimaConv.fechaActualizacion
-              )}`
-            : ""
-        }
-      `,
-        "Información del Cliente"
-      );
-    };
-
+    // Inicialización
     $on("pageInit", (page) => {
-      const conversacionIdParam =
+      const conversacionId =
         page.route?.params?.conversacionId ||
-        $f7.views.main.router.currentRoute?.params?.conversacionId ||
-        "254";
+        $f7.views.main.router.currentRoute?.params?.conversacionId;
 
-      console.log(
-        `📱 Cargando historial para conversación: ${conversacionIdParam}`
-      );
+      if (!conversacionId) {
+        $f7.dialog.alert("ID de conversación no válido");
+        return;
+      }
 
-      setTimeout(() => {
-        cargarHistorialCliente(conversacionIdParam);
-      }, 300);
+      console.log(`📱 Cargando historial para conversación: ${conversacionId}`);
+      setTimeout(() => cargarHistorial(conversacionId), 300);
     });
 
     return $render;

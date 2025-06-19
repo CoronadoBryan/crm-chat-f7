@@ -17,10 +17,12 @@
         <div class="title">${telefono}</div>
 
         <div class="right">
-          <!-- Botón para finalizar conversación -->
+          <!-- Botón para finalizar conversación - Solo si NO está finalizada -->
           <button
             class="button button-fill color-red"
             @click="${handleFinalizarConversacion}"
+            id="btn-finalizar"
+            style="display: none"
           >
             Finalizar Conversación
           </button>
@@ -38,8 +40,12 @@
       </div>
     </div>
 
-    <!-- Messagebar -->
-    <div class="toolbar messagebar">
+    <!-- Messagebar - Solo si NO está finalizada -->
+    <div
+      class="toolbar messagebar"
+      id="messagebar-container"
+      style="display: none"
+    >
       <div class="toolbar-inner">
         <div class="messagebar-area">
           <textarea
@@ -55,7 +61,25 @@
     </div>
 
     <!-- Mensajes -->
-    <div class="page-content messages-content">
+    <div class="page-content messages-content" id="messages-content">
+      <!-- Mensaje de conversación finalizada -->
+      <div
+        id="mensaje-finalizada"
+        style="
+          display: none;
+          background: #f5f5f5;
+          padding: 15px;
+          text-align: center;
+          border-bottom: 1px solid #ddd;
+        "
+      >
+        <p style="margin: 0; color: #666; font-size: 14px">
+          <i class="icon f7-icons" style="color: #4caf50"
+            >checkmark_circle_fill</i
+          >
+          Esta conversación ha sido finalizada
+        </p>
+      </div>
       <div class="messages"></div>
     </div>
   </div>
@@ -80,7 +104,44 @@
     let enviandoMensaje = false;
     let conversacionId,
       telefono = "Chat";
-    let conversacionData = null; // Agregar variable para almacenar datos de la conversación
+    let conversacionData = null;
+    let conversacionFinalizada = false; // Nueva variable para controlar el estado
+
+    // --- Función para verificar y actualizar UI según estado ---
+    const actualizarUISegunEstado = () => {
+      const btnFinalizar = document.getElementById("btn-finalizar");
+      const messagebarContainer = document.getElementById(
+        "messagebar-container"
+      );
+      const mensajeFinalizada = document.getElementById("mensaje-finalizada");
+      const messagesContent = document.getElementById("messages-content");
+
+      if (conversacionFinalizada) {
+        // Conversación finalizada: ocultar controles
+        if (btnFinalizar) btnFinalizar.style.display = "none";
+        if (messagebarContainer) messagebarContainer.style.display = "none";
+        if (mensajeFinalizada) mensajeFinalizada.style.display = "block";
+
+        // Ajustar el contenido de mensajes para que ocupe todo el espacio
+        if (messagesContent) {
+          messagesContent.style.paddingBottom = "0px";
+        }
+
+        console.log("🔒 Conversación finalizada - Controles deshabilitados");
+      } else {
+        // Conversación activa: mostrar controles
+        if (btnFinalizar) btnFinalizar.style.display = "block";
+        if (messagebarContainer) messagebarContainer.style.display = "block";
+        if (mensajeFinalizada) mensajeFinalizada.style.display = "none";
+
+        // Restaurar padding para el messagebar
+        if (messagesContent) {
+          messagesContent.style.paddingBottom = "44px"; // Altura del messagebar
+        }
+
+        console.log("✅ Conversación activa - Controles habilitados");
+      }
+    };
 
     // --- Utilidades de UI ---
     const getEstadoIcono = (id_estado) => {
@@ -110,9 +171,8 @@
       }
     };
 
-    // --- Finalizar conversación ---
     const handleFinalizarConversacion = () => {
-      $f7.dialog.confirm(
+            $f7.dialog.confirm(
         "¿Estás seguro de que deseas finalizar esta conversación?",
         "Finalizar Conversación",
         async () => {
@@ -154,33 +214,53 @@
       );
     };
 
-    // --- Cargar datos de la conversación ---
     const loadConversacionData = async () => {
       try {
         const conversaciones = await getConversaciones();
-        conversacionData = conversaciones.find(conv => conv.conversacionId == conversacionId);
+        conversacionData = conversaciones.find(
+          (conv) => conv.conversacionId == conversacionId
+        );
         if (conversacionData) {
-          telefono = conversacionData.telefono || 'Sin teléfono';
-          const navbarTitle = document.querySelector('.navbar .title');
+          telefono = conversacionData.telefono || "Sin teléfono";
+
+          // Verificar si la conversación está finalizada
+          conversacionFinalizada = conversacionData.estadoId === 4;
+          console.log(
+            `📊 Estado de conversación ${conversacionId}: ${conversacionData.estadoId} (Finalizada: ${conversacionFinalizada})`
+          );
+
+          const navbarTitle = document.querySelector(".navbar .title");
           if (navbarTitle) {
-            navbarTitle.textContent = telefono;
+            navbarTitle.textContent =
+              telefono + (conversacionFinalizada ? " (Finalizada)" : "");
           }
+
+          // Actualizar UI según el estado
+          actualizarUISegunEstado();
         } else {
-          console.warn(`⚠️ No se encontraron datos para conversación ${conversacionId}`);
-          console.log('🔍 IDs disponibles:', conversaciones.map(c => c.conversacionId));
+          console.warn(
+            `⚠️ No se encontraron datos para conversación ${conversacionId}`
+          );
+          console.log(
+            "🔍 IDs disponibles:",
+            conversaciones.map((c) => c.conversacionId)
+          );
         }
       } catch (error) {
-        console.error('❌ Error al cargar datos de conversación:', error);
+        console.error("❌ Error al cargar datos de conversación:", error);
       }
     };
 
     const handleHistorialFinalizada = () => {
-      console.log(`📜 Navegando al historial de conversación: ${conversacionId}`);
-      
-      $f7.views.main.router.navigate(`/historial-finalizado/${conversacionId}/`);
+      console.log(
+        `📜 Navegando al historial de conversación: ${conversacionId}`
+      );
+
+      $f7.views.main.router.navigate(
+        `/historial-finalizado/${conversacionId}/`
+      );
     };
 
-    // --- Renderizado de mensajes ---
     const renderMessages = () => {
       if (!messages || !mensajesData.length) return;
       messages.removeMessages();
@@ -188,10 +268,13 @@
         (a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0)
       );
       const messagesToAdd = mensajesOrdenados.map((msg) => ({
-        text: msg.mensaje + getEstadoIcono(msg.id_estado),
+        text:
+          msg.contesta === "cliente"
+            ? msg.mensaje
+            : msg.mensaje + getEstadoIcono(msg.id_estado),
         type: msg.contesta === "cliente" ? "received" : "sent",
         name: msg.contesta === "cliente" ? "Cliente" : "Yo",
-        isHtml: true,
+        isHtml: msg.contesta !== "cliente",
       }));
       messages.addMessages(messagesToAdd);
       console.log(`🎨 Renderizados ${messagesToAdd.length} mensajes`);
@@ -204,23 +287,30 @@
         console.log(`📋 Cargados ${mensajesData.length} mensajes`);
         renderMessages();
 
-        //emitir evento de actualización de mensajes a estado 4
-        const mensajesNoLeidos = mensajesData.filter(msg => msg.id_estado === 3);
-        console.log(`Mensajes no leídos a marcar como leídos${conversacionId}:`, mensajesNoLeidos);
-        if (mensajesNoLeidos.length > 0) {
-          await Promise.all(mensajesNoLeidos.map(msg => mensajeLeido(msg.id)));
-          setTimeout(() => {
-            if (window.cargarDatos) window.cargarDatos();
-          }, 200); 
+        // Solo marcar como leídos si la conversación NO está finalizada
+        if (!conversacionFinalizada) {
+          const mensajesNoLeidos = mensajesData.filter(
+            (msg) => msg.id_estado === 3
+          );
+          console.log(
+            `Mensajes no leídos a marcar como leídos${conversacionId}:`,
+            mensajesNoLeidos
+          );
+          if (mensajesNoLeidos.length > 0) {
+            await Promise.all(
+              mensajesNoLeidos.map((msg) => mensajeLeido(msg.id))
+            );
+            setTimeout(() => {
+              if (window.cargarDatos) window.cargarDatos();
+            }, 200);
+          }
         }
-
       } catch (error) {
         console.error("❌ Error al cargar mensajes:", error);
         $f7.dialog.alert("Error al cargar los mensajes");
       }
     };
 
-    // --- Envío de mensajes ---
     const sendMessage = async (messageText) => {
       if (!messageText || !messageText.trim()) return;
       enviandoMensaje = true;
@@ -259,6 +349,8 @@
 
     // --- Eventos de UI ---
     const handleSendClick = () => {
+      if (conversacionFinalizada) return; // Bloquear si está finalizada
+
       const textarea = document.getElementById("message-input");
       if (!textarea) return;
       const messageText = textarea.value.trim();
@@ -269,6 +361,8 @@
     };
 
     const handleKeyPress = (e) => {
+      if (conversacionFinalizada) return; // Bloquear si está finalizada
+
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSendClick();
@@ -279,7 +373,7 @@
     const conectarSocket = () => {
       socket = io("http://82.180.163.151:3000/");
 
-      socket.on("nuevo_mensaje", (data) => {
+      socket.on("nuevo_mensaje", async (data) => {
         console.log("📨 Mensaje recibido:", data);
 
         if (data.id_conversacion != conversacionId) return;
@@ -290,14 +384,45 @@
             mensaje: data.mensaje || data.texto,
             contesta: data.contesta,
             created_at: data.created_at || new Date().toISOString(),
+            id: data.id,
+            id_estado: data.id_estado,
           };
           mensajesData.push(nuevoMensaje);
 
-          messages.addMessage({
-            text: nuevoMensaje.mensaje,
-            type: data.contesta === "bot" ? "sent" : "received",
-            name: data.contesta === "bot" ? "Bot" : "Cliente",
-          });
+          if (data.contesta === "cliente") {
+            messages.addMessage({
+              text: nuevoMensaje.mensaje,
+              type: "received",
+              name: "Cliente",
+            });
+          } else if (data.contesta === "bot") {
+            messages.addMessage({
+              text: nuevoMensaje.mensaje + getEstadoIcono(data.id_estado),
+              type: "sent",
+              name: "Bot",
+              isHtml: true,
+            });
+          }
+
+          // Solo marcar como leído si la conversación NO está finalizada
+          if (
+            data.contesta === "cliente" &&
+            data.id &&
+            !conversacionFinalizada
+          ) {
+            try {
+              console.log(
+                `🔵 Marcando mensaje ${data.id} como leído automáticamente`
+              );
+              await mensajeLeido(data.id);
+
+              setTimeout(() => {
+                if (window.cargarDatos) window.cargarDatos();
+              }, 200);
+            } catch (error) {
+              console.error("❌ Error al marcar mensaje como leído:", error);
+            }
+          }
 
           if (data.contesta === "cliente") {
             $f7.toast
