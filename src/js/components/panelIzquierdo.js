@@ -88,8 +88,6 @@ export function panelIzquierdo({
       const usuarioId = Number(localStorage.getItem("usuarioId"));
 
     
-
-      // Solo permitir si corresponde
       if (conv.usuarioId && conv.usuarioId != usuarioId) {
         $f7.dialog.alert("No tienes permiso para acceder a esta conversación.");
         return;
