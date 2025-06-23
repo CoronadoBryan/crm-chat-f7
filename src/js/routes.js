@@ -1,28 +1,10 @@
-import HomePage from "../pages/home.f7";
-import AboutPage from "../pages/about.f7";
-import FormPage from "../pages/form.f7";
+
 import MessagesPage from "../pages/messages.f7";
 import HistorialFinalizadoPage from "../pages/historial-finalizado.f7";
-
-import LeftPage1 from "../pages/left-page-1.f7";
-import LeftPage2 from "../pages/left-page-2.f7";
-import DynamicRoutePage from "../pages/dynamic-route.f7";
 import RequestAndLoad from "../pages/request-and-load.f7";
-import NotFoundPage from "../pages/404.f7";
 
 var routes = [
-  {
-    path: "/",
-    component: HomePage,
-  },
-  {
-    path: "/about/",
-    component: AboutPage,
-  },
-  {
-    path: "/form/",
-    component: FormPage,
-  },
+
   {
     path: "/messages/:conversacionId/",
     component: MessagesPage,
@@ -31,18 +13,7 @@ var routes = [
     path: "/historial-finalizado/:conversacionId/",
     component: HistorialFinalizadoPage,
   },
-  {
-    path: "/left-page-1/",
-    component: LeftPage1,
-  },
-  {
-    path: "/left-page-2/",
-    component: LeftPage2,
-  },
-  {
-    path: "/dynamic-route/blog/:blogId/post/:postId/",
-    component: DynamicRoutePage,
-  },
+
   {
     path: "/request-and-load/user/:userId/",
     async: function ({ router, to, resolve }) {
@@ -90,10 +61,7 @@ var routes = [
       }, 1000);
     },
   },
-  {
-    path: "(.*)",
-    component: NotFoundPage,
-  },
+
 ];
 
 export default routes;

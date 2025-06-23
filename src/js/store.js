@@ -30,6 +30,7 @@ const store = createStore({
     addProduct({ state }, product) {
       state.products = [...state.products, product];
     },
+    
   },
 })
 export default store;
