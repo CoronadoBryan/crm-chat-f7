@@ -1,250 +1,337 @@
 <template>
-    <div id="app">
-        <!-- Your main view, should have "view-main" class -->
-        <div id="view-main " class="view view-main view-init safe-areas " data-url="/dashboard">
-            <!-- Top Navbar -->
-            <div class="navbar ">
-                <div class="navbar-bg color-red"></div>
-                <div class="navbar-inner">
-                    <!---
-                    <div class="left">
-                        <a href="/dashboard" class="link popover-open">
-                            <span>${app_name}</span>
-                        </a>
-                    </div>-->
-
-
-                    <div class="left">
-                        <a href="/dashboard" class="link">
-                            <img src="icons/logo.png" class="logo" alt="Logo" style="height: 28px;" />
-                        </a>
+  <div id="app">
+    <!-- Panel izquierdo: Lista de conversaciones -->
+    <div
+      class="panel panel-left panel-cover dark panel-init"
+      data-visible-breakpoint="960"
+    >
+      <div class="view view-init" data-name="left">
+        <div class="page" data-name="home">
+          <div class="navbar navbar-large">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner sliding">
+              <div class="title">Conversaciones</div>
+              <div class="title-large">
+                <div class="title-large-text">Conversaciones</div>
+              </div>
+              <div
+                class="subnavbar"
+                style="
+                  display: flex;
+                  justify-content: flex-end;
+                  padding: 0 10px;
+                "
+              >
+                <form
+                  class="searchbar searchbar-init"
+                  style="max-width: 300px; width: 100%"
+                  onsubmit="return false;"
+                >
+                  <div class="searchbar-inner">
+                    <div class="searchbar-input-wrap">
+                      <input
+                        id="search-input"
+                        type="search"
+                        placeholder="Buscar por teléfono"
+                        autocomplete="off"
+                      />
+                      <i class="searchbar-icon"></i>
+                      <span class="input-clear-button" id="clear-button"></span>
                     </div>
-
-                    <div class="right">
-                        ${isSudo && $h`
-                        <a href="/sistema/configuraciones" class="link icon-only">
-                            <i class="icon f7-icons">gear_alt</i>
-                        </a>
-                        `}
-                        <a href="#" class="link popover-open" data-popover=".account-options">
-                            <span>Hola, ${perfil.value['nombres']} ${perfil.value['apellidos']}</span>
-                            <i class="icon f7-icons">person_crop_circle</i>
-                        </a>
-                    </div>
-                </div>
+                    <span class="searchbar-disable-button">Cancel</span>
+                  </div>
+                </form>
+              </div>
             </div>
-            <!-- Toolbar-->
-
-            <div class="toolbar toolbar-bottom">
-                <div class="toolbar-inner ">
-                    <div class="toolbar-inner justify-content-center">
-                        <a href="/menu-modulos" class="link icon-only">
-                            <i class="icon f7-icons">logo_windows</i>
-                        </a>
-
-                    </div>
-
-                    <div class="toolbar-inner justify-content-end">
-                        <a href="#" class="link ">Right Link</a>
-                    </div>
-
-                </div>
+          </div>
+          <div class="page-content">
+            <div class="list">
+              <ul id="lista-conversaciones">
+                <!-- Las conversaciones se renderizan aquí -->
+              </ul>
             </div>
+          </div>
         </div>
-
-        <!-- OPCIONES DEL USUARIO LOGEADO -->
-        <div class="popover account-options">
-            <!-- Popover's arrow -->
-            <div class="popover-arrow"></div>
-
-            <!-- Popover content -->
-            <div class="popover-inner">
-                <div class="list list-outline">
-                    <ul>
-                        <li>
-                            <a href="/usuario/perfil" class="item-link item-content popover-close">
-                                <div class="item-media">
-                                    <i class="icon f7-icons">person_crop_circle</i>
-                                </div>
-                                <div class="item-inner">
-                                    <div class="item-title">
-                                        Perfil
-                                        <div class="item-footer">Ver/Editar perfil de usuario</div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/usuario/cambio/password" class="item-link item-content popover-close">
-                                <div class="item-media">
-                                    <i class="icon f7-icons">lock_rotation</i>
-                                </div>
-                                <div class="item-inner">
-                                    <div class="item-title">
-                                        Cambiar Contraseña
-                                        <!--<div class="item-footer">Ver/Editar perfil de usuario</div>-->
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="item-link item-content popover-close color-red" @click="${cerrarSesion}">
-                                <div class="item-media">
-                                    <i class="icon f7-icons">square_arrow_left_fill</i>
-                                </div>
-                                <div class="item-inner">
-                                    <div class="item-title">
-                                        Cerrar Sesión
-                                        <!--<div class="item-footer">Ver/Editar perfil de usuario</div>-->
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- MODAL CAMBIAR CONTRASEÑA -->
-        <!--<div class="dialog dialog-md account-password">-->
-        <!--<div class="dialog account-password">-->
-
-        <!-- LOGIN SCREEN -->
-        <div id="login-screen" class="login-screen">
-            <!-- Default view-page layout -->
-            <div class="view">
-                <div class="page login-screen-page">
-                    <!-- page-content has additional login-screen content -->
-                    <div class="page-content login-screen-content">
-                        <div class="login-screen-title">${app_name}</div>
-                        <!-- Login form -->
-                        <form @submit="${iniciarSesion}" autocomplete="off">
-                            <div class="list">
-                                <ul>
-                                    <li class="item-content item-input">
-                                        <div class="item-inner">
-                                            <div class="item-title item-label">Usuario</div>
-                                            <div class="item-input-wrap">
-
-                                                <input type="text" name="username" id="iusername" placeholder="Usuario"
-                                                       autocomplete="off" />
-
-                                                <span class="input-clear-button"></span>
-                                            </div>
-                                        </div>
-                                    </li>
-                                    <li class="item-content item-input">
-                                        <div class="item-inner">
-                                            <div class="item-title item-label">Contraseña</div>
-                                            <div class="item-input-wrap">
-
-                                                <input type="password" name="password" id="ipassword"
-                                                       placeholder="Contraseña" />
-
-                                                <span class="input-clear-button"></span>
-                                            </div>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="list">
-                                <ul>
-                                    <li class="item-content px-3">
-                                        <button type="submit"
-                                                class="button button-fill button-large color-green">Ingresar</button>
-                                    </li>
-                                </ul>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
+
+    <!-- Panel derecho: Datos del cliente -->
+    <div class="panel panel-right panel-reveal dark panel-init">
+      <div class="view">
+        <div class="page">
+          <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner">
+              <div class="title">Datos del Cliente</div>
+            </div>
+          </div>
+          <div class="page-content">
+            <div class="block" id="panel-datos-cliente">
+              Selecciona una conversación para ver los datos del cliente.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Your main view, should have "view-main" class -->
+    <div
+      id="view-main"
+      class="view view-main view-init safe-areas"
+      data-url="/dashboard"
+    >
+      <!-- Top Navbar -->
+      <div class="navbar">
+        <div class="navbar-bg color-red"></div>
+        <div class="navbar-inner">
+          <div class="left">
+            <a href="/dashboard" class="link">
+              <img
+                src="icons/logo.png"
+                class="logo"
+                alt="Logo"
+                style="height: 28px"
+              />
+            </a>
+          </div>
+
+          <div class="right">
+            ${isSudo && $h`
+            <a href="/sistema/configuraciones" class="link icon-only">
+              <i class="icon f7-icons">gear_alt</i>
+            </a>
+            `}
+            <a
+              href="#"
+              class="link popover-open"
+              data-popover=".account-options"
+            >
+              <span
+                >Hola, ${perfil.value['nombres']}
+                ${perfil.value['apellidos']}</span
+              >
+              <i class="icon f7-icons">person_crop_circle</i>
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- Toolbar-->
+      <div class="toolbar toolbar-bottom">
+        <div class="toolbar-inner">
+          <div class="toolbar-inner justify-content-center">
+            <a href="/menu-modulos" class="link icon-only">
+              <i class="icon f7-icons">logo_windows</i>
+            </a>
+          </div>
+          <div class="toolbar-inner justify-content-end">
+            <a href="#" class="link">Right Link</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPCIONES DEL USUARIO LOGEADO -->
+    <div class="popover account-options">
+      <!-- Popover's arrow -->
+      <div class="popover-arrow"></div>
+
+      <!-- Popover content -->
+      <div class="popover-inner">
+        <div class="list list-outline">
+          <ul>
+            <li>
+              <a
+                href="/usuario/perfil"
+                class="item-link item-content popover-close"
+              >
+                <div class="item-media">
+                  <i class="icon f7-icons">person_crop_circle</i>
+                </div>
+                <div class="item-inner">
+                  <div class="item-title">
+                    Perfil
+                    <div class="item-footer">Ver/Editar perfil de usuario</div>
+                  </div>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a
+                href="/usuario/cambio/password"
+                class="item-link item-content popover-close"
+              >
+                <div class="item-media">
+                  <i class="icon f7-icons">lock_rotation</i>
+                </div>
+                <div class="item-inner">
+                  <div class="item-title">Cambiar Contraseña</div>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                class="item-link item-content popover-close color-red"
+                @click="${cerrarSesion}"
+              >
+                <div class="item-media">
+                  <i class="icon f7-icons">square_arrow_left_fill</i>
+                </div>
+                <div class="item-inner">
+                  <div class="item-title">Cerrar Sesión</div>
+                </div>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="login-screen">
+      <div class="view">
+        <div class="page login-screen-page">
+          <div class="page-content login-screen-content">
+            <div class="login-screen-title">${app_name}</div>
+            <form @submit="${iniciarSesion}" autocomplete="off">
+              <div class="list">
+                <ul>
+                  <li class="item-content item-input">
+                    <div class="item-inner">
+                      <div class="item-title item-label">Usuario</div>
+                      <div class="item-input-wrap">
+                        <input
+                          type="text"
+                          name="username"
+                          id="iusername"
+                          placeholder="Usuario"
+                          autocomplete="off"
+                        />
+                        <span class="input-clear-button"></span>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="item-content item-input">
+                    <div class="item-inner">
+                      <div class="item-title item-label">Contraseña</div>
+                      <div class="item-input-wrap">
+                        <input
+                          type="password"
+                          name="password"
+                          id="ipassword"
+                          placeholder="Contraseña"
+                        />
+                        <span class="input-clear-button"></span>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <div class="list">
+                <ul>
+                  <li class="item-content px-3">
+                    <button
+                      type="submit"
+                      class="button button-fill button-large color-green"
+                    >
+                      Ingresar
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
-    export default (props, { $, $f7, $store, $update }) => {
-        let app_name = $f7.name;
-        let cuenta = $store.getters.cuenta;
-        let perfil = $store.getters.perfil;
-        let isSudo = $store.getters.isSudo;
+  export default (props, { $, $f7, $store, $update }) => {
+    let app_name = $f7.name;
+    let cuenta = $store.getters.cuenta;
+    let perfil = $store.getters.perfil;
+    let isSudo = $store.getters.isSudo;
 
+    const iniciarSesion = function (ev) {
+      ev.preventDefault();
+      let formData = $f7.form.convertToData(ev.target);
 
-        const iniciarSesion = function (ev) {
-            ev.preventDefault();
-            let formData = $f7.form.convertToData(ev.target);
+      $f7.dialog.preloader("Iniciando Sesión", "red");
 
+      fetch($f7.config.endpoint("/auth/login"), {
+        method: "POST",
+        cache: "no-cache",
+        credentials: "same-origin",
+        body: JSON.stringify(formData),
+      })
+        .then((response) => {
+          $f7.dialog.close();
+          return response.json();
+        })
+        .then((data) => {
+          $f7.dialog.close();
 
-            $f7.dialog.preloader('Iniciando Sesión', 'red');
+          if (data.status === 400) {
+            throw new Error(data.status + " - " + data.messages.error);
+          }
 
-            fetch($f7.config.endpoint('/auth/login'), {
-                method: "POST",
-                cache: 'no-cache',
-                credentials: 'same-origin',
+          if (!data.success) throw new Error(data.messages.error);
+          if (!data.token) throw new Error("Token ausente.");
 
-                body: JSON.stringify(formData),
+          $store.dispatch("setToken", data.token);
 
-            }).then(response => {
-                $f7.dialog.close();
-                return response.json();
-            }).then(data => {
-                $f7.dialog.close();
+          $f7.notification
+            .create({
+              icon: '<i class="icon f7-icons color-green size-50">hand_thumbsup_fill</i>',
+              text: data.messages,
+              closeTimeout: 2000,
+              on: {
+                close: function () {
+                  $("input#iusername")
+                    .eq(0)
+                    .val("")
+                    .trigger("input change")
+                    .focus()
+                    .trigger("input:clear");
+                  $("input#ipassword")
+                    .eq(0)
+                    .val("")
+                    .trigger("input change")
+                    .focus()
+                    .trigger("input:clear");
+                  $store.dispatch("setToken", data.token);
+                },
+              },
+            })
+            .open();
 
-                if (data.status === 400) {
-                    throw new Error(data.status + ' - ' + data.messages.error);
-                }
-
-                if (!data.success)
-                    throw new Error(data.messages.error);
-                if (!data.token)
-                    throw new Error('Token ausente.');
-
-                $store.dispatch('setToken', data.token);
-
-                $f7.notification.create({
-                    icon: '<i class="icon f7-icons color-green size-50">hand_thumbsup_fill</i>',
-                    text: data.messages,
-
-                    closeTimeout: 2000,
-                    on: {
-                        close: function () {
-                            $('input#iusername').eq(0).val('').trigger('input change').focus().trigger('input:clear');
-                            $('input#ipassword').eq(0).val('').trigger('input change').focus().trigger('input:clear');
-
-                            //Almacenar el token
-                            $store.dispatch('setToken', data.token);
-                        }
-                    }
-
-                }).open();
-
-                if (isFirstLogin) {
-                    //VERIFCIAR EL PRIMER LOGEO
-                    alert("Es el primer login, te redirigiré al cambio de contraseña.");
-
-                    localStorage.setItem('isFirstLogin', 'false');
-                    $f7.views.main.router.navigate('/usuario/cambio/password');
-                } else {
-                    //VERIICAR MULTIPLES LOGEOS - 
-                    alert("No es el primer login, te redirigiré al dashboard.");
-
-                    $f7.views.main.router.navigate('/dashboard');
-                }
-            }).catch(error => {
-                console.error('Error al iniciar sesión:', error);
-                $f7.notification.create({text: error.message || error.toString()}).open();
-            });
-        };
-
-        const cerrarSesion = function () {
-            $f7.dialog.preloader('Cerrando Sesión', 'red');
-            $f7.tools.sendRequest('GET', '/auth/logout').then(data => {
-                $f7.dialog.close();
-                $store.dispatch('cerrarSistema');
-            });
-        };
-
-        return $render;
+          if (isFirstLogin) {
+            alert("Es el primer login, te redirigiré al cambio de contraseña.");
+            localStorage.setItem("isFirstLogin", "false");
+            $f7.views.main.router.navigate("/usuario/cambio/password");
+          } else {
+            alert("No es el primer login, te redirigiré al dashboard.");
+            $f7.views.main.router.navigate("/dashboard");
+          }
+        })
+        .catch((error) => {
+          console.error("Error al iniciar sesión:", error);
+          $f7.notification
+            .create({ text: error.message || error.toString() })
+            .open();
+        });
     };
+
+    const cerrarSesion = function () {
+      $f7.dialog.preloader("Cerrando Sesión", "red");
+      $f7.tools.sendRequest("GET", "/auth/logout").then((data) => {
+        $f7.dialog.close();
+        $store.dispatch("cerrarSistema");
+      });
+    };
+
+    return $render;
+  };
 </script>

@@ -1,6 +1,6 @@
-import api from "../config.js";
+import config from "../config.js";
 
 export async function getPerfiles() {
-  const res = await api.get("/cliente/perfil/listado");
+  const res = await config.api.get("/cliente/perfil/listado");
   return res.data.data;
 }

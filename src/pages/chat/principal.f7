@@ -1,224 +1,276 @@
 <template>
-  <div id="app">
-    <!-- Panel izquierdo: Lista de conversaciones -->
-    <div
-      class="panel panel-left panel-cover dark panel-init"
-      data-visible-breakpoint="960"
-    >
-      <div class="view view-init" data-name="left">
-        <div class="page" data-name="home">
-          <div class="navbar navbar-large">
-            <div class="navbar-bg"></div>
-            <div class="navbar-inner sliding">
-              <div class="title">MyApp</div>
-              <div class="title-large">
-                <div class="title-large-text">Conversaciones</div>
-              </div>
-              <div
-                class="subnavbar"
-                style="
-                  display: flex;
-                  justify-content: flex-end;
-                  padding: 0 10px;
-                "
-              >
-                <form
-                  class="searchbar searchbar-init"
-                  style="max-width: 300px; width: 100%"
-                  onsubmit="return false;"
-                >
-                  <div class="searchbar-inner">
-                    <div class="searchbar-input-wrap">
-                      <input
-                        id="search-input"
-                        type="search"
-                        placeholder="Buscar por teléfono"
-                        autocomplete="off"
-                      />
-                      <i class="searchbar-icon"></i>
-                      <span class="input-clear-button" id="clear-button"></span>
-                    </div>
-                    <span class="searchbar-disable-button">Cancel</span>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-          <div class="page-content">
-            <div class="list">
-              <ul id="lista-conversaciones">
-                <!-- Las conversaciones se renderizan aquí -->
-              </ul>
-            </div>
-          </div>
-        </div>
+  <div class="page" data-name="chat">
+    <!-- NO navbar aquí - se maneja desde app.f7 -->
+
+    <!-- Contenido principal -->
+    <div class="page-content">
+      <div class="block">
+        <p>Área principal del chat</p>
+        <p>Haz clic en el ícono de barras (☰) para abrir las conversaciones</p>
+        <p>Haz clic en el ícono de persona para ver los datos del cliente</p>
       </div>
     </div>
-
-    <!-- Panel derecho: Datos del cliente -->
-    <div class="panel panel-right panel-reveal dark">
-      <div class="view">
-        <div class="page">
-          <div class="navbar">
-            <div class="navbar-bg"></div>
-            <div class="navbar-inner">
-              <div class="title">Datos del Cliente</div>
-            </div>
-          </div>
-          <div class="page-content">
-            <div class="block" id="panel-datos-cliente">
-              Selecciona una conversación para ver los datos del cliente.
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Vista principal -->
-    <div class="view view-main view-init safe-areas" data-url="/"></div>
   </div>
 </template>
 
 <script>
-  // --- Importaciones ---
-  import {
-    getClientes,
-    getPerfiles,
-    getConversaciones,
-  } from "./js/services/index.js";
-  import io from "socket.io-client";
-  import { panelDerecho, panelIzquierdo } from "./js/components/index.js";
-
   export default (props, { $on, $f7 }) => {
-    // --- Variables de estado ---
     let conversaciones = [];
     let clientes = [];
     let perfiles = [];
     let socket = null;
 
-    // --- Ciclo de vida: Al iniciar la página ---
-    $on("pageInit", () => {
-      // Conexión en tiempo real con el servidor
-      socket = io("http://82.180.163.151:3000");
+    // Función para decodificar JWT token
+    const decodeJWT = (token) => {
+      try {
+        const payload = token.split(".")[1];
+        const decodedPayload = atob(payload);
+        return JSON.parse(decodedPayload);
+      } catch (error) {
+        console.error("Error decodificando JWT:", error);
+        return null;
+      }
+    };
 
-      socket.on("conversacion_asignada", (data) => {
-        const usuarioId = Number(localStorage.getItem("usuarioId"));
-        console.log("Evento conversacion_asignada recibido:", data);
-        if (data.usuarioId && data.usuarioId == usuarioId) {
-          cargarDatos();
+    // Función para obtener el usuarioId desde el token o store
+    const getUsuarioId = () => {
+      let usuarioId = localStorage.getItem("usuarioId");
+      if (usuarioId) {
+        return Number(usuarioId);
+      }
+
+      const store = $f7.store;
+      if (store && store.state && store.state.cuenta) {
+        return store.state.cuenta.id;
+      }
+
+      const token = localStorage.getItem("token");
+      if (token) {
+        const decoded = decodeJWT(token);
+        if (decoded) {
+          const possibleIds = [
+            decoded.id,
+            decoded.user_id,
+            decoded.userId,
+            decoded.sub,
+            decoded.data?.id,
+            decoded.user?.id,
+            decoded.inf?.id,
+          ];
+
+          for (const id of possibleIds) {
+            if (id) {
+              localStorage.setItem("usuarioId", id);
+              return Number(id);
+            }
+          }
+        }
+      }
+
+      return null;
+    };
+
+    $on("pageInit", async () => {
+      try {
+        console.log("Iniciando carga de página chat...");
+
+        // Cambiar el panel a modo chat
+        if (window.switchPanelContent) {
+          window.switchPanelContent("chat");
+        }
+
+        // Actualizar la navbar del app principal para la página de chat
+        const navbar = document.querySelector(
+          ".view-main .navbar .navbar-inner"
+        );
+        if (navbar) {
+          navbar.innerHTML = `
+            <div class="left">
+              <a href="#" class="link icon-only panel-open" data-panel="left">
+                <i class="icon f7-icons">bars</i>
+              </a>
+            </div>
+            <div class="title">Chat</div>
+            <div class="right">
+              <a href="#" class="link icon-only panel-open" data-panel="right">
+                <i class="icon f7-icons">person</i>
+              </a>
+            </div>
+          `;
+        }
+
+        const usuarioIdObtenido = getUsuarioId();
+        console.log("Usuario ID obtenido:", usuarioIdObtenido);
+
+        if (!usuarioIdObtenido) {
           $f7.toast
             .create({
-              text: "Nueva conversación recibida",
-              closeTimeout: 2000,
-              position: "top",
+              text: "No se pudo obtener la información del usuario.",
+              closeTimeout: 3000,
             })
             .open();
+          return;
         }
-      });
 
-      socket.on("nuevo_mensaje", (data) => {
-        console.log("Evento nuevo_mensaje recibido:", data);
-        cargarDatos(); 
-      });
+        // Imports dinámicos
+        const services = await import("../../js/services/index.js");
+        const { getClientes, getPerfiles, getConversaciones } = services;
 
-    
-      cargarDatos();
+        const socketModule = await import("socket.io-client");
+        const io = socketModule.default;
+
+        const components = await import("../../js/components/index.js");
+        const { panelDerecho, panelIzquierdo } = components;
+
+        // Conexión socket
+        socket = io("http://82.180.163.151:3000");
+
+        socket.on("conversacion_asignada", (data) => {
+          const usuarioId = getUsuarioId();
+          if (data.usuarioId && data.usuarioId == usuarioId) {
+            cargarDatos();
+            $f7.toast
+              .create({
+                text: "Nueva conversación recibida",
+                closeTimeout: 2000,
+                position: "top",
+              })
+              .open();
+          }
+        });
+
+        socket.on("nuevo_mensaje", (data) => {
+          cargarDatos();
+        });
+
+        const cargarDatos = async () => {
+          try {
+            console.log("Cargando datos...");
+
+            const [conversacionesData, clientesData, perfilesData] =
+              await Promise.all([
+                getConversaciones(),
+                getClientes(),
+                getPerfiles(),
+              ]);
+
+            conversaciones = conversacionesData || [];
+            clientes = clientesData || [];
+            perfiles = perfilesData || [];
+
+            console.log("Datos cargados:", {
+              conversaciones: conversaciones.length,
+              clientes: clientes.length,
+              perfiles: perfiles.length,
+            });
+
+            renderConversaciones(conversaciones);
+            initSearch();
+          } catch (err) {
+            console.error("Error al cargar datos:", err);
+          }
+        };
+
+        const renderConversaciones = (convs) => {
+          try {
+            const usuarioId = getUsuarioId();
+            if (!usuarioId || !panelIzquierdo) return;
+
+            const convsFiltradas = convs.filter(
+              (conv) => conv.usuarioId && conv.usuarioId == usuarioId
+            );
+
+            const lista = document.querySelector("#lista-conversaciones");
+            if (!lista) return;
+
+            panelIzquierdo({
+              lista,
+              conversaciones: convsFiltradas,
+              clientes,
+              perfiles,
+              panelIzquierdo,
+              panelDerecho,
+              $f7,
+              onSeleccionar: (convId) => {
+                console.log("Conversación seleccionada:", convId);
+              },
+              conversacionSeleccionadaId: null,
+            });
+          } catch (error) {
+            console.error("Error al renderizar conversaciones:", error);
+          }
+        };
+
+        const initSearch = () => {
+          const input = document.querySelector("#search-input");
+          const clearBtn = document.querySelector("#clear-button");
+
+          if (!input || !clearBtn) return;
+
+          input.addEventListener("input", () => {
+            const query = input.value.trim().toLowerCase();
+            if (query === "") {
+              renderConversaciones(conversaciones);
+              return;
+            }
+
+            const usuarioId = getUsuarioId();
+            const filtradas = conversaciones.filter((conv) => {
+              if (!conv.telefono) return false;
+              return (
+                conv.usuarioId &&
+                conv.usuarioId == usuarioId &&
+                (conv.telefono.toLowerCase().includes(query) ||
+                  conv.conversacionId.toString().includes(query))
+              );
+            });
+            renderConversaciones(filtradas);
+          });
+
+          clearBtn.addEventListener("click", () => {
+            input.value = "";
+            renderConversaciones(conversaciones);
+            input.focus();
+          });
+        };
+
+        // Cargar datos inicialmente
+        await cargarDatos();
+      } catch (error) {
+        console.error("Error general:", error);
+      }
     });
 
-    // --- Ciclo de vida: Al salir de la página ---
     $on("pageBeforeRemove", () => {
+      // Restaurar el panel a modo menú
+      if (window.switchPanelContent) {
+        window.switchPanelContent("menu");
+      }
+
+      // Restaurar la navbar original
+      const navbar = document.querySelector(".view-main .navbar .navbar-inner");
+      if (navbar) {
+        navbar.innerHTML = `
+          <div class="left">
+            <a href="/dashboard" class="link">
+              <img src="icons/logo.png" class="logo" alt="Logo" style="height: 28px;" />
+            </a>
+          </div>
+          <div class="right">
+            <a href="#" class="link popover-open" data-popover=".account-options">
+              <span>Usuario</span>
+              <i class="icon f7-icons">person_crop_circle</i>
+            </a>
+          </div>
+        `;
+      }
+
       if (socket) {
         socket.disconnect();
         socket = null;
       }
     });
 
-    // --- Función: Cargar datos desde el servidor ---
-    const cargarDatos = async () => {
-      try {
-        [conversaciones, clientes, perfiles] = await Promise.all([
-          getConversaciones(),
-          getClientes(),
-          getPerfiles(),
-        ]);
-        renderConversaciones(conversaciones);
-        initSearch();
-      } catch (err) {
-        $f7.toast
-          .create({
-            text: "Error al cargar conversaciones",
-            closeTimeout: 3000,
-          })
-          .open();
-      }
-    };
-    window.cargarDatos = cargarDatos; 
-
-    let conversacionSeleccionadaId = null;
-    const handleSeleccionarConversacion = (convId) => {
-      conversacionSeleccionadaId = convId;
-      renderConversaciones(conversaciones);
-    };
-
-    // --- Función: Renderizar la lista de conversaciones ---
-    const renderConversaciones = (convs) => {
-      const usuarioId = Number(localStorage.getItem("usuarioId"));
-      const convsFiltradas = convs.filter(
-        (conv) => conv.usuarioId && conv.usuarioId == usuarioId
-      );
-
-      const lista = document.querySelector("#lista-conversaciones");
-      panelIzquierdo({
-        lista,
-        conversaciones: convsFiltradas,
-        clientes,
-        perfiles,
-        panelIzquierdo,
-        panelDerecho,
-        $f7,
-        onSeleccionar: handleSeleccionarConversacion,
-        conversacionSeleccionadaId
-      });
-    };
-
-    // --- Función: Inicializar la búsqueda de conversaciones ---
-    const initSearch = () => {
-      const input = document.querySelector("#search-input");
-      const clearBtn = document.querySelector("#clear-button");
-
-      if (!input || !clearBtn) return;
-
-      input.addEventListener("input", () => {
-        const query = input.value.trim().toLowerCase();
-
-        if (query === "") {
-          renderConversaciones(conversaciones);
-          return;
-        }
-
-        const usuarioId = Number(localStorage.getItem("usuarioId"));
-        const filtradas = conversaciones.filter((conv) => {
-          if (!conv.telefono) return false;
-          // Solo buscar entre las que ya tienen usuario asignado y corresponden al usuario actual
-          return (
-            conv.usuarioId &&
-            conv.usuarioId == usuarioId &&
-            (conv.telefono.toLowerCase().includes(query) ||
-              conv.conversacionId.toString().includes(query))
-          );
-        });
-
-        renderConversaciones(filtradas);
-      });
-
-      clearBtn.addEventListener("click", () => {
-        input.value = "";
-        renderConversaciones(conversaciones);
-        input.focus();
-      });
-    };
-
-    // --- Render de Framework7 ---
     return $render;
   };
 </script>

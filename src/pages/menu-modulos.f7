@@ -4,7 +4,7 @@
             <ul>
 
                 <li>
-                    <a href="/sistema/citas" class="item-link item-content ${current_route.path === '/sistema/citas' && $h`item-active`}">
+                    <a href="/chat" class="item-link item-content ${current_route.path === '/sistema/citas' && $h`item-active`}">
                         <div class="item-media">
                             <i class="icon f7-icons">macwindow</i>
                         </div>
@@ -25,11 +25,12 @@
 <script>
 
     const routes = [
-       
         {
-            path: '/sistema/citas',
-            componentUrl: '../pages/citas/index.f7'
+            path: '/chat',
+            componentUrl: './pages/chat/principal.f7',
+
         },
+       
     ];
 
     export default (props, {$f7, $f7ready, $f7router}) => {
