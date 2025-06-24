@@ -38,11 +38,7 @@
     </div>
 
     <!-- Messagebar -->
-    <div
-      class="toolbar messagebar"
-      id="messagebar-container"
-      style="display: none"
-    >
+    <div class="toolbar messagebar" id="messagebar-container">
       <div class="toolbar-inner">
         <div class="messagebar-area">
           <textarea
@@ -177,22 +173,115 @@
       messagesContent: document.getElementById("messages-content"),
     });
 
+    // --- Reemplazar la función actualizarUISegunEstado con logs detallados ---
     const actualizarUISegunEstado = () => {
-      const elementos = getElementosPorId();
+      console.log("🔧 INICIO actualizarUISegunEstado");
+      console.log("📊 conversacionFinalizada:", conversacionFinalizada);
 
-      if (conversacionFinalizada) {
-        elementos.btnFinalizar?.style.setProperty("display", "none");
-        elementos.messagebarContainer?.style.setProperty("display", "none");
-        elementos.mensajeFinalizada?.style.setProperty("display", "block");
-        elementos.messagesContent?.style.setProperty("paddingBottom", "0px");
-        console.log("🔒 Conversación finalizada - Controles deshabilitados");
-      } else {
-        elementos.btnFinalizar?.style.setProperty("display", "block");
-        elementos.messagebarContainer?.style.setProperty("display", "block");
-        elementos.mensajeFinalizada?.style.setProperty("display", "none");
-        elementos.messagesContent?.style.setProperty("paddingBottom", "44px");
-        console.log("✅ Conversación activa - Controles habilitados");
-      }
+      // ✅ Usar setTimeout para asegurar que el DOM esté listo
+      setTimeout(() => {
+        console.log("⏰ Ejecutando timeout de actualizarUISegunEstado");
+
+        const elementos = getElementosPorId();
+
+        // 🔍 Log detallado de cada elemento
+        console.log("🔍 Elementos encontrados:");
+        console.log("  - btnFinalizar:", elementos.btnFinalizar);
+        console.log("  - messagebarContainer:", elementos.messagebarContainer);
+        console.log("  - mensajeFinalizada:", elementos.mensajeFinalizada);
+        console.log("  - messagesContent:", elementos.messagesContent);
+
+        if (conversacionFinalizada) {
+          console.log("🔒 APLICANDO estilos para conversación FINALIZADA");
+
+          if (elementos.btnFinalizar) {
+            elementos.btnFinalizar.style.setProperty("display", "none");
+            console.log("  ✅ btnFinalizar oculto");
+          } else {
+            console.warn("  ⚠️ btnFinalizar NO encontrado");
+          }
+
+          if (elementos.messagebarContainer) {
+            elementos.messagebarContainer.style.setProperty("display", "none");
+            console.log("  ✅ messagebarContainer OCULTO");
+            console.log(
+              "  📏 messagebarContainer display:",
+              elementos.messagebarContainer.style.display
+            );
+          } else {
+            console.warn("  ⚠️ messagebarContainer NO encontrado");
+          }
+
+          if (elementos.mensajeFinalizada) {
+            elementos.mensajeFinalizada.style.setProperty("display", "block");
+            console.log("  ✅ mensajeFinalizada mostrado");
+          } else {
+            console.warn("  ⚠️ mensajeFinalizada NO encontrado");
+          }
+
+          if (elementos.messagesContent) {
+            elementos.messagesContent.style.setProperty("paddingBottom", "0px");
+            console.log("  ✅ messagesContent padding ajustado");
+          }
+
+          console.log("🔒 Conversación finalizada - Controles deshabilitados");
+        } else {
+          console.log("✅ APLICANDO estilos para conversación ACTIVA");
+
+          if (elementos.btnFinalizar) {
+            elementos.btnFinalizar.style.setProperty("display", "block");
+            console.log("  ✅ btnFinalizar mostrado");
+          } else {
+            console.warn("  ⚠️ btnFinalizar NO encontrado");
+          }
+
+          if (elementos.messagebarContainer) {
+            elementos.messagebarContainer.style.setProperty("display", "block");
+            console.log("  ✅ messagebarContainer MOSTRADO");
+            console.log(
+              "  📏 messagebarContainer display:",
+              elementos.messagebarContainer.style.display
+            );
+          } else {
+            console.warn("  ⚠️ messagebarContainer NO encontrado");
+          }
+
+          if (elementos.mensajeFinalizada) {
+            elementos.mensajeFinalizada.style.setProperty("display", "none");
+            console.log("  ✅ mensajeFinalizada ocultado");
+          } else {
+            console.warn("  ⚠️ mensajeFinalizada NO encontrado");
+          }
+
+          if (elementos.messagesContent) {
+            elementos.messagesContent.style.setProperty(
+              "paddingBottom",
+              "44px"
+            );
+            console.log("  ✅ messagesContent padding ajustado");
+          }
+
+          console.log("✅ Conversación activa - Controles habilitados");
+        }
+
+        // 🔍 Verificar estado final del input
+        const textarea = document.getElementById("message-input");
+        console.log("🔍 Estado final del textarea:");
+        console.log("  - textarea encontrado:", !!textarea);
+        if (textarea) {
+          console.log("  - textarea visible:", textarea.offsetParent !== null);
+          console.log(
+            "  - textarea display:",
+            getComputedStyle(textarea).display
+          );
+          console.log(
+            "  - textarea visibility:",
+            getComputedStyle(textarea).visibility
+          );
+        }
+
+        console.log("🔧 FIN actualizarUISegunEstado");
+      }, 100);
     };
 
     const actualizarEstadoEnUI = (key, id_estado) => {
@@ -297,12 +386,16 @@
             `📊 Estado de conversación ${conversacionId}: ${conversacionData.estadoId} (Finalizada: ${conversacionFinalizada})`
           );
 
-          const navbarTitle = document.querySelector(".navbar .title");
-          if (navbarTitle) {
-            navbarTitle.textContent =
-              telefono + (conversacionFinalizada ? " (Finalizada)" : "");
-          }
+          // ✅ Actualizar título de forma más segura
+          setTimeout(() => {
+            const navbarTitle = document.querySelector(".navbar .title");
+            if (navbarTitle) {
+              navbarTitle.textContent =
+                telefono + (conversacionFinalizada ? " (Finalizada)" : "");
+            }
+          }, 50);
 
+          // ✅ Actualizar UI después de cargar datos
           actualizarUISegunEstado();
         } else {
           console.warn(
@@ -505,7 +598,6 @@
               text: nuevoMensaje.mensaje,
               type: "received",
               name: conversacionData?.telefono || "Cliente",
-              avatar: generarAvatar(iniciales),
               footer: footerTiempo,
             });
           } else if (data.contesta === "bot") {
@@ -519,17 +611,25 @@
           }
 
           // Mejorar el manejo de mensajes no leídos
-          if (data.contesta === "cliente" && data.id && !conversacionFinalizada) {
+          if (
+            data.contesta === "cliente" &&
+            data.id &&
+            !conversacionFinalizada
+          ) {
             try {
-              console.log(`🔵 Marcando mensaje ${data.id} como leído automáticamente`);
+              console.log(
+                `🔵 Marcando mensaje ${data.id} como leído automáticamente`
+              );
               await mensajeLeido(data.id);
-              
+
               // Actualizar inmediatamente el estado local
-              const msgIndex = mensajesData.findIndex(msg => msg.id === data.id);
+              const msgIndex = mensajesData.findIndex(
+                (msg) => msg.id === data.id
+              );
               if (msgIndex >= 0) {
                 mensajesData[msgIndex].id_estado = 4; // Marcar como leído
               }
-              
+
               // Actualizar la lista de conversaciones para actualizar el contador
               setTimeout(() => {
                 if (window.cargarDatos) {
@@ -545,7 +645,9 @@
           if (data.contesta === "cliente") {
             $f7.toast
               .create({
-                text: `Nuevo mensaje de ${conversacionData?.telefono || 'Cliente'}`,
+                text: `Nuevo mensaje de ${
+                  conversacionData?.telefono || "Cliente"
+                }`,
                 closeTimeout: 2000,
                 position: "top",
               })
@@ -560,7 +662,9 @@
 
         if (idx >= 0) {
           mensajesData[idx].id_estado = data.id_estado;
-          console.log(`🔄 Estado del mensaje ${data.id} actualizado a: ${data.id_estado}`);
+          console.log(
+            `🔄 Estado del mensaje ${data.id} actualizado a: ${data.id_estado}`
+          );
         } else {
           idx = mensajesData.findIndex((msg) => msg.id === null);
           if (idx >= 0) {
@@ -576,13 +680,15 @@
         }
 
         if (idx >= 0) actualizarEstadoEnUI(idx, data.id_estado);
-        
+
         // Si el mensaje fue leído, actualizar el contador en la lista de conversaciones
         if (data.id_estado === 4) {
           setTimeout(() => {
             if (window.cargarDatos) {
               window.cargarDatos();
-              console.log("🔄 Contador actualizado por cambio de estado a leído");
+              console.log(
+                "🔄 Contador actualizado por cambio de estado a leído"
+              );
             }
           }, 200);
         }

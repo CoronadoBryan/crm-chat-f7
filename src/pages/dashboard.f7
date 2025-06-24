@@ -1,129 +1,196 @@
 <template>
-    <div class="page" data-name="dashboard">
-        <div class="page-content">
-            <div class="block-title">Resumen General</div>
-            <div class="grid grid-cols-2 grid-gap">
-                <div class="card card-outline">
-                    <div class="card-content card-content-padding text-align-center">
-                        <i class="icon f7-icons size-32 color-blue">chat_bubble_2_fill</i>
-                        <div class="text-lg font-bold" id="conversaciones-activas">0</div>
-                        <div class="text-sm text-muted">Conversaciones activas</div>
-                    </div>
-                </div>
-                <div class="card card-outline">
-                    <div class="card-content card-content-padding text-align-center">
-                        <i class="icon f7-icons size-32 color-red">bell_badge_fill</i>
-                        <div class="text-lg font-bold" id="mensajes-pendientes">0</div>
-                        <div class="text-sm text-muted">Mensajes pendientes</div>
-                    </div>
-                </div>
-                <div class="card card-outline">
-                    <div class="card-content card-content-padding text-align-center">
-                        <i class="icon f7-icons size-32 color-green">person_2_fill</i>
-                        <div class="text-lg font-bold" id="clientes-total">0</div>
-                        <div class="text-sm text-muted">Clientes registrados</div>
-                    </div>
-                </div>
-                <div class="card card-outline">
-                    <div class="card-content card-content-padding text-align-center">
-                        <i class="icon f7-icons size-32 color-orange">checkmark_circle_fill</i>
-                        <div class="text-lg font-bold" id="conversaciones-finalizadas">0</div>
-                        <div class="text-sm text-muted">Finalizadas hoy</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Accesos rápidos -->
-            <div class="block-title">Accesos rápidos</div>
-            <div class="list simple-list">
-                <ul>
-                    <li>
-                        <a href="#" class="item-link panel-open" data-panel="left">
-                            <i class="icon f7-icons color-blue">message_fill</i> 
-                            <span>Mensajes</span>
-                            <span class="badge color-red" id="badge-mensajes" style="display: none;">0</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/sistema/usuarios" class="item-link">
-                            <i class="icon f7-icons color-green">person_3_fill</i> 
-                            <span>Usuarios</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/sistema/configuraciones" class="item-link">
-                            <i class="icon f7-icons color-gray">gear_alt_fill</i> 
-                            <span>Configuraciones</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+  <div class="page" data-name="dashboard">
+    <div class="page-content">
+      <div class="block-title">Resumen General</div>
+      <div class="grid grid-cols-2 grid-gap">
+        <div class="card card-outline">
+          <div class="card-content card-content-padding text-align-center">
+            <i class="icon f7-icons size-32 color-blue">chat_bubble_2_fill</i>
+            <div class="text-lg font-bold" id="conversaciones-activas">0</div>
+            <div class="text-sm text-muted">Conversaciones activas</div>
+          </div>
         </div>
+        <div class="card card-outline">
+          <div class="card-content card-content-padding text-align-center">
+            <i class="icon f7-icons size-32 color-red">bell_badge_fill</i>
+            <div class="text-lg font-bold" id="mensajes-pendientes">0</div>
+            <div class="text-sm text-muted">Mensajes pendientes</div>
+          </div>
+        </div>
+        <div class="card card-outline">
+          <div class="card-content card-content-padding text-align-center">
+            <i class="icon f7-icons size-32 color-green">person_2_fill</i>
+            <div class="text-lg font-bold" id="clientes-total">0</div>
+            <div class="text-sm text-muted">Clientes registrados</div>
+          </div>
+        </div>
+        <div class="card card-outline">
+          <div class="card-content card-content-padding text-align-center">
+            <i class="icon f7-icons size-32 color-orange"
+              >checkmark_circle_fill</i
+            >
+            <div class="text-lg font-bold" id="conversaciones-finalizadas">
+              0
+            </div>
+            <div class="text-sm text-muted">Finalizadas hoy</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accesos rápidos -->
+      <div class="block-title">Accesos rápidos</div>
+      <div class="list simple-list">
+        <ul>
+          <li>
+            <a href="#" class="item-link panel-open" data-panel="left">
+              <i class="icon f7-icons color-blue">message_fill</i>
+              <span>Mensajes</span>
+              <span
+                class="badge color-red"
+                id="badge-mensajes"
+                style="display: none"
+                >0</span
+              >
+            </a>
+          </li>
+          <li>
+            <a href="/sistema/usuarios" class="item-link">
+              <i class="icon f7-icons color-green">person_3_fill</i>
+              <span>Usuarios</span>
+            </a>
+          </li>
+          <li>
+            <a href="/sistema/configuraciones" class="item-link">
+              <i class="icon f7-icons color-gray">gear_alt_fill</i>
+              <span>Configuraciones</span>
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
+  </div>
 </template>
 
 <script>
-import { getConversaciones, getClientes } from "../js/services/index.js";
+  import { getConversaciones, getClientes } from "../js/services/index.js";
 
-export default (props, { $f7, $f7ready }) => {
-    
+  export default (props, { $f7, $f7ready }) => {
     const cargarEstadisticas = async () => {
-        try {
-            const usuarioId = Number(localStorage.getItem("usuarioId"));
-            if (!usuarioId) return;
+      try {
+        console.log("🔄 Iniciando carga de estadísticas...");
 
-            const [conversaciones, clientes] = await Promise.all([
-                getConversaciones(),
-                getClientes()
-            ]);
-
-            const misConversaciones = conversaciones.filter(conv => conv.usuarioId == usuarioId);
-            const conversacionesActivas = misConversaciones.filter(conv => conv.estadoId == 2).length;
-            
-            let totalMensajesNoLeidos = 0;
-            misConversaciones.forEach(conv => {
-                if (conv.nroMensajesUltNoLeidos && conv.estadoMensajeUltNoLeido == 3) {
-                    totalMensajesNoLeidos += conv.nroMensajesUltNoLeidos;
-                }
-            });
-
-            const conversacionesFinalizadasHoy = misConversaciones.filter(conv => 
-                conv.estadoId == 3 && 
-                new Date(conv.fechaFinalizacion).toDateString() === new Date().toDateString()
-            ).length;
-
-            // Actualizar UI
-            document.getElementById('conversaciones-activas').textContent = conversacionesActivas;
-            document.getElementById('mensajes-pendientes').textContent = totalMensajesNoLeidos;
-            document.getElementById('clientes-total').textContent = clientes.length;
-            document.getElementById('conversaciones-finalizadas').textContent = conversacionesFinalizadasHoy;
-
-            // Badge en mensajes
-            const badge = document.getElementById('badge-mensajes');
-            if (totalMensajesNoLeidos > 0) {
-                badge.textContent = totalMensajesNoLeidos;
-                badge.style.display = 'inline-block';
-            } else {
-                badge.style.display = 'none';
-            }
-
-        } catch (error) {
-            console.error('Error cargando estadísticas:', error);
+        const usuarioId = Number(localStorage.getItem("usuarioId"));
+        if (!usuarioId) {
+          console.warn("❌ No hay usuarioId en localStorage");
+          return;
         }
+
+        console.log("👤 Usuario ID:", usuarioId);
+
+        const [conversaciones, clientes] = await Promise.all([
+          getConversaciones(),
+          getClientes(),
+        ]);
+
+        console.log("📊 Datos obtenidos:", {
+          conversaciones: conversaciones.length,
+          clientes: clientes.length,
+        });
+
+        const misConversaciones = conversaciones.filter(
+          (conv) => conv.usuarioId == usuarioId
+        );
+        const conversacionesActivas = misConversaciones.filter(
+          (conv) => conv.estadoId == 2
+        ).length;
+
+        let totalMensajesNoLeidos = 0;
+        misConversaciones.forEach((conv) => {
+          if (
+            conv.nroMensajesUltNoLeidos &&
+            conv.estadoMensajeUltNoLeido == 3
+          ) {
+            totalMensajesNoLeidos += conv.nroMensajesUltNoLeidos;
+          }
+        });
+
+        const conversacionesFinalizadasHoy = misConversaciones.filter(
+          (conv) =>
+            conv.estadoId == 3 &&
+            new Date(conv.fechaFinalizacion).toDateString() ===
+              new Date().toDateString()
+        ).length;
+
+        console.log("📈 Estadísticas calculadas:", {
+          conversacionesActivas,
+          totalMensajesNoLeidos,
+          clientesTotal: clientes.length,
+          conversacionesFinalizadasHoy,
+        });
+
+        // ✅ Función auxiliar para actualizar elemento de forma segura
+        const actualizarElemento = (id, valor) => {
+          const elemento = document.getElementById(id);
+          if (elemento) {
+            elemento.textContent = valor;
+            console.log(`✅ ${id} actualizado: ${valor}`);
+          } else {
+            console.warn(`⚠️ Elemento '${id}' no encontrado en el DOM`);
+          }
+        };
+
+        // ✅ Actualizar UI de forma segura
+        actualizarElemento("conversaciones-activas", conversacionesActivas);
+        actualizarElemento("mensajes-pendientes", totalMensajesNoLeidos);
+        actualizarElemento("clientes-total", clientes.length);
+        actualizarElemento(
+          "conversaciones-finalizadas",
+          conversacionesFinalizadasHoy
+        );
+
+        // ✅ Badge en mensajes de forma segura
+        const badge = document.getElementById("badge-mensajes");
+        if (badge) {
+          if (totalMensajesNoLeidos > 0) {
+            badge.textContent = totalMensajesNoLeidos;
+            badge.style.display = "inline-block";
+            console.log(`✅ Badge actualizado: ${totalMensajesNoLeidos}`);
+          } else {
+            badge.style.display = "none";
+            console.log("✅ Badge ocultado (sin mensajes)");
+          }
+        } else {
+          console.warn("⚠️ Badge de mensajes no encontrado");
+        }
+
+        console.log("✅ Estadísticas cargadas correctamente");
+      } catch (error) {
+        console.error("❌ Error cargando estadísticas:", error);
+
+        // ✅ Mostrar notificación de error al usuario
+        if ($f7) {
+          $f7.notification
+            .create({
+              text: "Error al cargar estadísticas del dashboard",
+              closeTimeout: 3000,
+            })
+            .open();
+        }
+      }
     };
 
     $f7ready(() => {
-        console.log('Dashboard VIP2CARS cargado');
-        
-        // Cargar estadísticas al iniciar
-        setTimeout(() => {
-            cargarEstadisticas();
-        }, 1000);
+      console.log("Dashboard VIP2CARS cargado");
 
-        // Recargar cada 30 segundos
-        setInterval(cargarEstadisticas, 30000);
+      // Cargar estadísticas al iniciar
+      setTimeout(() => {
+        cargarEstadisticas();
+      }, 1000);
+
+      // Recargar cada 30 segundos
+      setInterval(cargarEstadisticas, 30000);
     });
 
     return $render;
-};
+  };
 </script>

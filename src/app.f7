@@ -261,6 +261,8 @@
     getClientes,
     getPerfiles,
     getConversaciones,
+    login, // ✅ Agregar función login
+    logout, // ✅ Agregar función logout
   } from "./js/services/index.js";
   import io from "socket.io-client";
   import { panelDerecho, panelIzquierdo } from "./js/components/index.js";
@@ -463,100 +465,108 @@
       }, 30000);
     });
 
-    // --- Funciones originales del login ---
-    const iniciarSesion = function (ev) {
+    // --- Reemplazar la función iniciarSesion ---
+    const iniciarSesion = async function (ev) {
       ev.preventDefault();
       let formData = $f7.form.convertToData(ev.target);
 
       $f7.dialog.preloader("Iniciando Sesión", "red");
 
-      fetch($f7.config.endpoint("/auth/login"), {
-        method: "POST",
-        cache: "no-cache",
-        credentials: "same-origin",
-        body: JSON.stringify(formData),
-      })
-        .then((response) => {
-          $f7.dialog.close();
-          return response.json();
-        })
-        .then((data) => {
-          $f7.dialog.close();
+      try {
+        // ✅ Usar el servicio en lugar de fetch
+        const data = await login(formData);
 
-          if (data.status === 400) {
-            throw new Error(data.status + " - " + data.messages.error);
-          }
-
-          if (!data.success) throw new Error(data.messages.error);
-          if (!data.token) throw new Error("Token ausente.");
-
-          $store.dispatch("setToken", data.token);
-
-          $f7.notification
-            .create({
-              icon: '<i class="icon f7-icons color-green size-50">hand_thumbsup_fill</i>',
-              text: data.messages,
-              closeTimeout: 2000,
-              on: {
-                close: function () {
-                  $("input#iusername")
-                    .eq(0)
-                    .val("")
-                    .trigger("input change")
-                    .focus()
-                    .trigger("input:clear");
-                  $("input#ipassword")
-                    .eq(0)
-                    .val("")
-                    .trigger("input change")
-                    .focus()
-                    .trigger("input:clear");
-                  $store.dispatch("setToken", data.token);
-
-                  // CARGAR CONVERSACIONES después del login exitoso
-                  setTimeout(() => {
-                    cargarDatos();
-                  }, 2000); // Aumentar el tiempo para asegurar que el usuarioId esté guardado
-                },
-              },
-            })
-            .open();
-
-          // También cargar aquí por si acaso
-          setTimeout(() => {
-            cargarDatos();
-          }, 2500);
-
-          if (isFirstLogin) {
-            alert("Es el primer login, te redirigiré al cambio de contraseña.");
-            localStorage.setItem("isFirstLogin", "false");
-            $f7.views.main.router.navigate("/usuario/cambio/password");
-          } else {
-            alert("No es el primer login, te redirigiré al dashboard.");
-            $f7.views.main.router.navigate("/dashboard");
-          }
-        })
-        .catch((error) => {
-          console.error("Error al iniciar sesión:", error);
-          $f7.notification
-            .create({ text: error.message || error.toString() })
-            .open();
-        });
-    };
-
-    const cerrarSesion = function () {
-      $f7.dialog.preloader("Cerrando Sesión", "red");
-      $f7.tools.sendRequest("GET", "/auth/logout").then((data) => {
         $f7.dialog.close();
 
-        // Desconectar socket al cerrar sesión
+        if (data.status === 400) {
+          throw new Error(data.status + " - " + data.messages.error);
+        }
+
+        if (!data.success) throw new Error(data.messages.error);
+        if (!data.token) throw new Error("Token ausente.");
+
+        $store.dispatch("setToken", data.token);
+
+        $f7.notification
+          .create({
+            icon: '<i class="icon f7-icons color-green size-50">hand_thumbsup_fill</i>',
+            text: data.messages,
+            closeTimeout: 2000,
+            on: {
+              close: function () {
+                $("input#iusername")
+                  .eq(0)
+                  .val("")
+                  .trigger("input change")
+                  .focus()
+                  .trigger("input:clear");
+                $("input#ipassword")
+                  .eq(0)
+                  .val("")
+                  .trigger("input change")
+                  .focus()
+                  .trigger("input:clear");
+                $store.dispatch("setToken", data.token);
+
+                // CARGAR CONVERSACIONES después del login exitoso
+                setTimeout(() => {
+                  cargarDatos();
+                }, 2000);
+              },
+            },
+          })
+          .open();
+
+        // También cargar aquí por si acaso
+        setTimeout(() => {
+          cargarDatos();
+        }, 2500);
+
+        if (isFirstLogin) {
+          alert("Es el primer login, te redirigiré al cambio de contraseña.");
+          localStorage.setItem("isFirstLogin", "false");
+          $f7.views.main.router.navigate("/usuario/cambio/password");
+        } else {
+          alert("No es el primer login, te redirigiré al dashboard.");
+          $f7.views.main.router.navigate("/dashboard");
+        }
+      } catch (error) {
+        $f7.dialog.close();
+        console.error("Error al iniciar sesión:", error);
+        $f7.notification
+          .create({
+            text: error.message || error.toString(),
+            closeTimeout: 3000,
+          })
+          .open();
+      }
+    };
+
+    // --- Mejorar la función cerrarSesion ---
+    const cerrarSesion = async function () {
+      $f7.dialog.preloader("Cerrando Sesión", "red");
+
+      // ✅ Intentar logout en servidor, pero no bloquear el logout local
+      logout().catch((error) => {
+        console.warn(
+          "Error en logout del servidor (ignorado):",
+          error.response?.status === 500 ? "Token ya eliminado" : error.message
+        );
+      });
+
+      // ✅ Ejecutar logout local inmediatamente
+      setTimeout(() => {
+        $f7.dialog.close();
+
+        // Desconectar socket
         if (socket) {
           socket.disconnect();
           socket = null;
         }
 
+        // Limpiar sesión local
         $store.dispatch("cerrarSistema");
-      });
+      }, 500);
     };
 
     // --- Limpieza al cerrar la aplicación ---

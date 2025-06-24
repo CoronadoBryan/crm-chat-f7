@@ -35,9 +35,11 @@ export function panelIzquierdo({
 
   if (conversacionesFiltradas.length === 0) {
     lista.innerHTML = `
-      <li style="text-align: center; padding: 40px 20px;">
-        <div style="color: #8e8e93; font-size: 14px; margin-top: 8px;">
-          No tienes conversaciones asignadas.
+      <li class="item-content-center">
+        <div class="item-inner" style="text-align: center; padding: 40px 20px;">
+          <div class="text-color-gray" style="font-size: 14px; margin-top: 8px;">
+            No tienes conversaciones asignadas.
+          </div>
         </div>
       </li>`;
     return;
@@ -109,97 +111,44 @@ export function panelIzquierdo({
         conv.estadoMensajeUltNoLeido == 3 && conv.nroMensajesUltNoLeidos > 0;
 
       return `
-      <li class="abrir-chat${isSelected ? " seleccionada" : ""}" 
-          data-conv-id="${conv.conversacionId}" 
-          style="
-            cursor: pointer; 
-            background-color: ${
-              isSelected ? "rgba(220, 53, 69, 0.15)" : "transparent"
-            };
-            display: flex;
-            align-items: center;
-            padding: 12px 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            transition: background-color 0.2s ease;
-          ">
-        
-        <!-- Avatar -->
-        <div style="
-          background: ${colorAvatar};
-          width: 44px;
-          height: 44px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-weight: 600;
-          font-size: 16px;
-          margin-right: 12px;
-          flex-shrink: 0;
-        ">
-          ${iniciales}
-        </div>
-
-        <!-- Contenido -->
-        <div style="
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-        ">
-          <!-- Fila superior: Nombre y badges -->
-          <div style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 4px;
-          ">
-            <div style="
-              font-weight: 500;
-              color: rgba(255, 255, 255, 0.9);
-              font-size: 15px;
-              flex: 1;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
+      <li class="abrir-chat${
+        isSelected ? " seleccionada" : ""
+      }" data-conv-id="${
+        conv.conversacionId
+      }" style="cursor:pointer; background-color: ${
+        isSelected ? "rgba(220, 53, 69, 0.15)" : "transparent"
+      };">
+        <div class="item-content">
+          <div class="item-media">
+            <div class="avatar" style="
+              background: ${colorAvatar};
+              width: 40px;
+              height: 40px;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-weight: 600;
+              font-size: 14px;
             ">
-              ${displayName}
-            </div>
-            
-            <div style="display: flex; align-items: center; gap: 8px;">
-              ${
-                mostrarNotificacion
-                  ? `
-                <span style="
-                  background: #dc3545;
-                  color: white;
-                  border-radius: 10px;
-                  padding: 2px 6px;
-                  font-size: 12px;
-                  font-weight: 600;
-                  min-width: 18px;
-                  text-align: center;
-                ">${conv.nroMensajesUltNoLeidos}</span>
-              `
-                  : ""
-              }
-              
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="opacity: 0.6;">
-                <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              ${iniciales}
             </div>
           </div>
-
-          <!-- Fila inferior: Preview del último mensaje -->
-          <div style="
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.6);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          ">
-            ${conv.ultimoMensaje || ""}
+          <div class="item-inner">
+            <div class="item-title-row">
+              <div class="item-title" style="font-weight: 500; color: var(--f7-text-color);">
+                ${displayName}
+              </div>
+              <div class="item-after">
+                ${
+                  mostrarNotificacion
+                    ? `<span class="badge color-red">${conv.nroMensajesUltNoLeidos}</span>`
+                    : ""
+                }
+                <i class="icon f7-icons color-gray">chevron_right</i>
+              </div>
+            </div>
           </div>
         </div>
       </li>
@@ -212,6 +161,7 @@ export function panelIzquierdo({
       e.preventDefault();
       const convId = el.getAttribute("data-conv-id");
       if (onSeleccionar) onSeleccionar(convId);
+
       const conv = conversaciones.find((c) => c.conversacionId == convId);
       const usuarioId = Number(localStorage.getItem("usuarioId"));
 
@@ -225,7 +175,7 @@ export function panelIzquierdo({
         return;
       }
 
-      // Marcar visualmente como seleccionada
+      // ✅ Marcar visualmente como seleccionada ANTES de navegar
       document.querySelectorAll(".abrir-chat").forEach((item) => {
         item.classList.remove("seleccionada");
         item.style.backgroundColor = "transparent";
@@ -233,38 +183,73 @@ export function panelIzquierdo({
       el.classList.add("seleccionada");
       el.style.backgroundColor = "rgba(220, 53, 69, 0.15)";
 
-      await aceptarConversacion(convId, usuarioId);
+      console.log(`🔄 Navegando a conversación ${convId}`);
 
-      // Buscar cliente y perfil
-      let cliente = null;
+      // ✅ Verificar si ya estamos en una página de mensajes
+      const currentRoute = $f7.views.main.router.currentRoute;
+      const yaEnMensajes = currentRoute.path.includes("/messages/");
+
+      console.log("📍 Ruta actual:", currentRoute.path);
+      console.log("📍 Ya en mensajes:", yaEnMensajes);
+
       try {
-        cliente = clientes.find((c) => c.telefono === conv.telefono);
-      } catch (err) {
-        console.error("Error buscando cliente:", err);
-      }
+        await aceptarConversacion(convId, usuarioId);
 
-      let perfil = null;
-      if (cliente) {
+        // Obtener datos del cliente
+        let cliente = null;
+        let perfil = null;
+
         try {
-          perfil = perfiles.find((p) => p.id_cliente === cliente.id);
+          cliente = clientes.find((c) => c.telefono === conv.telefono);
+          if (cliente) {
+            perfil = perfiles.find((p) => p.id_cliente === cliente.id);
+          }
         } catch (err) {
-          console.error("Error buscando perfil:", err);
+          console.error("Error buscando cliente/perfil:", err);
         }
-      }
 
-      // Mostrar datos en el panel derecho
-      const panelDatos = document.getElementById("panel-datos-cliente");
-      if (panelDerecho && panelDatos) {
-        panelDerecho(panelDatos, conv, perfil);
-      }
+        // Mostrar datos en el panel derecho
+        const panelDatos = document.getElementById("panel-datos-cliente");
+        if (panelDerecho && panelDatos) {
+          panelDerecho(panelDatos, conv, perfil);
+        }
 
-      // Navegar al chat
-      $f7.views.main.router.navigate(`/messages/${convId}/`, {
-        reloadAll: true,
-      });
+        // ✅ ESTRATEGIA DE NAVEGACIÓN MEJORADA
+        if (yaEnMensajes) {
+          // Si ya estamos en una página de mensajes, REEMPLAZAR
+          console.log("🔄 REEMPLAZANDO página de mensajes existente");
+
+          $f7.views.main.router.navigate(`/messages/${convId}/`, {
+            reloadAll: true, // ✅ Fuerza recarga completa
+            ignoreCache: true, // ✅ Ignora caché
+            force: true, // ✅ Fuerza navegación
+            replace: true, // ✅ REEMPLAZA en lugar de apilar
+            clearPreviousHistory: false, // ✅ Mantiene historial para el botón back
+          });
+        } else {
+          // Si venimos de otra página, navegación normal
+          console.log("➡️ NAVEGANDO a nueva página de mensajes");
+
+          $f7.views.main.router.navigate(`/messages/${convId}/`, {
+            reloadAll: true,
+            ignoreCache: true,
+            force: true,
+          });
+        }
+      } catch (error) {
+        console.error("❌ Error al aceptar conversación:", error);
+
+        // ✅ Restaurar estado visual en caso de error
+        el.classList.remove("seleccionada");
+        el.style.backgroundColor = "transparent";
+
+        $f7.dialog.alert(
+          "Error al acceder a la conversación. Inténtalo de nuevo."
+        );
+      }
     });
 
-    // Agregar efecto hover
+    // ✅ Efectos hover mejorados
     el.addEventListener("mouseenter", () => {
       if (!el.classList.contains("seleccionada")) {
         el.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
