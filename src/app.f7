@@ -82,7 +82,7 @@
     >
       <!-- Top Navbar -->
       <div class="navbar">
-        <div class="navbar-bg color-red"></div>
+        <div class="navbar-bg" style="background-color: #f8f9fa"></div>
         <div class="navbar-inner">
           <div class="left">
             <a href="/dashboard" class="link">
@@ -99,7 +99,7 @@
                 style="
                   width: 32px;
                   height: 32px;
-                  background-color: rgba(255, 255, 255, 0.2);
+                  background-color: #dc3545;
                   border-radius: 50%;
                   display: flex;
                   align-items: center;
@@ -116,19 +116,22 @@
           <div class="right">
             ${isSudo && $h`
             <a href="/sistema/configuraciones" class="link icon-only">
-              <i class="icon f7-icons">gear_alt</i>
+              <i class="icon f7-icons" style="color: #343a40">gear_alt</i>
             </a>
             `}
             <a
               href="#"
               class="link popover-open"
               data-popover=".account-options"
+              style="color: #343a40"
             >
               <span
                 >Hola, ${perfil.value['nombres']}
                 ${perfil.value['apellidos']}</span
               >
-              <i class="icon f7-icons">person_crop_circle</i>
+              <i class="icon f7-icons" style="color: #343a40"
+                >person_crop_circle</i
+              >
             </a>
           </div>
         </div>
