@@ -1,581 +1,250 @@
 <template>
-  <div id="app">
-    <!-- LOGIN SCREEN -->
-    <div id="login-screen" class="login-screen" style="display: block">
-      <div class="view">
-        <div class="page login-screen-page">
-          <div class="page-content login-screen-content">
-            <div class="login-screen-title">${app_name}</div>
-            <form @submit="${iniciarSesion}" autocomplete="off">
-              <div class="list">
-                <ul>
-                  <li class="item-content item-input">
-                    <div class="item-inner">
-                      <div class="item-title item-label">Usuario</div>
-                      <div class="item-input-wrap">
-                        <input
-                          type="text"
-                          name="username"
-                          id="iusername"
-                          placeholder="Usuario"
-                          autocomplete="off"
-                        />
-                        <span class="input-clear-button"></span>
-                      </div>
+    <div id="app">
+        <!-- Your main view, should have "view-main" class -->
+        <div id="view-main " class="view view-main view-init safe-areas " data-url="/dashboard">
+            <!-- Top Navbar -->
+            <div class="navbar ">
+                <div class="navbar-bg color-red"></div>
+                <div class="navbar-inner">
+                    <!---
+                    <div class="left">
+                        <a href="/dashboard" class="link popover-open">
+                            <span>${app_name}</span>
+                        </a>
+                    </div>-->
+
+
+                    <div class="left">
+                        <a href="/dashboard" class="link">
+                            <img src="icons/logo.png" class="logo" alt="Logo" style="height: 28px;" />
+                        </a>
                     </div>
-                  </li>
-                  <li class="item-content item-input">
-                    <div class="item-inner">
-                      <div class="item-title item-label">Contraseña</div>
-                      <div class="item-input-wrap">
-                        <input
-                          type="password"
-                          name="password"
-                          id="ipassword"
-                          placeholder="Contraseña"
-                        />
-                        <span class="input-clear-button"></span>
-                      </div>
+
+                    <div class="right">
+                        ${isSudo && $h`
+                        <a href="/sistema/configuraciones" class="link icon-only">
+                            <i class="icon f7-icons">gear_alt</i>
+                        </a>
+                        `}
+                        <a href="#" class="link popover-open" data-popover=".account-options">
+                            <span>Hola, ${perfil.value['nombres']} ${perfil.value['apellidos']}</span>
+                            <i class="icon f7-icons">person_crop_circle</i>
+                        </a>
                     </div>
-                  </li>
-                </ul>
-              </div>
-              <div class="list">
-                <ul>
-                  <li class="item-content px-3">
-                    <button
-                      type="submit"
-                      class="button button-fill button-large color-green"
-                    >
-                      Ingresar
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- MAIN APPLICATION (hidden initially) -->
-    <div id="main-app" style="display: none">
-      <!-- Your main view, should have "view-main" class -->
-      <div
-        id="view-main"
-        class="view view-main view-init safe-areas"
-        data-url="/dashboard"
-      >
-        <!-- Top Navbar -->
-        <div class="navbar">
-          <div class="navbar-bg color-red"></div>
-          <div class="navbar-inner">
-            <div class="left">
-              <a href="/dashboard" class="link">
-                <img
-                  src="icons/logo.png"
-                  class="logo"
-                  alt="Logo"
-                  style="height: 28px"
-                />
-              </a>
-            </div>
-
-            <div class="right">
-              ${getIsSudo() ? $h`
-              <a href="/sistema/configuraciones" class="link icon-only">
-                <i class="icon f7-icons">gear_alt</i>
-              </a>
-              ` : ''}
-              <a
-                href="#"
-                class="link popover-open"
-                data-popover=".account-options"
-              >
-                <span>Hola, ${getUserDisplayName()}</span>
-                <i class="icon f7-icons">person_crop_circle</i>
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Toolbar-->
-        <div class="toolbar toolbar-bottom">
-          <div class="toolbar-inner">
-            <div class="toolbar-inner justify-content-center">
-              <a href="/menu-modulos" class="link icon-only">
-                <i class="icon f7-icons">logo_windows</i>
-              </a>
-            </div>
-            <div class="toolbar-inner justify-content-end">
-              <a href="#" class="link">Right Link</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Panel izquierdo: Lista de conversaciones -->
-      <div
-        class="panel panel-left panel-cover dark panel-init"
-        data-visible-breakpoint="960"
-      >
-        <div class="view view-init" data-name="left">
-          <div class="page" data-name="home">
-            <div class="navbar navbar-large">
-              <div class="navbar-bg"></div>
-              <div class="navbar-inner sliding">
-                <div class="title">CRM Chat</div>
-                <div class="title-large">
-                  <div class="title-large-text">Conversaciones</div>
                 </div>
-                <div
-                  class="subnavbar"
-                  style="
-                    display: flex;
-                    justify-content: flex-end;
-                    padding: 0 10px;
-                  "
-                >
-                  <form
-                    class="searchbar searchbar-init"
-                    style="max-width: 300px; width: 100%"
-                    onsubmit="return false;"
-                  >
-                    <div class="searchbar-inner">
-                      <div class="searchbar-input-wrap">
-                        <input
-                          id="search-input"
-                          type="search"
-                          placeholder="Buscar por teléfono"
-                          autocomplete="off"
-                        />
-                        <i class="searchbar-icon"></i>
-                        <span
-                          class="input-clear-button"
-                          id="clear-button"
-                        ></span>
-                      </div>
-                      <span class="searchbar-disable-button">Cancel</span>
+            </div>
+            <!-- Toolbar-->
+
+            <div class="toolbar toolbar-bottom">
+                <div class="toolbar-inner ">
+                    <div class="toolbar-inner justify-content-center">
+                        <a href="/menu-modulos" class="link icon-only">
+                            <i class="icon f7-icons">logo_windows</i>
+                        </a>
+
                     </div>
-                  </form>
+
+                    <div class="toolbar-inner justify-content-end">
+                        <a href="#" class="link ">Right Link</a>
+                    </div>
+
                 </div>
-              </div>
             </div>
-            <div class="page-content">
-              <div class="list">
-                <ul id="lista-conversaciones">
-                  <!-- Las conversaciones se renderizan aquí -->
-                </ul>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
 
-      <!-- Panel derecho: Datos del cliente -->
-      <div class="panel panel-right panel-reveal dark">
-        <div class="view">
-          <div class="page">
-            <div class="navbar">
-              <div class="navbar-bg"></div>
-              <div class="navbar-inner">
-                <div class="title">Datos del Cliente</div>
-              </div>
+        <!-- OPCIONES DEL USUARIO LOGEADO -->
+        <div class="popover account-options">
+            <!-- Popover's arrow -->
+            <div class="popover-arrow"></div>
+
+            <!-- Popover content -->
+            <div class="popover-inner">
+                <div class="list list-outline">
+                    <ul>
+                        <li>
+                            <a href="/usuario/perfil" class="item-link item-content popover-close">
+                                <div class="item-media">
+                                    <i class="icon f7-icons">person_crop_circle</i>
+                                </div>
+                                <div class="item-inner">
+                                    <div class="item-title">
+                                        Perfil
+                                        <div class="item-footer">Ver/Editar perfil de usuario</div>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/usuario/cambio/password" class="item-link item-content popover-close">
+                                <div class="item-media">
+                                    <i class="icon f7-icons">lock_rotation</i>
+                                </div>
+                                <div class="item-inner">
+                                    <div class="item-title">
+                                        Cambiar Contraseña
+                                        <!--<div class="item-footer">Ver/Editar perfil de usuario</div>-->
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="item-link item-content popover-close color-red" @click="${cerrarSesion}">
+                                <div class="item-media">
+                                    <i class="icon f7-icons">square_arrow_left_fill</i>
+                                </div>
+                                <div class="item-inner">
+                                    <div class="item-title">
+                                        Cerrar Sesión
+                                        <!--<div class="item-footer">Ver/Editar perfil de usuario</div>-->
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
-            <div class="page-content">
-              <div class="block" id="panel-datos-cliente">
-                Selecciona una conversación para ver los datos del cliente.
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
 
-      <!-- OPCIONES DEL USUARIO LOGEADO -->
-      <div class="popover account-options">
-        <div class="popover-arrow"></div>
-        <div class="popover-inner">
-          <div class="list list-outline">
-            <ul>
-              <li>
-                <a
-                  href="/usuario/perfil"
-                  class="item-link item-content popover-close"
-                >
-                  <div class="item-media">
-                    <i class="icon f7-icons">person_crop_circle</i>
-                  </div>
-                  <div class="item-inner">
-                    <div class="item-title">
-                      Perfil
-                      <div class="item-footer">
-                        Ver/Editar perfil de usuario
-                      </div>
+        <!-- MODAL CAMBIAR CONTRASEÑA -->
+        <!--<div class="dialog dialog-md account-password">-->
+        <!--<div class="dialog account-password">-->
+
+        <!-- LOGIN SCREEN -->
+        <div id="login-screen" class="login-screen">
+            <!-- Default view-page layout -->
+            <div class="view">
+                <div class="page login-screen-page">
+                    <!-- page-content has additional login-screen content -->
+                    <div class="page-content login-screen-content">
+                        <div class="login-screen-title">${app_name}</div>
+                        <!-- Login form -->
+                        <form @submit="${iniciarSesion}" autocomplete="off">
+                            <div class="list">
+                                <ul>
+                                    <li class="item-content item-input">
+                                        <div class="item-inner">
+                                            <div class="item-title item-label">Usuario</div>
+                                            <div class="item-input-wrap">
+
+                                                <input type="text" name="username" id="iusername" placeholder="Usuario"
+                                                       autocomplete="off" />
+
+                                                <span class="input-clear-button"></span>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="item-content item-input">
+                                        <div class="item-inner">
+                                            <div class="item-title item-label">Contraseña</div>
+                                            <div class="item-input-wrap">
+
+                                                <input type="password" name="password" id="ipassword"
+                                                       placeholder="Contraseña" />
+
+                                                <span class="input-clear-button"></span>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="list">
+                                <ul>
+                                    <li class="item-content px-3">
+                                        <button type="submit"
+                                                class="button button-fill button-large color-green">Ingresar</button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </form>
                     </div>
-                  </div>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/usuario/cambio/password"
-                  class="item-link item-content popover-close"
-                >
-                  <div class="item-media">
-                    <i class="icon f7-icons">lock_rotation</i>
-                  </div>
-                  <div class="item-inner">
-                    <div class="item-title">Cambiar Contraseña</div>
-                  </div>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  class="item-link item-content popover-close color-red"
-                  @click="${cerrarSesion}"
-                >
-                  <div class="item-media">
-                    <i class="icon f7-icons">square_arrow_left_fill</i>
-                  </div>
-                  <div class="item-inner">
-                    <div class="item-title">Cerrar Sesión</div>
-                  </div>
-                </a>
-              </li>
-            </ul>
-          </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </template>
 
 <script>
-  // --- Importaciones ---
-  import {
-    getClientes,
-    getPerfiles,
-    getConversaciones,
-  } from "./js/services/index.js";
-  import api from "./js/api.js";
-  import io from "socket.io-client";
-  import { panelDerecho, panelIzquierdo } from "./js/components/index.js";
+    export default (props, { $, $f7, $store, $update }) => {
+        let app_name = $f7.name;
+        let cuenta = $store.getters.cuenta;
+        let perfil = $store.getters.perfil;
+        let isSudo = $store.getters.isSudo;
 
-  export default (props, { $, $f7, $store, $update, $on }) => {
-    // --- Variables de estado ---
-    let app_name = $f7.name || "CRM Chat";
 
-    // Variables del CRM
-    let conversaciones = [];
-    let clientes = [];
-    let perfiles = [];
-    let socket = null;
-    let conversacionSeleccionadaId = null;
+        const iniciarSesion = function (ev) {
+            ev.preventDefault();
+            let formData = $f7.form.convertToData(ev.target);
 
-    // --- Función para obtener datos reactivos ---
-    const getUserDisplayName = () => {
-      const perfil = $store.getters.perfil.value;
-      if (perfil && perfil.nombres) {
-        return `${perfil.nombres} ${perfil.apellidos || ""}`.trim();
-      }
-      const cuenta = $store.getters.cuenta.value;
-      if (cuenta && cuenta.usuario) {
-        return cuenta.usuario;
-      }
-      return "Usuario";
+
+            $f7.dialog.preloader('Iniciando Sesión', 'red');
+
+            fetch($f7.config.endpoint('/auth/login'), {
+                method: "POST",
+                cache: 'no-cache',
+                credentials: 'same-origin',
+
+                body: JSON.stringify(formData),
+
+            }).then(response => {
+                $f7.dialog.close();
+                return response.json();
+            }).then(data => {
+                $f7.dialog.close();
+
+                if (data.status === 400) {
+                    throw new Error(data.status + ' - ' + data.messages.error);
+                }
+
+                if (!data.success)
+                    throw new Error(data.messages.error);
+                if (!data.token)
+                    throw new Error('Token ausente.');
+
+                $store.dispatch('setToken', data.token);
+
+                $f7.notification.create({
+                    icon: '<i class="icon f7-icons color-green size-50">hand_thumbsup_fill</i>',
+                    text: data.messages,
+
+                    closeTimeout: 2000,
+                    on: {
+                        close: function () {
+                            $('input#iusername').eq(0).val('').trigger('input change').focus().trigger('input:clear');
+                            $('input#ipassword').eq(0).val('').trigger('input change').focus().trigger('input:clear');
+
+                            //Almacenar el token
+                            $store.dispatch('setToken', data.token);
+                        }
+                    }
+
+                }).open();
+
+                if (isFirstLogin) {
+                    //VERIFCIAR EL PRIMER LOGEO
+                    alert("Es el primer login, te redirigiré al cambio de contraseña.");
+
+                    localStorage.setItem('isFirstLogin', 'false');
+                    $f7.views.main.router.navigate('/usuario/cambio/password');
+                } else {
+                    //VERIICAR MULTIPLES LOGEOS - 
+                    alert("No es el primer login, te redirigiré al dashboard.");
+
+                    $f7.views.main.router.navigate('/dashboard');
+                }
+            }).catch(error => {
+                console.error('Error al iniciar sesión:', error);
+                $f7.notification.create({text: error.message || error.toString()}).open();
+            });
+        };
+
+        const cerrarSesion = function () {
+            $f7.dialog.preloader('Cerrando Sesión', 'red');
+            $f7.tools.sendRequest('GET', '/auth/logout').then(data => {
+                $f7.dialog.close();
+                $store.dispatch('cerrarSistema');
+            });
+        };
+
+        return $render;
     };
-
-    const getIsSudo = () => {
-      return $store.getters.isSudo.value || false;
-    };
-
-    // --- Función para mostrar/ocultar screens ---
-    const mostrarAplicacionPrincipal = () => {
-      console.log("Mostrando aplicación principal");
-      document.getElementById("login-screen").style.display = "none";
-      document.getElementById("main-app").style.display = "block";
-    };
-
-    const mostrarLoginScreen = () => {
-      console.log("Mostrando login screen");
-      document.getElementById("main-app").style.display = "none";
-      document.getElementById("login-screen").style.display = "block";
-    };
-
-    // --- Función de Login ---
-    const iniciarSesion = function (ev) {
-      ev.preventDefault();
-      let formData = $f7.form.convertToData(ev.target);
-
-      $f7.dialog.preloader("Iniciando Sesión", "red");
-
-      api
-        .post("/auth/login", formData)
-        .then((response) => {
-          $f7.dialog.close();
-          const data = response.data;
-
-          console.log("Respuesta del servidor:", data);
-
-          if (data.status === 400) {
-            throw new Error(
-              data.status +
-                " - " +
-                (data.messages?.error || "Error de autenticación")
-            );
-          }
-
-          if (!data.success) {
-            throw new Error(data.messages || "Error de autenticación");
-          }
-
-          if (!data.token) {
-            throw new Error("Token ausente.");
-          }
-
-          // Usar el store para manejar el token
-          const tokenProcessed = $store.dispatch("setToken", data.token);
-
-          if (tokenProcessed) {
-            $f7.notification
-              .create({
-                icon: '<i class="icon f7-icons color-green size-50">hand_thumbsup_fill</i>',
-                text: data.messages || "Sesión iniciada correctamente",
-                closeTimeout: 2000,
-                on: {
-                  close: function () {
-                    // Limpiar formulario
-                    $("input#iusername").eq(0).val("").trigger("input change");
-                    $("input#ipassword").eq(0).val("").trigger("input change");
-
-                    // Mostrar aplicación principal
-                    mostrarAplicacionPrincipal();
-
-                    // Actualizar el componente para reflejar los cambios del store
-                    $update();
-
-                    // Inicializar el CRM después de un breve delay
-                    setTimeout(() => {
-                      if ($store.getters.sesionIniciada.value) {
-                        inicializarCRM();
-                      }
-                    }, 500);
-                  },
-                },
-              })
-              .open();
-          }
-        })
-        .catch((error) => {
-          $f7.dialog.close();
-          console.error("Error completo:", error);
-
-          let errorMessage = "Error al iniciar sesión";
-
-          if (error.response?.data?.message) {
-            errorMessage = error.response.data.message;
-          } else if (error.response?.data?.messages) {
-            errorMessage = error.response.data.messages;
-          } else if (error.response?.status === 401) {
-            errorMessage = "Credenciales incorrectas";
-          } else if (error.message) {
-            errorMessage = error.message;
-          }
-
-          $f7.notification
-            .create({
-              text: errorMessage,
-              closeTimeout: 4000,
-            })
-            .open();
-        });
-    };
-
-    // --- Función de Logout ---
-    const cerrarSesion = function () {
-      $f7.dialog.preloader("Cerrando Sesión", "red");
-
-      // Desconectar socket antes de cerrar sesión
-      if (socket) {
-        socket.disconnect();
-        socket = null;
-      }
-
-      // El store maneja todo el proceso de logout
-      $store.dispatch("cerrarSistema");
-
-      setTimeout(() => {
-        $f7.dialog.close();
-
-        // Mostrar login screen
-        mostrarLoginScreen();
-
-        // Actualizar el componente
-        $update();
-      }, 1000);
-    };
-
-    // --- Funciones del CRM ---
-    const inicializarCRM = () => {
-      console.log("Inicializando CRM...");
-
-      // Verificar que hay sesión activa
-      if (!$store.getters.sesionIniciada.value) {
-        console.log("No hay sesión iniciada");
-        return;
-      }
-
-      // Conexión en tiempo real con el servidor
-      socket = io("http://82.180.163.151:3000");
-
-      socket.on("conversacion_asignada", (data) => {
-        const cuenta = $store.getters.cuenta.value;
-        const usuarioId = cuenta?.id_user;
-
-        console.log("Evento conversacion_asignada recibido:", data);
-        console.log("Usuario ID actual:", usuarioId);
-
-        if (data.usuarioId && data.usuarioId == usuarioId) {
-          cargarDatos();
-          $f7.toast
-            .create({
-              text: "Nueva conversación recibida",
-              closeTimeout: 2000,
-              position: "top",
-            })
-            .open();
-        }
-      });
-
-      socket.on("nuevo_mensaje", (data) => {
-        console.log("Evento nuevo_mensaje recibido:", data);
-        cargarDatos();
-      });
-
-      cargarDatos();
-    };
-
-    const cargarDatos = async () => {
-      try {
-        [conversaciones, clientes, perfiles] = await Promise.all([
-          getConversaciones(),
-          getClientes(),
-          getPerfiles(),
-        ]);
-        renderConversaciones(conversaciones);
-        initSearch();
-      } catch (err) {
-        console.error("Error al cargar datos:", err);
-        $f7.toast
-          .create({
-            text: "Error al cargar conversaciones",
-            closeTimeout: 3000,
-          })
-          .open();
-      }
-    };
-
-    const handleSeleccionarConversacion = (convId) => {
-      conversacionSeleccionadaId = convId;
-      renderConversaciones(conversaciones);
-    };
-
-    const renderConversaciones = (convs) => {
-      const cuenta = $store.getters.cuenta.value;
-      const usuarioId = cuenta?.id_user;
-
-      console.log("Datos de cuenta:", cuenta);
-      console.log("UsuarioId obtenido:", usuarioId);
-
-      if (!usuarioId) {
-        console.warn("No se encontró usuarioId en el store");
-        return;
-      }
-
-      const convsFiltradas = convs.filter(
-        (conv) => conv.usuarioId && conv.usuarioId == usuarioId
-      );
-
-      console.log("Conversaciones filtradas:", convsFiltradas.length);
-
-      const lista = document.querySelector("#lista-conversaciones");
-      if (lista && panelIzquierdo) {
-        panelIzquierdo({
-          lista,
-          conversaciones: convsFiltradas,
-          clientes,
-          perfiles,
-          panelIzquierdo,
-          panelDerecho,
-          $f7,
-          onSeleccionar: handleSeleccionarConversacion,
-          conversacionSeleccionadaId,
-        });
-      }
-    };
-
-    const initSearch = () => {
-      const input = document.querySelector("#search-input");
-      const clearBtn = document.querySelector("#clear-button");
-
-      if (!input || !clearBtn) return;
-
-      input.addEventListener("input", () => {
-        const query = input.value.trim().toLowerCase();
-
-        if (query === "") {
-          renderConversaciones(conversaciones);
-          return;
-        }
-
-        const cuenta = $store.getters.cuenta.value;
-        const usuarioId = cuenta?.id_user;
-
-        const filtradas = conversaciones.filter((conv) => {
-          if (!conv.telefono) return false;
-          return (
-            conv.usuarioId &&
-            conv.usuarioId == usuarioId &&
-            (conv.telefono.toLowerCase().includes(query) ||
-              conv.conversacionId.toString().includes(query))
-          );
-        });
-
-        renderConversaciones(filtradas);
-      });
-
-      clearBtn.addEventListener("click", () => {
-        input.value = "";
-        renderConversaciones(conversaciones);
-        input.focus();
-      });
-    };
-
-    // --- Ciclo de vida ---
-    $on("pageInit", () => {
-      const sesionIniciada = $store.getters.sesionIniciada.value;
-      console.log("Sesión iniciada:", sesionIniciada);
-
-      if (sesionIniciada) {
-        console.log("Usuario ya logueado, mostrando aplicación...");
-        mostrarAplicacionPrincipal();
-        inicializarCRM();
-      } else {
-        console.log("Usuario no logueado, mostrando login...");
-        mostrarLoginScreen();
-      }
-    });
-
-    $on("pageBeforeRemove", () => {
-      if (socket) {
-        socket.disconnect();
-        socket = null;
-      }
-    });
-
-    // Hacer cargarDatos disponible globalmente
-    window.cargarDatos = cargarDatos;
-
-    return $render;
-  };
 </script>

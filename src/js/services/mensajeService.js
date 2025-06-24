@@ -1,4 +1,4 @@
-import api from "../api.js";
+import api from "../config.js";
 
 export async function getMensajesPorConversacion(conversacionId) {
   const res = await api.get(`/mensaje/listar-por-conversacion/${conversacionId}`);

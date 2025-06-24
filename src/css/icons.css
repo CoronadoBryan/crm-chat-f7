@@ -7,6 +7,7 @@
     url(../fonts/material-icons.woff2) format('woff2'),
     url(../fonts/material-icons.woff) format('woff');
 }
+
 .material-icons {
   font-family: 'Material Icons';
   font-weight: normal;
@@ -33,6 +34,7 @@
   src: url('../fonts/Framework7Icons-Regular.woff2') format('woff2'),
     url('../fonts/Framework7Icons-Regular.woff') format('woff');
 }
+
 .f7-icons {
   font-family: 'Framework7 Icons';
   font-weight: normal;
@@ -53,34 +55,4 @@
   -moz-font-feature-settings: 'liga';
   font-feature-settings: 'liga';
   text-align: center;
-}
-
-
-
-
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 16px;
-  background: linear-gradient(45deg, var(--f7-color-blue), #34aadc);
-}
-
-.item-content-center {
-  justify-content: center;
-  text-align: center;
-  padding: 40px 20px;
-}
-
-.size-48 {
-  font-size: 48px;
-}
-
-.margin-bottom-16 {
-  margin-bottom: 16px;
 }

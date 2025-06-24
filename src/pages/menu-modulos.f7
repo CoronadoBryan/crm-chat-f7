@@ -1,0 +1,45 @@
+<template>
+    <div class="panel panel-md panel-left panel-floating panel-init  menu-modulos sistema-configuraciones">
+        <div class="list">
+            <ul>
+
+                <li>
+                    <a href="/sistema/citas" class="item-link item-content ${current_route.path === '/sistema/citas' && $h`item-active`}">
+                        <div class="item-media">
+                            <i class="icon f7-icons">macwindow</i>
+                        </div>
+                        <div class="item-inner">
+                            <div class="item-title">
+                                messages
+                                <div class="item-footer">Gestión de los conversaciones</div>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <!-- <div class="list">
+        </div> -->
+    </div>
+</template>
+<script>
+
+    const routes = [
+       
+        {
+            path: '/sistema/citas',
+            componentUrl: '../pages/citas/index.f7'
+        },
+    ];
+
+    export default (props, {$f7, $f7ready, $f7router}) => {
+        let current_route = $f7router.currentRoute;
+
+        $f7ready(function () {
+            console.log('ready menu modulos');
+            $f7.tools.addRoutes($f7router.routes, routes);
+        });
+
+        return $render;
+    }
+</script>

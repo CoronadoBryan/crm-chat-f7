@@ -1,0 +1,82 @@
+<template>
+    <div class="page" data-name="dashboard">
+        <div class="navbar">
+            <div class="navbar-inner sliding">
+                <div class="title">VIP2CARS</div>
+                <div class="right">
+                    <a href="#" class="link panel-open" data-panel="right">
+                        <i class="icon f7-icons">person_crop_circle</i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-content">
+            <div class="block-title">Resumen General</div>
+            <div class="grid grid-cols-2 grid-gap">
+                <div class="card card-outline">
+                    <div class="card-content card-content-padding text-align-center">
+                        <i class="icon f7-icons size-32 color-green">car_fill</i>
+                        <div class="text-lg font-bold">27</div>
+                        <div class="text-sm text-muted">Autos disponibles</div>
+                    </div>
+                </div>
+                <div class="card card-outline">
+                    <div class="card-content card-content-padding text-align-center">
+                        <i class="icon f7-icons size-32 color-blue">person_2_fill</i>
+                        <div class="text-lg font-bold">15</div>
+                        <div class="text-sm text-muted">Clientes nuevos</div>
+                    </div>
+                </div>
+                <div class="card card-outline">
+                    <div class="card-content card-content-padding text-align-center">
+                        <i class="icon f7-icons size-32 color-yellow">doc_text_fill</i>
+                        <div class="text-lg font-bold">8</div>
+                        <div class="text-sm text-muted">Cotizaciones hoy</div>
+                    </div>
+                </div>
+                <div class="card card-outline">
+                    <div class="card-content card-content-padding text-align-center">
+                        <i class="icon f7-icons size-32 color-red">money_dollar_circle</i>
+                        <div class="text-lg font-bold">$152,000</div>
+                        <div class="text-sm text-muted">Ventas del mes</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accesos rápidos -->
+            <div class="block-title">Accesos rápidos</div>
+
+            <div class="list simple-list">
+                <ul>
+                    <li>
+                        <a href="/sistema/citas" class="item-link">
+                            <i class="icon f7-icons">square_stack_3d_down_right</i> Citas 
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/sistema/usuarios" class="item-link">
+                            <i class="icon f7-icons">person_3_fill</i> Usuarios 
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/sistema/permisos" class="item-link">
+                            <i class="icon f7-icons">lock_shield_fill</i> Permisos 
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</template>
+
+<script>
+
+    export default (props, { $f7, $f7ready }) => {
+        $f7ready(() => {
+            console.log('Dashboard VIP2CARS cargado');
+        });
+        return $render;
+    };
+</script>

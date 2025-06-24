@@ -1,4 +1,4 @@
-import config from './api.js';
+import config from './config.js';
 import moment from 'moment';
 
 const tools = {

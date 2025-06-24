@@ -1,4 +1,4 @@
-import api from "../api.js";
+import api from "../config.js";
 
 export async function getConversaciones() {
   const res = await api.get("/conversacion/listadoTelefonos");

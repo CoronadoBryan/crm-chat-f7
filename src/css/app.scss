@@ -1,45 +1,767 @@
-/* Left Panel right border when it is visible by breakpoint */
-.panel-left.panel-in-breakpoint:before {
-  position: absolute;
-  right: 0;
-  top: 0;
-  height: 100%;
-  width: 1px;
-  background: rgba(0,0,0,0.1);
-  content: '';
-  z-index: 6000;
+:root {
+    @media (min-width: 1441px) {
+        --f7-panel-width: 320px;
+    }
 }
 
-/* Hide navbar link which opens left panel when it is visible by breakpoint */
-.panel-left.panel-in-breakpoint ~ .view .navbar .panel-open[data-panel="left"] {
-  display: none;
+* {
+    box-sizing: border-box;
 }
 
-/*
-  Extra borders for main view and left panel for iOS theme when it behaves as panel (before breakpoint size)
-*/
-.ios .panel-left:not(.panel-in-breakpoint).panel-in ~ .view-main:before,
-.ios .panel-left:not(.panel-in-breakpoint).panel-closing ~ .view-main:before {
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: 1px;
-  background: rgba(0,0,0,0.1);
-  content: '';
-  z-index: 6000;
+.size-22 {
+    font-size: 22px
 }
 
-.badge-notificacion {
-  display: inline-block;
-  min-width: 20px;
-  padding: 2px 8px;
-  margin-left: 8px;
-  background: #007aff;
-  color: #fff;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
-  text-align: center;
-  vertical-align: middle;
+.size-25 {
+    font-size: 25px
+}
+
+.size-40 {
+    font-size: 40px
+}
+
+.size-50 {
+    font-size: 50px
+}
+
+.dialog-md {
+    @media (min-width: 560px) {
+        --f7-dialog-width: 500px;
+    }
+}
+
+.dialog-lg {
+    @media (min-width: 560px) {
+        --f7-dialog-width: 500px;
+    }
+
+    @media (min-width: 860px) {
+        --f7-dialog-width: 800px;
+    }
+}
+
+.dialog-xl {
+    @media (min-width: 560px) {
+        --f7-dialog-width: 500px;
+    }
+
+    @media (min-width: 860px) {
+        --f7-dialog-width: 800px;
+    }
+
+    @media (min-width: 1200px) {
+        --f7-dialog-width: 1140px;
+    }
+}
+
+.panel-md {
+    @media (min-width: 450px) {
+        --f7-panel-width: 390px;
+    }
+}
+
+.panel-lg {
+    @media (min-width: 450px) {
+        --f7-panel-width: 390px;
+    }
+
+    @media (min-width: 750px) {
+        --f7-panel-width: 690px;
+    }
+}
+
+.panel-xl {
+    @media (min-width: 450px) {
+        --f7-panel-width: 390px;
+    }
+
+    @media (min-width: 750px) {
+        --f7-panel-width: 690px;
+    }
+
+    @media (min-width: 1090px) {
+        --f7-panel-width: 1030px;
+    }
+}
+
+#modewarning {
+    background-color: rgba(255, 0, 0, .5);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 999999;
+    width: 100%;
+    display: none;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+    padding: 5px 0;
+    color: #fff;
+}
+
+.menu-modulos {
+    &.panel-floating {
+        --f7-safe-area-bottom: var(--f7-toolbar-height);
+    }
+}
+
+.item-toggle {
+    &.item-content {
+        margin-left: 16px;
+        margin-right: 16px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+}
+
+.item-active {
+    --f7-list-item-title-text-color: #fff;
+    --f7-list-item-footer-text-color: #fff;
+    --f7-list-chevron-icon-color: #fff;
+
+    background-color: rgba(255, 0, 0, .5);
+    color: #fff !important;
+}
+
+.subnavbar .segmented {
+    flex-direction: row;
+    align-items: center;
+}
+
+.toast-success {
+    --f7-toast-bg-color: #28a745;
+    --f7-toast-text-color: #fff;
+}
+
+.toast-warning {
+    --f7-toast-bg-color: #ffc107;
+    --f7-toast-text-color: #000;
+}
+
+.toast-error {
+    --f7-toast-bg-color: #dc3545;
+    --f7-toast-text-color: #fff;
+}
+
+.color-secondary {
+    --f7-theme-color: #6c757d;
+    /* gris secundario estilo Bootstrap */
+    --f7-theme-color-rgb: 108, 117, 125;
+    --f7-theme-color-shade: #5a6268;
+    /* versión más oscura */
+    --f7-theme-color-tint: #898f96;
+    /* versión más clara */
+}
+
+.item-smart-select {
+    padding-left: 0 !important;
+
+    &.item-content {
+        margin-left: 16px;
+        margin-right: 16px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    .item-link {
+        &.smart-select {
+            width: 100%;
+        }
+    }
+}
+
+.item-smart-select-outline {
+    &.item-content::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 8px;
+        bottom: 8px;
+        border: 1px solid var(--f7-input-outline-border-color);
+        border-radius: var(--f7-input-outline-border-radius);
+        pointer-events: none;
+        box-sizing: border-box;
+        transition-duration: 200ms;
+    }
+
+    .item-link {
+        &.smart-select {
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+    }
+}
+
+.item-toggle {
+    &.item-content {
+        margin-left: 16px;
+        margin-right: 16px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+
+        .item-inner {
+            --f7-list-item-min-height: 56px;
+        }
+    }
+}
+
+.item-toggle-outline {
+    &.item-content::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 8px;
+        bottom: 8px;
+        border: 1px solid var(--f7-input-outline-border-color);
+        border-radius: var(--f7-input-outline-border-radius);
+        pointer-events: none;
+        box-sizing: border-box;
+        transition-duration: 200ms;
+    }
+}
+
+.button-form-cancel,
+.button-form-submit{
+    @media (min-width: 768px) {
+        max-width: 200px;
+    }
+}
+
+.logo {
+    border-radius: 2%;
+}
+
+.agenda-contenedor {
+    margin: 15px 0;
+    padding: 0 15px;
+    --agenda-horas-width: 90px;
+    --agenda-horas-height: 50px;
+    --agenda-bahias-width: 150px;
+    --agenda-citas-spacing: 2px;
+    --horas-servicio: 1;
+
+    .agenda-header {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        border-bottom: 1px solid #dce3ea;
+        background-color: #eef3f7;
+
+        .hora-header {
+            border-right: solid 1px #dce3ea;
+            text-align: center;
+
+            h3 {
+                width: var(--agenda-horas-width);
+            }
+        }
+
+        .bahia-header {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            width: 100%;
+
+            .col-bahia {
+                text-align: center;
+                border-right: solid 1px #dce3ea;
+                box-sizing: content-box;
+
+                &:last-child {
+                    border-right: none;
+                }
+
+                h3 {
+                    width: var(--agenda-bahias-width);
+                }
+            }
+        }
+    }
+
+    .agenda-body {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: flex-start;
+
+        .col-hora {
+            border-right: solid 1px #dce3ea;
+
+            .cell-hora {
+                width: var(--agenda-horas-width);
+                height: var(--agenda-horas-height);
+                border-bottom: dashed 1px #dce3ea;
+                text-align: center;
+                line-height: var(--agenda-horas-height);
+                font-size: 0.85rem;
+                color: #353434;
+            }
+        }
+
+        .agenda-wrapper {
+            position: relative;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: flex-start;
+
+            .col-bahia {
+                width: var(--agenda-bahias-width);
+                border-right: solid 1px #e0e0e0;
+                box-sizing: content-box;
+                z-index: 1;
+
+                &:last-child {
+                    border-right: none;
+                }
+
+                .cell-hora {
+                    position: relative;
+                    top: 0;
+                    left: 0;
+                    height: var(--agenda-horas-height);
+                    border-bottom: dashed 1px #e0e0e0;
+                    /*z-index: 1;*/
+                    background-color: #ffffff67;
+                    font-size: 0.85rem;
+                    color: #35343496;
+                    text-align: center;
+                }
+
+                .seleccion {
+                    background-color: rgba(33, 150, 243, 0.1);
+                    outline: 2px dashed #2196f3;
+                    transition: background-color 0.2s ease;
+                }
+            }
+        }
+    }
+}
+
+
+.cita {
+    position: absolute;
+    cursor: move;
+    /*añadido para geenrar el movimiento*/
+    top: 0;
+    left: 0;
+    width: calc(var(--agenda-bahias-width) - (var(--agenda-citas-spacing) * 1));
+    height: calc((var(--horas-servicio) * var(--agenda-horas-height)) - (var(--agenda-citas-spacing) * 1));
+    z-index: 100;
+    //margin: var(--agenda-citas-spacing);
+    box-sizing: border-box;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    &.cita-agendada {
+        background-color: #fdfdab;
+        border-left: 4px solid #eaf700;
+
+    }
+
+    &.cita-asistio {
+        background-color: #abfdac;
+        border-left: 4px solid #36f700;
+    }
+
+    &.cita-perdida {
+        background-color: #fdabab;
+        border-left: 4px solid #f70000;
+    }
+
+    &.cita-reagendada {
+        background-color: #f9dcbb;
+        border-left: 4px solid #fbab32;
+    }
+
+    .cita-hora {
+        position: absolute;
+        top: 0.2rem;
+        right: 0.4rem;
+        font-size: 0.65rem;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .cita-placa {
+        position: absolute;
+        left: 0.4rem;
+        top: 50%;
+        color: #1b1b1b;
+        transform: translateY(-50%);
+        font-size: 0.75rem;
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+    .icono-buscar {
+        position: absolute;
+        bottom: 0.2rem;
+        right: 0.4rem;
+        font-size: 0.85rem;
+        color: #555;
+        cursor: pointer;
+    }
+}
+
+.detalles-cita {
+    padding: 24px;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 16px;
+    color: #181717;
+}
+
+.popup-editar {
+    .item-inner {
+        padding: 4px 8px;
+        border-radius: 1px;
+    }
+}
+
+.leyenda-citas {
+    display: flex;
+    gap: 30px;
+    margin: 10px 10px;
+    font-size: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+
+    .leyenda-item {
+        display: flex;
+        align-items: center;
+
+        .color-box {
+            width: 16px;
+            height: 16px;
+            display: inline-block;
+            margin-right: 6px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+
+            &.asistio {
+                background-color: #4caf50;
+            }
+
+            &.reagendada {
+                background-color: #ff9800;
+            }
+
+            &.perdida {
+                background-color: #ff1100;
+            }
+
+            &.agendada {
+                background-color: #f4f136;
+            }
+        }
+    }
+}
+
+.icono-crear {
+    position: absolute;
+    bottom: 0.25rem;
+    right: 4.3rem;
+    font-size: 0.85rem;
+    color: #555;
+    cursor: pointer;
+}
+
+.grid-stack-item-content {
+    font-weight: bold;
+    border-radius: 5px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/*BAHIAS Y ESPACIOS*/
+
+.layout-principal {
+    display: flex;
+    flex-direction: row;
+    height: 95vh;
+    // puedes ajustar esto según necesidad
+    gap: 10px;
+
+    .contenedor-izquierda-completa {
+        display: flex;
+        flex-direction: column;
+        flex: 3;
+
+        .contenedor-izquierdo {
+            flex: 3;
+            overflow-y: auto;
+        }
+
+        .contenedor-inferior {
+            margin-top: 15px;
+            height: 30vh;
+            background: #eef3f7;
+            padding: 15px;
+            overflow-y: auto;
+            border-top: 1px solid #ccc;
+
+            .espacios-contenedor {
+                display: flex;
+                flex-direction: row;
+                gap: 10px;
+                flex-wrap: wrap;
+
+                .cell-bahia {
+                    min-width: 110px;
+                    // o usa var(--agenda-bahias-width)
+                    height: 100px;
+                    background-color: #ffffff;
+                    border: 1px dashed #ccc;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    font-size: 0.85rem;
+                    color: #353434;
+                    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+                    border-radius: 4px;
+                }
+            }
+        }
+    }
+
+    .bahias-contenedor {
+        margin: 15px 0;
+        padding: 0 15px;
+        --agenda-horas-width: 80px;
+        --agenda-horas-height: 118px;
+        --agenda-bahias-width: 150px;
+        --agenda-citas-spacing: 2px;
+        --horas-servicio: 1;
+
+        .bahias-titulo-total {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            border-bottom: 1px solid #dce3ea;
+            background-color: #eef3f7;
+
+            .bahias {
+                border-right: solid 1px #dce3ea;
+                text-align: center;
+
+                h3 {
+                    width: var(--agenda-horas-width);
+                }
+            }
+
+            .bahia-vertical {
+                justify-content: center;
+                text-align: center;
+                margin: auto;
+            }
+
+            .bahia-header {
+                display: flex;
+                flex-direction: row;
+                justify-content: flex-start;
+                align-items: center;
+                width: 100%;
+
+                .col-bahia {
+                    text-align: center;
+                    border-right: solid 1px #dce3ea;
+                    box-sizing: content-box;
+
+                    &:last-child {
+                        border-right: none;
+                    }
+
+                    h3 {
+                        width: var(--agenda-bahias-width);
+                    }
+                }
+            }
+        }
+
+        .bahias-body {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: flex-start;
+
+            .col-bahia-titulo {
+                border-right: solid 1px #dce3ea;
+
+                .cell-bahia-titulo {
+                    width: var(--agenda-horas-width);
+                    //height: var(--agenda-horas-height);
+                    border-bottom: solid 1px #dce3ea;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+
+                    writing-mode: vertical-rl;
+                    text-orientation: upright;
+
+                    font-size: 0.85rem;
+                    color: #353434;
+                    text-align: center;
+                }
+            }
+
+            .bahias-wrapper {
+                position: relative;
+                top: 0;
+                left: 0;
+                display: flex;
+                flex-direction: row;
+                align-items: flex-start;
+                justify-content: flex-start;
+
+                .col-bahia {
+                    width: var(--agenda-bahias-width);
+                    border-right: solid 1px #e0e0e0;
+                    box-sizing: content-box;
+                    z-index: 1;
+
+                    &:last-child {
+                        border-right: none;
+                    }
+
+                    .cell-bahia {
+                        position: relative;
+                        top: 0;
+                        left: 0;
+                        height: var(--agenda-horas-height);
+                        border-bottom: dashed 1px #e0e0e0;
+                        /*z-index: 1;*/
+                        background-color: #ffffff67;
+                        font-size: 0.85rem;
+                        color: #35343496;
+                        text-align: center;
+                    }
+
+                    .entrada {
+                        position: relative;
+                        top: 0;
+                        left: 0;
+                        height: var(--agenda-horas-height);
+                        border: dashed 1px #185a1e;
+                        /*z-index: 1;*/
+                        background-color: #20672b38;
+                        font-size: 0.85rem;
+                        color: #35343496;
+                        text-align: center;
+                    }
+
+                    .almacen {
+                        position: relative;
+                        top: 0;
+                        left: 0;
+                        height: var(--agenda-horas-height);
+                        border: dashed 1px #902d2d;
+                        /*z-index: 1;*/
+                        background-color: #dd797967;
+                        font-size: 0.85rem;
+                        color: #35343496;
+                        text-align: center;
+                    }
+
+
+                    .seleccion {
+                        background-color: rgba(33, 150, 243, 0.1);
+                        outline: 2px dashed #2196f3;
+                        transition: background-color 0.2s ease;
+                    }
+                }
+            }
+        }
+    }
+
+    .contenedor-derecho {
+        flex: 2;
+        background: #f4f4f4;
+        padding: 10px;
+        overflow-y: auto;
+        border-left: 1px solid #ccc;
+
+    }
+
+}
+
+.carro {
+    position: absolute;
+    cursor: move;
+    /*añadido para geenrar el movimiento*/
+    top: 0;
+    left: 0;
+    width: calc(var(--agenda-bahias-width) - (var(--agenda-citas-spacing) * 1));
+    height: calc((var(--horas-servicio) * var(--agenda-horas-height)) - (var(--agenda-citas-spacing) * 1));
+    z-index: 100;
+    //margin: var(--agenda-citas-spacing);
+    box-sizing: border-box;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    flex-direction: column;
+    padding: 5px;
+
+    .carro-img {
+        width: calc(var(--agenda-bahias-width) - (var(--agenda-citas-spacing) * 1));
+        height: calc((var(--horas-servicio) * var(--agenda-horas-height)) - (var(--agenda-citas-spacing) * 1));
+        object-fit: contain;
+        margin-bottom: 5px;
+    }
+}
+
+
+/*BAHIAS Y ESPACIOS VACIOS*/
+.contenedor-general {
+    display: flex;
+    flex-direction: row;
+    padding: 20px;
+
+    .contenedor-mapa {
+        flex: 7;
+        padding: 10px;
+        background-color: #fff;
+        position: relative;
+        min-width: 600px;
+        height: 650px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
+        .konva-center {
+            width: 1000px;
+            height: 600px;
+            margin: 0 auto;
+            position: relative;
+            border: 1px solid #ffffff00;
+        }
+    }
+
+    .contenedor-estadisticas {
+        flex: 2;
+        width: 250px;
+        margin-left: 20px;
+        background-color: #fff;
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        font-size: 15px;
+    }
 }
