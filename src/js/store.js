@@ -22,6 +22,7 @@ const store = createStore({
     isSudo({ state }) {
       return state.user.maestro === 1;
     },
+    
   },
   actions: {
     async setUserInfo({ state, dispatch }, tokenDecode) {
