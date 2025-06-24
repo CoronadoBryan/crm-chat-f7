@@ -1,53 +1,34 @@
 <template>
   <div id="app">
     <!-- Panel izquierdo: Lista de conversaciones -->
-    <div
-      class="panel panel-left panel-cover dark panel-init"
-      data-visible-breakpoint="960"
-    >
-      <div class="view view-init" data-name="left">
-        <div class="page" data-name="home">
-          <div class="navbar navbar-large">
+    <div class="panel panel-left panel-reveal dark panel-init">
+      <div class="view">
+        <div class="page">
+          <div class="navbar">
             <div class="navbar-bg"></div>
-            <div class="navbar-inner sliding">
+            <div class="navbar-inner">
               <div class="title">Conversaciones</div>
-              <div class="title-large">
-                <div class="title-large-text">Conversaciones</div>
-              </div>
-              <div
-                class="subnavbar"
-                style="
-                  display: flex;
-                  justify-content: flex-end;
-                  padding: 0 10px;
-                "
-              >
-                <form
-                  class="searchbar searchbar-init"
-                  style="max-width: 300px; width: 100%"
-                  onsubmit="return false;"
-                >
-                  <div class="searchbar-inner">
-                    <div class="searchbar-input-wrap">
-                      <input
-                        id="search-input"
-                        type="search"
-                        placeholder="Buscar por teléfono"
-                        autocomplete="off"
-                      />
-                      <i class="searchbar-icon"></i>
-                      <span class="input-clear-button" id="clear-button"></span>
-                    </div>
-                    <span class="searchbar-disable-button">Cancel</span>
-                  </div>
-                </form>
-              </div>
             </div>
           </div>
           <div class="page-content">
+            <!-- Buscador -->
+            <div class="searchbar">
+              <div class="searchbar-inner">
+                <div class="searchbar-input-wrap">
+                  <input
+                    type="search"
+                    id="search-input"
+                    placeholder="Buscar conversaciones..."
+                  />
+                  <i class="searchbar-icon"></i>
+                  <span class="input-clear-button" id="clear-button"></span>
+                </div>
+              </div>
+            </div>
+            <!-- Lista de conversaciones -->
             <div class="list">
               <ul id="lista-conversaciones">
-                <!-- Las conversaciones se renderizan aquí -->
+                <!-- Las conversaciones se cargarán aquí dinámicamente -->
               </ul>
             </div>
           </div>
@@ -55,7 +36,7 @@
       </div>
     </div>
 
-    <!-- Panel derecho: Datos del cliente -->
+    <!-- Panel derecho: Datos del cliente - MANTENER -->
     <div class="panel panel-right panel-reveal dark panel-init">
       <div class="view">
         <div class="page">
@@ -93,6 +74,26 @@
                 style="height: 28px"
               />
             </a>
+            <!-- Botón circular de menú -->
+            <a href="/menu-modulos" class="link" style="margin-left: 15px;">
+              <div
+                style="
+                  width: 32px;
+                  height: 32px;
+                  background-color: rgba(255, 255, 255, 0.2);
+                  border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <i
+                  class="icon f7-icons"
+                  style="font-size: 16px; color: white"
+                  >square_grid_3x2</i
+                >
+              </div>
+            </a>
           </div>
 
           <div class="right">
@@ -112,19 +113,6 @@
               >
               <i class="icon f7-icons">person_crop_circle</i>
             </a>
-          </div>
-        </div>
-      </div>
-      <!-- Toolbar-->
-      <div class="toolbar toolbar-bottom">
-        <div class="toolbar-inner">
-          <div class="toolbar-inner justify-content-center">
-            <a href="/menu-modulos" class="link icon-only">
-              <i class="icon f7-icons">logo_windows</i>
-            </a>
-          </div>
-          <div class="toolbar-inner justify-content-end">
-            <a href="#" class="link">Right Link</a>
           </div>
         </div>
       </div>

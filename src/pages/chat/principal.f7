@@ -1,8 +1,5 @@
 <template>
   <div class="page" data-name="chat">
-    <!-- NO navbar aquí - se maneja desde app.f7 -->
-
-    <!-- Contenido principal -->
     <div class="page-content">
       <div class="block">
         <p>Área principal del chat</p>
@@ -83,15 +80,30 @@
         const navbar = document.querySelector(
           ".view-main .navbar .navbar-inner"
         );
-        if (navbar) {
+                if (navbar) {
           navbar.innerHTML = `
+            <div class="title">Ver conversaciones</div>
+
             <div class="left">
-              <a href="#" class="link icon-only panel-open" data-panel="left">
+              </a>
+              <!-- Botón hamburguesa para abrir panel -->
+              <a href="#" class="link icon-only panel-open" data-panel="left" style="margin-left: 10px;">
                 <i class="icon f7-icons">bars</i>
               </a>
+
+              <!-- Botón circular de menú -->
+              <a href="/menu-modulos" class="link" style="margin-right: 10px;">
+                <div style="width: 28px; height: 28px; background-color: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                  <i class="icon f7-icons" style="font-size: 14px; color: white;">square_grid_3x2</i>
+                </div>
+              </a>
             </div>
-            <div class="title">Chat</div>
+            
+            
             <div class="right">
+              
+              
+              <!-- Botón para abrir panel derecho (datos del cliente) -->
               <a href="#" class="link icon-only panel-open" data-panel="right">
                 <i class="icon f7-icons">person</i>
               </a>
