@@ -1,34 +1,53 @@
 <template>
   <div id="app">
     <!-- Panel izquierdo: Lista de conversaciones -->
-    <div class="panel panel-left panel-reveal dark panel-init">
-      <div class="view">
-        <div class="page">
-          <div class="navbar">
+    <div
+      class="panel panel-left panel-cover dark panel-init"
+      data-visible-breakpoint="960"
+    >
+      <div class="view view-init" data-name="left">
+        <div class="page" data-name="home">
+          <div class="navbar navbar-large">
             <div class="navbar-bg"></div>
-            <div class="navbar-inner">
-              <div class="title">Conversaciones</div>
+            <div class="navbar-inner sliding">
+              <div class="title">MyApp</div>
+              <div class="title-large">
+                <div class="title-large-text">Conversaciones</div>
+              </div>
+              <div
+                class="subnavbar"
+                style="
+                  display: flex;
+                  justify-content: flex-end;
+                  padding: 0 10px;
+                "
+              >
+                <form
+                  class="searchbar searchbar-init"
+                  style="max-width: 300px; width: 100%"
+                  onsubmit="return false;"
+                >
+                  <div class="searchbar-inner">
+                    <div class="searchbar-input-wrap">
+                      <input
+                        id="search-input"
+                        type="search"
+                        placeholder="Buscar por teléfono"
+                        autocomplete="off"
+                      />
+                      <i class="searchbar-icon"></i>
+                      <span class="input-clear-button" id="clear-button"></span>
+                    </div>
+                    <span class="searchbar-disable-button">Cancel</span>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
           <div class="page-content">
-            <!-- Buscador -->
-            <div class="searchbar">
-              <div class="searchbar-inner">
-                <div class="searchbar-input-wrap">
-                  <input
-                    type="search"
-                    id="search-input"
-                    placeholder="Buscar conversaciones..."
-                  />
-                  <i class="searchbar-icon"></i>
-                  <span class="input-clear-button" id="clear-button"></span>
-                </div>
-              </div>
-            </div>
-            <!-- Lista de conversaciones -->
             <div class="list">
               <ul id="lista-conversaciones">
-                <!-- Las conversaciones se cargarán aquí dinámicamente -->
+                <!-- Las conversaciones se renderizan aquí -->
               </ul>
             </div>
           </div>
@@ -36,7 +55,7 @@
       </div>
     </div>
 
-    <!-- Panel derecho: Datos del cliente - MANTENER -->
+    <!-- Panel derecho: Datos del cliente -->
     <div class="panel panel-right panel-reveal dark panel-init">
       <div class="view">
         <div class="page">
@@ -75,7 +94,7 @@
               />
             </a>
             <!-- Botón circular de menú -->
-            <a href="/menu-modulos" class="link" style="margin-left: 15px;">
+            <a href="/menu-modulos" class="link" style="margin-left: 15px">
               <div
                 style="
                   width: 32px;
@@ -87,9 +106,7 @@
                   justify-content: center;
                 "
               >
-                <i
-                  class="icon f7-icons"
-                  style="font-size: 16px; color: white"
+                <i class="icon f7-icons" style="font-size: 16px; color: white"
                   >square_grid_3x2</i
                 >
               </div>
@@ -236,12 +253,214 @@
 </template>
 
 <script>
-  export default (props, { $, $f7, $store, $update }) => {
+  // --- Importaciones para el chat ---
+  import {
+    getClientes,
+    getPerfiles,
+    getConversaciones,
+  } from "./js/services/index.js";
+  import io from "socket.io-client";
+  import { panelDerecho, panelIzquierdo } from "./js/components/index.js";
+
+  export default (props, { $, $f7, $store, $update, $on }) => {
     let app_name = $f7.name;
     let cuenta = $store.getters.cuenta;
     let perfil = $store.getters.perfil;
     let isSudo = $store.getters.isSudo;
 
+    // --- Variables de estado para el chat ---
+    let conversaciones = [];
+    let clientes = [];
+    let perfiles = [];
+    let socket = null;
+
+    // --- Funciones del chat ---
+    const cargarDatos = async () => {
+      try {
+        // Verificar si el usuario está autenticado antes de cargar
+        const usuarioId = Number(localStorage.getItem("usuarioId"));
+        const token = localStorage.getItem("token");
+
+        if (!usuarioId || usuarioId === 0 || !token) {
+          console.log("Usuario no autenticado, esperando login...");
+          return;
+        }
+
+        console.log("Cargando conversaciones para usuario:", usuarioId);
+        [conversaciones, clientes, perfiles] = await Promise.all([
+          getConversaciones(),
+          getClientes(),
+          getPerfiles(),
+        ]);
+        renderConversaciones(conversaciones);
+        initSearch();
+      } catch (err) {
+        console.error("Error al cargar conversaciones:", err);
+        $f7.toast
+          .create({
+            text: "Error al cargar conversaciones",
+            closeTimeout: 3000,
+          })
+          .open();
+      }
+    };
+
+    // Hacer la función disponible globalmente
+    window.cargarDatos = cargarDatos;
+
+    let conversacionSeleccionadaId = null;
+    const handleSeleccionarConversacion = (convId) => {
+      conversacionSeleccionadaId = convId;
+      renderConversaciones(conversaciones);
+
+      // Navegar a la página de messages
+      $f7.views.main.router.navigate(`/messages/${convId}/`);
+    };
+
+    const renderConversaciones = (convs) => {
+      const usuarioId = Number(localStorage.getItem("usuarioId"));
+      const convsFiltradas = convs.filter(
+        (conv) => conv.usuarioId && conv.usuarioId == usuarioId
+      );
+
+      const lista = document.querySelector("#lista-conversaciones");
+      if (!lista || !panelIzquierdo) return;
+
+      panelIzquierdo({
+        lista,
+        conversaciones: convsFiltradas,
+        clientes,
+        perfiles,
+        panelIzquierdo,
+        panelDerecho,
+        $f7,
+        onSeleccionar: handleSeleccionarConversacion,
+        conversacionSeleccionadaId,
+      });
+    };
+
+    const initSearch = () => {
+      const input = document.querySelector("#search-input");
+      const clearBtn = document.querySelector("#clear-button");
+
+      if (!input || !clearBtn) return;
+
+      input.addEventListener("input", () => {
+        const query = input.value.trim().toLowerCase();
+
+        if (query === "") {
+          renderConversaciones(conversaciones);
+          return;
+        }
+
+        const usuarioId = Number(localStorage.getItem("usuarioId"));
+        const filtradas = conversaciones.filter((conv) => {
+          if (!conv.telefono) return false;
+          return (
+            conv.usuarioId &&
+            conv.usuarioId == usuarioId &&
+            (conv.telefono.toLowerCase().includes(query) ||
+              conv.conversacionId.toString().includes(query))
+          );
+        });
+
+        renderConversaciones(filtradas);
+      });
+
+      clearBtn.addEventListener("click", () => {
+        input.value = "";
+        renderConversaciones(conversaciones);
+        input.focus();
+      });
+    };
+
+    // --- Función para cambiar contenido del panel según contexto ---
+    window.switchPanelContent = (mode) => {
+      const leftPanel = document.querySelector(".panel-left");
+      if (!leftPanel) return;
+
+      // Siempre cargar conversaciones, sin importar el modo
+      cargarDatos();
+    };
+
+    // --- Ciclo de vida: Al iniciar la aplicación ---
+    $on("pageInit", () => {
+      console.log("Iniciando aplicación con funcionalidad de chat...");
+
+      // Conexión en tiempo real con el servidor
+      socket = io("http://82.180.163.151:3000");
+
+      socket.on("conversacion_asignada", (data) => {
+        const usuarioId = Number(localStorage.getItem("usuarioId"));
+        console.log("Evento conversacion_asignada recibido:", data);
+        if (data.usuarioId && data.usuarioId == usuarioId) {
+          cargarDatos();
+          $f7.toast
+            .create({
+              text: "Nueva conversación recibida",
+              closeTimeout: 2000,
+              position: "top",
+            })
+            .open();
+        }
+      });
+
+      socket.on("nuevo_mensaje", (data) => {
+        console.log("Evento nuevo_mensaje recibido:", data);
+        cargarDatos();
+      });
+
+      // Función para verificar usuario autenticado
+      const verificarUsuarioAutenticado = () => {
+        const usuarioId = Number(localStorage.getItem("usuarioId"));
+        const token = localStorage.getItem("token");
+
+        console.log(
+          "Verificando autenticación - usuarioId:",
+          usuarioId,
+          "token:",
+          !!token
+        );
+
+        if (usuarioId && usuarioId !== 0 && token) {
+          console.log(
+            "Usuario autenticado detectado, cargando conversaciones..."
+          );
+          cargarDatos();
+          return true;
+        }
+        return false;
+      };
+
+      // Verificar inmediatamente
+      verificarUsuarioAutenticado();
+
+      // Listener para detectar cambios en localStorage (cuando se guarda el usuarioId)
+      let ultimoUsuarioId = localStorage.getItem("usuarioId");
+      const intervalCheck = setInterval(() => {
+        const usuarioIdActual = localStorage.getItem("usuarioId");
+
+        if (
+          usuarioIdActual !== ultimoUsuarioId &&
+          usuarioIdActual &&
+          usuarioIdActual !== "0"
+        ) {
+          console.log("Nuevo usuarioId detectado:", usuarioIdActual);
+          ultimoUsuarioId = usuarioIdActual;
+          setTimeout(() => {
+            cargarDatos();
+          }, 500);
+          clearInterval(intervalCheck);
+        }
+      }, 500);
+
+      // Limpiar el intervalo después de 30 segundos
+      setTimeout(() => {
+        clearInterval(intervalCheck);
+      }, 30000);
+    });
+
+    // --- Funciones originales del login ---
     const iniciarSesion = function (ev) {
       ev.preventDefault();
       let formData = $f7.form.convertToData(ev.target);
@@ -290,10 +509,20 @@
                     .focus()
                     .trigger("input:clear");
                   $store.dispatch("setToken", data.token);
+
+                  // CARGAR CONVERSACIONES después del login exitoso
+                  setTimeout(() => {
+                    cargarDatos();
+                  }, 2000); // Aumentar el tiempo para asegurar que el usuarioId esté guardado
                 },
               },
             })
             .open();
+
+          // También cargar aquí por si acaso
+          setTimeout(() => {
+            cargarDatos();
+          }, 2500);
 
           if (isFirstLogin) {
             alert("Es el primer login, te redirigiré al cambio de contraseña.");
@@ -316,9 +545,24 @@
       $f7.dialog.preloader("Cerrando Sesión", "red");
       $f7.tools.sendRequest("GET", "/auth/logout").then((data) => {
         $f7.dialog.close();
+
+        // Desconectar socket al cerrar sesión
+        if (socket) {
+          socket.disconnect();
+          socket = null;
+        }
+
         $store.dispatch("cerrarSistema");
       });
     };
+
+    // --- Limpieza al cerrar la aplicación ---
+    $on("pageBeforeRemove", () => {
+      if (socket) {
+        socket.disconnect();
+        socket = null;
+      }
+    });
 
     return $render;
   };

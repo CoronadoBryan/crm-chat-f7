@@ -39,6 +39,35 @@ export function panelIzquierdo({
     return;
   }
 
+  // Función para generar iniciales inteligentes
+  const generarIniciales = (displayName, telefono) => {
+    if (!displayName || displayName === "Sin número") {
+      return telefono ? telefono.slice(-2) : "??";
+    }
+    
+    // Si es un nombre completo (contiene espacio)
+    if (displayName.includes(" ")) {
+      const palabras = displayName.trim().split(" ");
+      if (palabras.length >= 2) {
+        return (palabras[0][0] + palabras[1][0]).toUpperCase();
+      }
+    }
+    
+    // Si es solo una palabra o teléfono
+    return displayName.slice(0, 2).toUpperCase();
+  };
+
+  // Función para generar color de avatar
+  const generarColorAvatar = (texto) => {
+    const colores = [
+      "#007aff", "#34c759", "#ff9500", "#5ac8fa", 
+      "#af52de", "#ff2d92", "#32d74b", "#5856d6"
+    ];
+    
+    const codigo = texto.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return colores[codigo % colores.length];
+  };
+
   lista.innerHTML = conversacionesFiltradas
     .map((conv) => {
       // Buscar cliente y perfil para cada conversación
@@ -51,23 +80,39 @@ export function panelIzquierdo({
         ? `${perfil.nombre} ${perfil.apellido}`
         : conv.telefono ?? "Sin número";
 
+      // Generar iniciales y color mejorados
+      const iniciales = generarIniciales(displayName, conv.telefono);
+      const colorAvatar = generarColorAvatar(displayName + conv.telefono);
+
       const isSelected = conv.conversacionId == conversacionSeleccionadaId;
       const mostrarNotificacion = conv.estadoMensajeUltNoLeido == 3 && conv.nroMensajesUltNoLeidos > 0;
+      
       return `
       <li class="abrir-chat${isSelected ? ' seleccionada' : ''}" data-conv-id="${conv.conversacionId}" style="cursor:pointer; background-color: ${isSelected && 'rgba(100, 112, 238, 0.64)'};">
         <div class="item-content">
           <div class="item-media">
-            <div class="avatar color-blue" style="background: linear-gradient(45deg, #007aff, #5856d6);">
-              <span style="font-weight: 600;">${displayName.slice(-2)}</span>
+            <div class="avatar" style="
+              background: ${colorAvatar};
+              width: 40px;
+              height: 40px;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-weight: 600;
+              font-size: 14px;
+            ">
+              ${iniciales}
             </div>
           </div>
           <div class="item-inner">
             <div class="item-title-row">
               <div class="item-title" style="font-weight: 500; color: var(--f7-text-color);">
                 ${displayName}
-                ${mostrarNotificacion ? `<span class="badge-notificacion">${conv.nroMensajesUltNoLeidos}</span>` : ""}
               </div>
               <div class="item-after">
+                ${mostrarNotificacion ? `<span class="badge color-red">${conv.nroMensajesUltNoLeidos}</span>` : ""}
                 <i class="icon f7-icons color-gray">chevron_right</i>
               </div>
             </div>
@@ -78,7 +123,6 @@ export function panelIzquierdo({
     })
     .join("");
 
-
   lista.querySelectorAll(".abrir-chat").forEach((el) => {
     el.addEventListener("click", async (e) => {
       e.preventDefault();
@@ -87,7 +131,6 @@ export function panelIzquierdo({
       const conv = conversaciones.find(c => c.conversacionId == convId);
       const usuarioId = Number(localStorage.getItem("usuarioId"));
 
-    
       if (conv.usuarioId && conv.usuarioId != usuarioId) {
         $f7.dialog.alert("No tienes permiso para acceder a esta conversación.");
         return;
@@ -97,8 +140,6 @@ export function panelIzquierdo({
         $f7.dialog.alert("No se puede aceptar la conversación: faltan datos.");
         return;
       }
-
-      // Aquí defines conv:
 
       await aceptarConversacion(convId, usuarioId);
 

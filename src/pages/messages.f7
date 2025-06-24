@@ -3,7 +3,7 @@
     <!-- Navbar -->
     <div class="navbar">
       <div class="navbar-bg"></div>
-      
+
       <div class="navbar-inner sliding">
         <div class="left">
           <a
@@ -208,6 +208,16 @@
     };
 
     // --- Funciones principales ---
+    const handleBackClick = (e) => {
+      e.preventDefault();
+
+      // Navegar específicamente a la página de chat principal
+      $f7.views.main.router.navigate("/chat/principal", {
+        force: true,
+        ignoreCache: true,
+      });
+    };
+
     const handleFinalizarConversacion = () => {
       $f7.dialog.confirm(
         "¿Estás seguro de que deseas finalizar esta conversación?",
@@ -230,15 +240,38 @@
                 })
                 .open();
 
+              // 1. Actualizar la lista de conversaciones
+              if (window.cargarDatos) {
+                await window.cargarDatos();
+              }
+
+              // 2. Cerrar el socket
+              if (socket) {
+                socket.disconnect();
+                socket = null;
+              }
+
+              // 3. Opción A: Ir al dashboard (como un refresh)
               setTimeout(() => {
-                $f7.views.main.router.navigate("/", { reloadAll: true });
-              }, 1000);
+                $f7.views.main.router.navigate("/dashboard", {
+                  force: true,
+                  ignoreCache: true,
+                  clearPreviousHistory: true,
+                  reloadCurrent: true,
+                });
+              }, 500);
+
+              // 4. Opción B: Recargar la página completamente
+              // setTimeout(() => {
+              //   window.location.reload();
+              // }, 1000);
             } else {
               throw new Error(
                 response.message || "Error al finalizar conversación"
               );
             }
           } catch (error) {
+            console.error("Error al finalizar conversación:", error);
             $f7.dialog.alert(
               "No se pudo finalizar la conversación. Intenta nuevamente."
             );
@@ -324,16 +357,44 @@
         renderMessages();
 
         if (!conversacionFinalizada) {
+          // Mejorar el conteo de mensajes no leídos
           const mensajesNoLeidos = mensajesData.filter(
-            (msg) => msg.id_estado === 3
+            (msg) =>
+              msg.contesta === "cliente" &&
+              (msg.id_estado === 1 ||
+                msg.id_estado === 2 ||
+                msg.id_estado === 3)
           );
+
+          console.log(
+            `👁️ Mensajes no leídos encontrados: ${mensajesNoLeidos.length}`
+          );
+
           if (mensajesNoLeidos.length > 0) {
+            // Marcar como leído solo los mensajes del cliente que no han sido leídos
             await Promise.all(
-              mensajesNoLeidos.map((msg) => mensajeLeido(msg.id))
+              mensajesNoLeidos.map(async (msg) => {
+                try {
+                  await mensajeLeido(msg.id);
+                  console.log(`✅ Mensaje ${msg.id} marcado como leído`);
+                } catch (error) {
+                  console.error(
+                    `❌ Error al marcar mensaje ${msg.id} como leído:`,
+                    error
+                  );
+                }
+              })
             );
+
+            // Actualizar la lista de conversaciones para reflejar el cambio en el contador
             setTimeout(() => {
-              if (window.cargarDatos) window.cargarDatos();
-            }, 200);
+              if (window.cargarDatos) {
+                window.cargarDatos();
+                console.log(
+                  "🔄 Lista de conversaciones actualizada después de marcar mensajes como leídos"
+                );
+              }
+            }, 500);
           }
         }
       } catch (error) {
@@ -434,10 +495,17 @@
           const footerTiempo = crearFooterTiempo(nuevoMensaje.created_at);
 
           if (data.contesta === "cliente") {
+            // Mejorar el avatar del cliente
+            let iniciales = "C";
+            if (conversacionData && conversacionData.telefono) {
+              iniciales = conversacionData.telefono.substring(0, 2);
+            }
+
             messages.addMessage({
               text: nuevoMensaje.mensaje,
               type: "received",
-              name: "Cliente",
+              name: conversacionData?.telefono || "Cliente",
+              avatar: generarAvatar(iniciales),
               footer: footerTiempo,
             });
           } else if (data.contesta === "bot") {
@@ -450,18 +518,24 @@
             });
           }
 
-          if (
-            data.contesta === "cliente" &&
-            data.id &&
-            !conversacionFinalizada
-          ) {
+          // Mejorar el manejo de mensajes no leídos
+          if (data.contesta === "cliente" && data.id && !conversacionFinalizada) {
             try {
-              console.log(
-                `🔵 Marcando mensaje ${data.id} como leído automáticamente`
-              );
+              console.log(`🔵 Marcando mensaje ${data.id} como leído automáticamente`);
               await mensajeLeido(data.id);
+              
+              // Actualizar inmediatamente el estado local
+              const msgIndex = mensajesData.findIndex(msg => msg.id === data.id);
+              if (msgIndex >= 0) {
+                mensajesData[msgIndex].id_estado = 4; // Marcar como leído
+              }
+              
+              // Actualizar la lista de conversaciones para actualizar el contador
               setTimeout(() => {
-                if (window.cargarDatos) window.cargarDatos();
+                if (window.cargarDatos) {
+                  window.cargarDatos();
+                  console.log("🔄 Contador de mensajes no leídos actualizado");
+                }
               }, 200);
             } catch (error) {
               console.error("❌ Error al marcar mensaje como leído:", error);
@@ -471,7 +545,7 @@
           if (data.contesta === "cliente") {
             $f7.toast
               .create({
-                text: "Nuevo mensaje del cliente",
+                text: `Nuevo mensaje de ${conversacionData?.telefono || 'Cliente'}`,
                 closeTimeout: 2000,
                 position: "top",
               })
@@ -486,6 +560,7 @@
 
         if (idx >= 0) {
           mensajesData[idx].id_estado = data.id_estado;
+          console.log(`🔄 Estado del mensaje ${data.id} actualizado a: ${data.id_estado}`);
         } else {
           idx = mensajesData.findIndex((msg) => msg.id === null);
           if (idx >= 0) {
@@ -501,6 +576,16 @@
         }
 
         if (idx >= 0) actualizarEstadoEnUI(idx, data.id_estado);
+        
+        // Si el mensaje fue leído, actualizar el contador en la lista de conversaciones
+        if (data.id_estado === 4) {
+          setTimeout(() => {
+            if (window.cargarDatos) {
+              window.cargarDatos();
+              console.log("🔄 Contador actualizado por cambio de estado a leído");
+            }
+          }, 200);
+        }
       });
     };
 
@@ -517,6 +602,12 @@
 
       console.log(`🚀 Chat para conversación: ${conversacionId}`);
 
+      // Ocultar el navbar principal
+      const mainNavbar = document.querySelector(".view-main > .navbar");
+      if (mainNavbar) {
+        mainNavbar.style.display = "none";
+      }
+
       messagebar = $f7.messagebar.create({ el: $el.value.find(".messagebar") });
       messages = $f7.messages.create({ el: $el.value.find(".messages") });
 
@@ -532,6 +623,13 @@
 
     $on("pageBeforeRemove", () => {
       enviandoMensaje = false;
+
+      // Restaurar el navbar principal
+      const mainNavbar = document.querySelector(".view-main > .navbar");
+      if (mainNavbar) {
+        mainNavbar.style.display = "block";
+      }
+
       const textarea = document.getElementById("message-input");
       if (textarea) textarea.removeEventListener("keypress", handleKeyPress);
       if (messagebar) messagebar.destroy();

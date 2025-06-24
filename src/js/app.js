@@ -26,7 +26,7 @@ import App from '../app.f7';
 
 var device = getDevice();
 var app = new Framework7({
-    name: 'Vip2System', // App name
+    name: 'crm-whatsapp', // App name
     theme: 'auto', // Automatic theme detection
 
 
