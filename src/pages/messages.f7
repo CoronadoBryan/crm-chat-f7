@@ -207,14 +207,19 @@
               $f7.toast
                 .create({
                   text: "Conversación finalizada exitosamente",
-                  closeTimeout: 2000,
+                  closeTimeout: 1000,
                   position: "top",
                 })
                 .open();
 
+              if (window.cargarDatos) window.cargarDatos();
+
+              // Espera un momento para mostrar el toast y luego recarga la página completamente
               setTimeout(() => {
-                $f7.views.main.router.navigate("/", { reloadAll: true });
+                window.location.reload();
               }, 1000);
+
+              return;
             } else {
               throw new Error(
                 response.message || "Error al finalizar conversación"

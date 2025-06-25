@@ -259,7 +259,6 @@
   // --- Importaciones para el chat ---
   import {
     getClientes,
-    getPerfiles,
     getConversaciones,
     login, // ✅ Agregar función login
     logout, // ✅ Agregar función logout
@@ -292,10 +291,9 @@
         }
 
         console.log("Cargando conversaciones para usuario:", usuarioId);
-        [conversaciones, clientes, perfiles] = await Promise.all([
+        [conversaciones, clientes] = await Promise.all([
           getConversaciones(),
           getClientes(),
-          getPerfiles(),
         ]);
         renderConversaciones(conversaciones);
         initSearch();
@@ -361,11 +359,17 @@
         const usuarioId = Number(localStorage.getItem("usuarioId"));
         const filtradas = conversaciones.filter((conv) => {
           if (!conv.telefono) return false;
+          const nombre = (conv.nombreCliente || "").toLowerCase();
+          const apellido = (conv.apellidoCliente || "").toLowerCase();
           return (
             conv.usuarioId &&
             conv.usuarioId == usuarioId &&
-            (conv.telefono.toLowerCase().includes(query) ||
-              conv.conversacionId.toString().includes(query))
+            (
+              conv.telefono.toLowerCase().includes(query) ||
+              conv.conversacionId.toString().includes(query) ||
+              nombre.includes(query) ||
+              apellido.includes(query)
+            )
           );
         });
 
@@ -524,14 +528,7 @@
           cargarDatos();
         }, 2500);
 
-        if (isFirstLogin) {
-          alert("Es el primer login, te redirigiré al cambio de contraseña.");
-          localStorage.setItem("isFirstLogin", "false");
-          $f7.views.main.router.navigate("/usuario/cambio/password");
-        } else {
-          alert("No es el primer login, te redirigiré al dashboard.");
-          $f7.views.main.router.navigate("/dashboard");
-        }
+        
       } catch (error) {
         $f7.dialog.close();
         console.error("Error al iniciar sesión:", error);

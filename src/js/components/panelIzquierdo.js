@@ -84,25 +84,17 @@ export function panelIzquierdo({
 
   lista.innerHTML = conversacionesFiltradas
     .map((conv) => {
-      // Buscar cliente y perfil para cada conversación
-      const cliente = clientes.find((c) => c.telefono === conv.telefono);
-      const perfil = cliente
-        ? perfiles.find((p) => p.id_cliente === cliente.id)
-        : null;
       const perfilCompleto =
-        perfil &&
-        perfil.nombre &&
-        perfil.apellido &&
-        perfil.marca &&
-        perfil.modelo &&
-        perfil.placa;
+        conv.nombreCliente &&
+        conv.apellidoCliente &&
+        conv.marcaCliente &&
+        conv.modeloCliente &&
+        conv.placaCliente;
 
-      // Si perfil completo, mostrar nombre; si no, mostrar teléfono
       const displayName = perfilCompleto
-        ? `${perfil.nombre} ${perfil.apellido}`
+        ? `${conv.nombreCliente} ${conv.apellidoCliente}`
         : conv.telefono ?? "Sin número";
 
-      // Generar iniciales y color mejorados
       const iniciales = generarIniciales(displayName, conv.telefono);
       const colorAvatar = generarColorAvatar(displayName + conv.telefono);
 
@@ -223,11 +215,11 @@ export function panelIzquierdo({
           console.log("🔄 REEMPLAZANDO página de mensajes existente");
 
           $f7.views.main.router.navigate(`/messages/${convId}/`, {
-            reloadAll: true, // ✅ Fuerza recarga completa
-            ignoreCache: true, // ✅ Ignora caché
-            force: true, // ✅ Fuerza navegación
-            replace: true, // ✅ REEMPLAZA en lugar de apilar
-            clearPreviousHistory: false, // ✅ Mantiene historial para el botón back
+            reloadAll: true,
+            ignoreCache: true,
+            force: true,
+            replace: true,
+            clearPreviousHistory: false,
           });
         } else {
           // Si venimos de otra página, navegación normal
