@@ -189,8 +189,11 @@ export function panelIzquierdo({
       const currentRoute = $f7.views.main.router.currentRoute;
       const yaEnMensajes = currentRoute.path.includes("/messages/");
 
-      console.log("📍 Ruta actual:", currentRoute.path);
-      console.log("📍 Ya en mensajes:", yaEnMensajes);
+      // Desconecta el socket de la conversación actual si existe
+      if (window.socket && typeof window.socket.disconnect === "function") {
+        window.socket.disconnect();
+        window.socket = null;
+      }
 
       try {
         await aceptarConversacion(convId, usuarioId);

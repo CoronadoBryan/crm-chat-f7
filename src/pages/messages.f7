@@ -417,7 +417,6 @@
     };
 
     const handleKeyPress = (e) => {
-      console.log("🟡 handleKeyPress ejecutado", e.key, e.shiftKey);
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSendClick();
@@ -427,6 +426,7 @@
     // --- Socket ---
     const conectarSocket = () => {
       socket = io("http://82.180.163.151:3000/");
+      window.socket = socket;
 
       socket.on("nuevo_mensaje", async (data) => {
         console.log("📨 Mensaje recibido:", data);
@@ -480,7 +480,7 @@
           if (data.contesta === "cliente") {
             $f7.toast
               .create({
-                text: "Nuevo mensaje del cliente",
+                text: "Nuevo mesdfgnsaje del cliente",
                 closeTimeout: 2000,
                 position: "top",
               })

@@ -388,6 +388,8 @@
       cargarDatos();
     };
 
+    
+
     // --- Ciclo de vida: Al iniciar la aplicación ---
     $on("pageInit", () => {
       console.log("Iniciando aplicación con funcionalidad de chat...");
