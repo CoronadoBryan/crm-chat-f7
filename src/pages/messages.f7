@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <!-- Navbar -->
-    <div class="navbar">
+    <div class="subnavbar">
       <div class="navbar-bg"></div>
       <div class="navbar-inner sliding">
         <div class="left">
@@ -173,6 +173,22 @@
       }
     };
 
+    const actualizarUISegunEstado = () => {
+      const elementos = getElementosPorId();
+
+      if (conversacionFinalizada) {
+        elementos.btnFinalizar?.style.setProperty("display", "none");
+        elementos.messagebarContainer?.style.setProperty("display", "none");
+        elementos.mensajeFinalizada?.style.setProperty("display", "block");
+        elementos.messagesContent?.style.setProperty("paddingBottom", "0px");
+      } else {
+        elementos.btnFinalizar?.style.setProperty("display", "block");
+        elementos.messagebarContainer?.style.setProperty("display", "block");
+        elementos.mensajeFinalizada?.style.setProperty("display", "none");
+        elementos.messagesContent?.style.setProperty("paddingBottom", "44px");
+      }
+    };
+
     // --- Funciones principales ---
     const handleFinalizarConversacion = () => {
       $f7.dialog.confirm(
@@ -226,12 +242,17 @@
           telefono = conversacionData.telefono || "Sin teléfono";
           conversacionFinalizada = conversacionData.estadoId === 4;
 
+          console.log(
+            `📊 Estado de conversación ${conversacionId}: ${conversacionData.estadoId} (Finalizada: ${conversacionFinalizada})`
+          );
+
           const navbarTitle = document.querySelector(".navbar .title");
           if (navbarTitle) {
             navbarTitle.textContent =
               telefono + (conversacionFinalizada ? " (Finalizada)" : "");
           }
-          // No actualizar UI aquí
+
+          actualizarUISegunEstado();
         } else {
           console.warn(
             `⚠️ No se encontraron datos para conversación ${conversacionId}`
