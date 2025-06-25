@@ -3,7 +3,6 @@
     <!-- Navbar -->
     <div class="navbar">
       <div class="navbar-bg"></div>
-
       <div class="navbar-inner sliding">
         <div class="left">
           <a
@@ -21,7 +20,6 @@
             class="button button-fill color-red"
             @click="${handleFinalizarConversacion}"
             id="btn-finalizar"
-            style="display: none"
           >
             Finalizar Conversación
           </button>
@@ -42,8 +40,7 @@
       <div class="toolbar-inner">
         <div class="messagebar-area">
           <textarea
-            id="message-input"
-            class="resizable"
+            class="resizable chat-message-input"
             placeholder="Escribe un mensaje..."
           ></textarea>
         </div>
@@ -55,15 +52,6 @@
 
     <!-- Mensajes -->
     <div class="page-content messages-content" id="messages-content">
-      <!-- Mensaje de conversación finalizada -->
-      <div id="mensaje-finalizada" class="mensaje-finalizada-container">
-        <p class="mensaje-finalizada-text">
-          <i class="icon f7-icons mensaje-finalizada-icon"
-            >checkmark_circle_fill</i
-          >
-          Esta conversación ha sido finalizada
-        </p>
-      </div>
       <div class="messages"></div>
     </div>
   </div>
@@ -173,117 +161,6 @@
       messagesContent: document.getElementById("messages-content"),
     });
 
-    // --- Reemplazar la función actualizarUISegunEstado con logs detallados ---
-    const actualizarUISegunEstado = () => {
-      console.log("🔧 INICIO actualizarUISegunEstado");
-      console.log("📊 conversacionFinalizada:", conversacionFinalizada);
-
-      // ✅ Usar setTimeout para asegurar que el DOM esté listo
-      setTimeout(() => {
-        console.log("⏰ Ejecutando timeout de actualizarUISegunEstado");
-
-        const elementos = getElementosPorId();
-
-        // 🔍 Log detallado de cada elemento
-        console.log("🔍 Elementos encontrados:");
-        console.log("  - btnFinalizar:", elementos.btnFinalizar);
-        console.log("  - messagebarContainer:", elementos.messagebarContainer);
-        console.log("  - mensajeFinalizada:", elementos.mensajeFinalizada);
-        console.log("  - messagesContent:", elementos.messagesContent);
-
-        if (conversacionFinalizada) {
-          console.log("🔒 APLICANDO estilos para conversación FINALIZADA");
-
-          if (elementos.btnFinalizar) {
-            elementos.btnFinalizar.style.setProperty("display", "none");
-            console.log("  ✅ btnFinalizar oculto");
-          } else {
-            console.warn("  ⚠️ btnFinalizar NO encontrado");
-          }
-
-          if (elementos.messagebarContainer) {
-            elementos.messagebarContainer.style.setProperty("display", "none");
-            console.log("  ✅ messagebarContainer OCULTO");
-            console.log(
-              "  📏 messagebarContainer display:",
-              elementos.messagebarContainer.style.display
-            );
-          } else {
-            console.warn("  ⚠️ messagebarContainer NO encontrado");
-          }
-
-          if (elementos.mensajeFinalizada) {
-            elementos.mensajeFinalizada.style.setProperty("display", "block");
-            console.log("  ✅ mensajeFinalizada mostrado");
-          } else {
-            console.warn("  ⚠️ mensajeFinalizada NO encontrado");
-          }
-
-          if (elementos.messagesContent) {
-            elementos.messagesContent.style.setProperty("paddingBottom", "0px");
-            console.log("  ✅ messagesContent padding ajustado");
-          }
-
-          console.log("🔒 Conversación finalizada - Controles deshabilitados");
-        } else {
-          console.log("✅ APLICANDO estilos para conversación ACTIVA");
-
-          if (elementos.btnFinalizar) {
-            elementos.btnFinalizar.style.setProperty("display", "block");
-            console.log("  ✅ btnFinalizar mostrado");
-          } else {
-            console.warn("  ⚠️ btnFinalizar NO encontrado");
-          }
-
-          if (elementos.messagebarContainer) {
-            elementos.messagebarContainer.style.setProperty("display", "block");
-            console.log("  ✅ messagebarContainer MOSTRADO");
-            console.log(
-              "  📏 messagebarContainer display:",
-              elementos.messagebarContainer.style.display
-            );
-          } else {
-            console.warn("  ⚠️ messagebarContainer NO encontrado");
-          }
-
-          if (elementos.mensajeFinalizada) {
-            elementos.mensajeFinalizada.style.setProperty("display", "none");
-            console.log("  ✅ mensajeFinalizada ocultado");
-          } else {
-            console.warn("  ⚠️ mensajeFinalizada NO encontrado");
-          }
-
-          if (elementos.messagesContent) {
-            elementos.messagesContent.style.setProperty(
-              "paddingBottom",
-              "44px"
-            );
-            console.log("  ✅ messagesContent padding ajustado");
-          }
-
-          console.log("✅ Conversación activa - Controles habilitados");
-        }
-
-        // 🔍 Verificar estado final del input
-        const textarea = document.getElementById("message-input");
-        console.log("🔍 Estado final del textarea:");
-        console.log("  - textarea encontrado:", !!textarea);
-        if (textarea) {
-          console.log("  - textarea visible:", textarea.offsetParent !== null);
-          console.log(
-            "  - textarea display:",
-            getComputedStyle(textarea).display
-          );
-          console.log(
-            "  - textarea visibility:",
-            getComputedStyle(textarea).visibility
-          );
-        }
-
-        console.log("🔧 FIN actualizarUISegunEstado");
-      }, 100);
-    };
-
     const actualizarEstadoEnUI = (key, id_estado) => {
       const messageEls = $el.value[0].querySelectorAll(".message");
       const messageEl = messageEls[key];
@@ -297,16 +174,6 @@
     };
 
     // --- Funciones principales ---
-    const handleBackClick = (e) => {
-      e.preventDefault();
-
-      // Navegar específicamente a la página de chat principal
-      $f7.views.main.router.navigate("/chat/principal", {
-        force: true,
-        ignoreCache: true,
-      });
-    };
-
     const handleFinalizarConversacion = () => {
       $f7.dialog.confirm(
         "¿Estás seguro de que deseas finalizar esta conversación?",
@@ -329,38 +196,15 @@
                 })
                 .open();
 
-              // 1. Actualizar la lista de conversaciones
-              if (window.cargarDatos) {
-                await window.cargarDatos();
-              }
-
-              // 2. Cerrar el socket
-              if (socket) {
-                socket.disconnect();
-                socket = null;
-              }
-
-              // 3. Opción A: Ir al dashboard (como un refresh)
               setTimeout(() => {
-                $f7.views.main.router.navigate("/dashboard", {
-                  force: true,
-                  ignoreCache: true,
-                  clearPreviousHistory: true,
-                  reloadCurrent: true,
-                });
-              }, 500);
-
-              // 4. Opción B: Recargar la página completamente
-              // setTimeout(() => {
-              //   window.location.reload();
-              // }, 1000);
+                $f7.views.main.router.navigate("/", { reloadAll: true });
+              }, 1000);
             } else {
               throw new Error(
                 response.message || "Error al finalizar conversación"
               );
             }
           } catch (error) {
-            console.error("Error al finalizar conversación:", error);
             $f7.dialog.alert(
               "No se pudo finalizar la conversación. Intenta nuevamente."
             );
@@ -382,21 +226,12 @@
           telefono = conversacionData.telefono || "Sin teléfono";
           conversacionFinalizada = conversacionData.estadoId === 4;
 
-          console.log(
-            `📊 Estado de conversación ${conversacionId}: ${conversacionData.estadoId} (Finalizada: ${conversacionFinalizada})`
-          );
-
-          // ✅ Actualizar título de forma más segura
-          setTimeout(() => {
-            const navbarTitle = document.querySelector(".navbar .title");
-            if (navbarTitle) {
-              navbarTitle.textContent =
-                telefono + (conversacionFinalizada ? " (Finalizada)" : "");
-            }
-          }, 50);
-
-          // ✅ Actualizar UI después de cargar datos
-          actualizarUISegunEstado();
+          const navbarTitle = document.querySelector(".navbar .title");
+          if (navbarTitle) {
+            navbarTitle.textContent =
+              telefono + (conversacionFinalizada ? " (Finalizada)" : "");
+          }
+          // No actualizar UI aquí
         } else {
           console.warn(
             `⚠️ No se encontraron datos para conversación ${conversacionId}`
@@ -449,46 +284,16 @@
         console.log(`📋 Cargados ${mensajesData.length} mensajes`);
         renderMessages();
 
-        if (!conversacionFinalizada) {
-          // Mejorar el conteo de mensajes no leídos
-          const mensajesNoLeidos = mensajesData.filter(
-            (msg) =>
-              msg.contesta === "cliente" &&
-              (msg.id_estado === 1 ||
-                msg.id_estado === 2 ||
-                msg.id_estado === 3)
+        const mensajesNoLeidos = mensajesData.filter(
+          (msg) => msg.id_estado === 3
+        );
+        if (mensajesNoLeidos.length > 0) {
+          await Promise.all(
+            mensajesNoLeidos.map((msg) => mensajeLeido(msg.id))
           );
-
-          console.log(
-            `👁️ Mensajes no leídos encontrados: ${mensajesNoLeidos.length}`
-          );
-
-          if (mensajesNoLeidos.length > 0) {
-            // Marcar como leído solo los mensajes del cliente que no han sido leídos
-            await Promise.all(
-              mensajesNoLeidos.map(async (msg) => {
-                try {
-                  await mensajeLeido(msg.id);
-                  console.log(`✅ Mensaje ${msg.id} marcado como leído`);
-                } catch (error) {
-                  console.error(
-                    `❌ Error al marcar mensaje ${msg.id} como leído:`,
-                    error
-                  );
-                }
-              })
-            );
-
-            // Actualizar la lista de conversaciones para reflejar el cambio en el contador
-            setTimeout(() => {
-              if (window.cargarDatos) {
-                window.cargarDatos();
-                console.log(
-                  "🔄 Lista de conversaciones actualizada después de marcar mensajes como leídos"
-                );
-              }
-            }, 500);
-          }
+          setTimeout(() => {
+            if (window.cargarDatos) window.cargarDatos();
+          }, 200);
         }
       } catch (error) {
         console.error("❌ Error al cargar mensajes:", error);
@@ -497,7 +302,27 @@
     };
 
     const sendMessage = async (messageText) => {
-      if (!messageText?.trim()) return;
+      console.log("🔹 Intentando enviar mensaje:", messageText);
+      console.log("🔹 Estado enviandoMensaje:", enviandoMensaje);
+      console.log("🔹 conversacionId actual:", conversacionId);
+
+      if (!messageText?.trim()) {
+        console.warn("⚠️ Mensaje vacío, no se envía.");
+        return;
+      }
+
+      if (!conversacionId) {
+        console.error(
+          "❌ No hay conversacionId definido, no se puede enviar mensaje."
+        );
+        $f7.dialog.alert("No se puede enviar mensaje: conversación no válida.");
+        return;
+      }
+
+      if (enviandoMensaje) {
+        console.warn("⚠️ Ya se está enviando un mensaje, espera un momento.");
+        return;
+      }
 
       enviandoMensaje = true;
       console.log("📤 Enviando:", messageText);
@@ -531,22 +356,35 @@
           id_mensaje_responde: null,
           id_estado: 1,
         };
+        console.log("🔹 Payload a enviar:", payload);
         await enviarMensaje(payload);
         setTimeout(() => {
           enviandoMensaje = false;
+          console.log("🔹 enviandoMensaje liberado tras timeout");
         }, 2000);
+        console.log("✅ Mensaje enviado correctamente");
       } catch (error) {
         $f7.dialog.alert("No se pudo enviar el mensaje");
         messages.removeMessage(messages.messages[messages.messages.length - 1]);
         mensajesData.pop();
         enviandoMensaje = false;
+        console.error("❌ Error al enviar mensaje:", error);
       }
     };
 
     const handleSendClick = () => {
-      if (conversacionFinalizada) return;
+      // Busca todos los textareas visibles con la clase correcta
+      const allTextareas = Array.from(
+        document.querySelectorAll(".chat-message-input")
+      ).filter(
+        (ta) => ta.offsetParent !== null && !ta.disabled && !ta.readOnly
+      );
 
-      const textarea = document.getElementById("message-input");
+      // Busca el que tiene el foco, si no, el último visible
+      let textarea =
+        allTextareas.find((ta) => document.activeElement === ta) ||
+        allTextareas[allTextareas.length - 1];
+
       if (!textarea) return;
 
       const messageText = textarea.value.trim();
@@ -558,7 +396,7 @@
     };
 
     const handleKeyPress = (e) => {
-      if (conversacionFinalizada) return;
+      console.log("🟡 handleKeyPress ejecutado", e.key, e.shiftKey);
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSendClick();
@@ -588,16 +426,10 @@
           const footerTiempo = crearFooterTiempo(nuevoMensaje.created_at);
 
           if (data.contesta === "cliente") {
-            // Mejorar el avatar del cliente
-            let iniciales = "C";
-            if (conversacionData && conversacionData.telefono) {
-              iniciales = conversacionData.telefono.substring(0, 2);
-            }
-
             messages.addMessage({
               text: nuevoMensaje.mensaje,
               type: "received",
-              name: conversacionData?.telefono || "Cliente",
+              name: "Cliente",
               footer: footerTiempo,
             });
           } else if (data.contesta === "bot") {
@@ -610,32 +442,14 @@
             });
           }
 
-          // Mejorar el manejo de mensajes no leídos
-          if (
-            data.contesta === "cliente" &&
-            data.id &&
-            !conversacionFinalizada
-          ) {
+          if (data.contesta === "cliente" && data.id) {
             try {
               console.log(
                 `🔵 Marcando mensaje ${data.id} como leído automáticamente`
               );
               await mensajeLeido(data.id);
-
-              // Actualizar inmediatamente el estado local
-              const msgIndex = mensajesData.findIndex(
-                (msg) => msg.id === data.id
-              );
-              if (msgIndex >= 0) {
-                mensajesData[msgIndex].id_estado = 4; // Marcar como leído
-              }
-
-              // Actualizar la lista de conversaciones para actualizar el contador
               setTimeout(() => {
-                if (window.cargarDatos) {
-                  window.cargarDatos();
-                  console.log("🔄 Contador de mensajes no leídos actualizado");
-                }
+                if (window.cargarDatos) window.cargarDatos();
               }, 200);
             } catch (error) {
               console.error("❌ Error al marcar mensaje como leído:", error);
@@ -645,9 +459,7 @@
           if (data.contesta === "cliente") {
             $f7.toast
               .create({
-                text: `Nuevo mensaje de ${
-                  conversacionData?.telefono || "Cliente"
-                }`,
+                text: "Nuevo mensaje del cliente",
                 closeTimeout: 2000,
                 position: "top",
               })
@@ -662,9 +474,6 @@
 
         if (idx >= 0) {
           mensajesData[idx].id_estado = data.id_estado;
-          console.log(
-            `🔄 Estado del mensaje ${data.id} actualizado a: ${data.id_estado}`
-          );
         } else {
           idx = mensajesData.findIndex((msg) => msg.id === null);
           if (idx >= 0) {
@@ -680,64 +489,90 @@
         }
 
         if (idx >= 0) actualizarEstadoEnUI(idx, data.id_estado);
-
-        // Si el mensaje fue leído, actualizar el contador en la lista de conversaciones
-        if (data.id_estado === 4) {
-          setTimeout(() => {
-            if (window.cargarDatos) {
-              window.cargarDatos();
-              console.log(
-                "🔄 Contador actualizado por cambio de estado a leído"
-              );
-            }
-          }, 200);
-        }
       });
     };
 
     // --- Ciclo de vida ---
     $on("pageInit", async (page) => {
+      console.log("🔄 pageInit ejecutado");
+      // Limpia estado y destruye instancias anteriores
+      if (messagebar) messagebar.destroy();
+      if (messages) messages.destroy();
+      if (socket) socket.disconnect();
+      mensajesData = [];
+      enviandoMensaje = false;
+
       conversacionId =
         page.route?.params?.conversacionId ||
         $f7.views.main.router.currentRoute?.params?.conversacionId;
+
+      console.log("🔄 Nuevo conversacionId:", conversacionId);
 
       if (!conversacionId) {
         $f7.dialog.alert("No se pudo obtener el ID de conversación");
         return;
       }
 
-      console.log(`🚀 Chat para conversación: ${conversacionId}`);
-
-      // Ocultar el navbar principal
-      const mainNavbar = document.querySelector(".view-main > .navbar");
-      if (mainNavbar) {
-        mainNavbar.style.display = "none";
-      }
-
       messagebar = $f7.messagebar.create({ el: $el.value.find(".messagebar") });
       messages = $f7.messages.create({ el: $el.value.find(".messages") });
 
+      // Limpia mensajes del DOM inmediatamente
+      messages.removeMessages();
+
       setTimeout(() => {
-        const textarea = document.getElementById("message-input");
-        if (textarea) textarea.addEventListener("keypress", handleKeyPress);
-      }, 100);
+        const messagebarEl = $el.value[0].querySelector(".messagebar");
+        let textarea = null;
+        if (messagebarEl) {
+          // Busca el textarea visible por clase
+          textarea = Array.from(
+            messagebarEl.querySelectorAll(".chat-message-input")
+          ).find((ta) => ta.offsetParent !== null);
+        }
+        // Lógica para finalizadas: deshabilita textarea y botón si la conversación está finalizada
+        if (textarea) {
+          if (conversacionFinalizada) {
+            textarea.disabled = true;
+            textarea.readOnly = true;
+          } else {
+            textarea.disabled = false;
+            textarea.readOnly = false;
+            textarea.focus();
+          }
+          textarea.removeEventListener("keypress", handleKeyPress);
+          textarea.addEventListener("keypress", handleKeyPress);
+        }
+        const sendBtn = messagebarEl
+          ? messagebarEl.querySelector(".link.icon-only")
+          : null;
+        if (sendBtn) {
+          if (conversacionFinalizada) {
+            sendBtn.style.pointerEvents = "none";
+            sendBtn.style.opacity = "0.5";
+          } else {
+            sendBtn.style.pointerEvents = "";
+            sendBtn.style.opacity = "";
+          }
+          sendBtn.removeEventListener("click", handleSendClick);
+          sendBtn.addEventListener("click", handleSendClick);
+        }
+      }, 0);
 
       await loadConversacionData();
       conectarSocket();
-      setTimeout(loadMessages, 100);
+      await loadMessages();
     });
 
     $on("pageBeforeRemove", () => {
       enviandoMensaje = false;
-
-      // Restaurar el navbar principal
-      const mainNavbar = document.querySelector(".view-main > .navbar");
-      if (mainNavbar) {
-        mainNavbar.style.display = "block";
-      }
-
-      const textarea = document.getElementById("message-input");
+      const messagebarEl = $el.value[0].querySelector(".messagebar");
+      const textarea = messagebarEl
+        ? messagebarEl.querySelector("#message-input")
+        : null;
       if (textarea) textarea.removeEventListener("keypress", handleKeyPress);
+      const sendBtn = messagebarEl
+        ? messagebarEl.querySelector(".link.icon-only")
+        : null;
+      if (sendBtn) sendBtn.removeEventListener("click", handleSendClick);
       if (messagebar) messagebar.destroy();
       if (messages) messages.destroy();
       if (socket) socket.disconnect();

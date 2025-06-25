@@ -77,7 +77,6 @@
   export default (props, { $f7, $f7ready }) => {
     const cargarEstadisticas = async () => {
       try {
-        console.log("🔄 Iniciando carga de estadísticas...");
 
         const usuarioId = Number(localStorage.getItem("usuarioId"));
         if (!usuarioId) {
@@ -85,17 +84,13 @@
           return;
         }
 
-        console.log("👤 Usuario ID:", usuarioId);
 
         const [conversaciones, clientes] = await Promise.all([
           getConversaciones(),
           getClientes(),
         ]);
 
-        console.log("📊 Datos obtenidos:", {
-          conversaciones: conversaciones.length,
-          clientes: clientes.length,
-        });
+
 
         const misConversaciones = conversaciones.filter(
           (conv) => conv.usuarioId == usuarioId
@@ -121,21 +116,13 @@
               new Date().toDateString()
         ).length;
 
-        console.log("📈 Estadísticas calculadas:", {
-          conversacionesActivas,
-          totalMensajesNoLeidos,
-          clientesTotal: clientes.length,
-          conversacionesFinalizadasHoy,
-        });
 
         // ✅ Función auxiliar para actualizar elemento de forma segura
         const actualizarElemento = (id, valor) => {
           const elemento = document.getElementById(id);
           if (elemento) {
             elemento.textContent = valor;
-            console.log(`✅ ${id} actualizado: ${valor}`);
           } else {
-            console.warn(`⚠️ Elemento '${id}' no encontrado en el DOM`);
           }
         };
 
@@ -154,20 +141,13 @@
           if (totalMensajesNoLeidos > 0) {
             badge.textContent = totalMensajesNoLeidos;
             badge.style.display = "inline-block";
-            console.log(`✅ Badge actualizado: ${totalMensajesNoLeidos}`);
           } else {
             badge.style.display = "none";
-            console.log("✅ Badge ocultado (sin mensajes)");
           }
         } else {
-          console.warn("⚠️ Badge de mensajes no encontrado");
         }
 
-        console.log("✅ Estadísticas cargadas correctamente");
       } catch (error) {
-        console.error("❌ Error cargando estadísticas:", error);
-
-        // ✅ Mostrar notificación de error al usuario
         if ($f7) {
           $f7.notification
             .create({
@@ -180,7 +160,6 @@
     };
 
     $f7ready(() => {
-      console.log("Dashboard VIP2CARS cargado");
 
       // Cargar estadísticas al iniciar
       setTimeout(() => {
