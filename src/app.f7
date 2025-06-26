@@ -364,12 +364,10 @@
           return (
             conv.usuarioId &&
             conv.usuarioId == usuarioId &&
-            (
-              conv.telefono.toLowerCase().includes(query) ||
+            (conv.telefono.toLowerCase().includes(query) ||
               conv.conversacionId.toString().includes(query) ||
               nombre.includes(query) ||
-              apellido.includes(query)
-            )
+              apellido.includes(query))
           );
         });
 
@@ -392,14 +390,12 @@
       cargarDatos();
     };
 
-    
-
     // --- Ciclo de vida: Al iniciar la aplicación ---
     $on("pageInit", () => {
       console.log("Iniciando aplicación con funcionalidad de chat...");
 
       // Conexión en tiempo real con el servidor
-      socket = io("http://82.180.163.151:3000");
+      socket = io("https://socket-5b6n.onrender.com/");
 
       socket.on("conversacion_asignada", (data) => {
         const usuarioId = Number(localStorage.getItem("usuarioId"));
@@ -555,15 +551,15 @@
 
       // ✅ Ejecutar logout local inmediatamente
       setTimeout(() => {
-        $f7.dialog.close();
+      $f7.dialog.close();
 
-        // Desconectar socket
-        if (socket) {
-          socket.disconnect();
-          socket = null;
-        }
+      // Desconectar socket
+      if (socket) {
+        socket.disconnect();
+        socket = null;
+      }
 
-        // Limpiar sesión local
+      // Limpiar sesión local
         $store.dispatch("cerrarSistema");
       }, 500);
     };

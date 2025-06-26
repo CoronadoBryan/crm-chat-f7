@@ -430,7 +430,7 @@
 
     // --- Socket ---
     const conectarSocket = () => {
-      socket = io("http://82.180.163.151:3000/");
+      socket = io("https://socket-5b6n.onrender.com/");
       window.socket = socket;
 
       socket.on("nuevo_mensaje", async (data) => {

@@ -4,7 +4,7 @@ const api = axios.create({
   baseURL: "https://prueba1.yourkate.net/public/api/v1",
   headers: {
     "Content-Type": "application/json",
-    // Authorization: 'Bearer TU_TOKEN' // si usas JWT
+    //Authorization: 'Bearer TU_TOKEN' // si usas JWT
   },
 });
 

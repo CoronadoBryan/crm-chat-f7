@@ -6,7 +6,16 @@ export async function login(credentials) {
 }
 
 export async function logout() {
-  const res = await config.api.get("/auth/logout");
+  const token = localStorage.getItem("token");
+  const res = await config.api.post(
+    "/auth/logout",
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
   return res.data;
 }
 
