@@ -1,6 +1,7 @@
 import { createStore } from "framework7";
 import tools from "./tools.js";
 import moment from "moment";
+import { cambiarEstadoUsuario } from "./services/usuarioService.js";
 
 const store = createStore({
   state: {
@@ -96,6 +97,12 @@ const store = createStore({
 
           return tokenDecode !== false;
         } else {
+          // Cambiar estado a offline antes de cerrar sesión
+          try {
+            cambiarEstadoUsuario("offline");
+          } catch (e) {
+            // Ignorar error si no se puede cambiar el estado
+          }
           throw new Error("Sesión expirada.");
         }
       } catch (ex) {
@@ -117,6 +124,8 @@ const store = createStore({
       state.perfil = {};
 
       localStorage.removeItem("token");
+
+      cambiarEstadoUsuario("offline"); // Cambiar el estado del usuario a offline
 
       app.f7.loginScreen.open("#login-screen");
     },

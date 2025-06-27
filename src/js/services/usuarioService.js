@@ -24,3 +24,15 @@ export async function getEstadoUsuario(id_usuario) {
   });
   return res.data;
 }
+
+export async function getUsuarioById(id_usuario) {
+  const token = localStorage.getItem("token");
+  const res = await config.api.get(`/usuario/${id_usuario}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.data;
+}
+
+window.getUsuarioById = getUsuarioById;
