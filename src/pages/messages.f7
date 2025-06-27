@@ -430,7 +430,7 @@
 
     // --- Socket ---
     const conectarSocket = () => {
-      socket = io("https://socket-5b6n.onrender.com/");
+      socket = io("https://vip2cars.pe:3000/");
       window.socket = socket;
 
       socket.on("nuevo_mensaje", async (data) => {

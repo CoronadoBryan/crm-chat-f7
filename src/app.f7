@@ -119,6 +119,41 @@
               <i class="icon f7-icons" style="color: #343a40">gear_alt</i>
             </a>
             `}
+            <!-- Select de estado mejorado -->
+            <div
+              style="
+                display: inline-flex;
+                align-items: center;
+                margin-right: 10px;
+              "
+            >
+              <label
+                for="estado-usuario"
+                style="
+                  margin-right: 6px;
+                  font-size: 14px;
+                  color: #343a40;
+                  font-weight: 500;
+                "
+                >Estado:</label
+              >
+              <select
+                id="estado-usuario"
+                style="
+                  border-radius: 5px;
+                  padding: 2px 10px;
+                  font-size: 14px;
+                  background: #f1f3f4;
+                  border: 1px solid #ced4da;
+                  color: #343a40;
+                  min-width: 90px;
+                "
+                title="Cambia tu estado de disponibilidad"
+              >
+                <option value="online">🟢 Online</option>
+                <option value="ausente">🟡 Ausente</option>
+              </select>
+            </div>
             <a
               href="#"
               class="link popover-open"
@@ -262,6 +297,8 @@
     getConversaciones,
     login, // ✅ Agregar función login
     logout, // ✅ Agregar función logout
+    cambiarEstadoUsuario,
+    getEstadoUsuario,
   } from "./js/services/index.js";
   import io from "socket.io-client";
   import { panelDerecho, panelIzquierdo } from "./js/components/index.js";
@@ -277,8 +314,42 @@
     let clientes = [];
     let perfiles = [];
     let socket = null;
+    // Estado del usuario: se inicializa vacío, se obtiene del backend al iniciar
+    let estadoUsuario = "online";
 
     // --- Funciones del chat ---
+
+    // --- Handler para el select de estado ---
+    const handleEstadoChange = async (ev) => {
+      estadoUsuario = ev.target.value;
+      try {
+        await cambiarEstadoUsuario(estadoUsuario);
+        $f7.toast
+          .create({
+            text: `Estado cambiado a: ${estadoUsuario}`,
+            closeTimeout: 1500,
+          })
+          .open();
+      } catch (error) {
+        $f7.toast
+          .create({
+            text: "Error al cambiar el estado en el servidor",
+            closeTimeout: 2500,
+          })
+          .open();
+      }
+    };
+
+    // --- Obtener estado actual del usuario desde la BD al iniciar ---
+    async function obtenerEstadoUsuario() {
+      try {
+        const id_usuario = localStorage.getItem("usuarioId");
+        const data = await getEstadoUsuario(id_usuario);
+        estadoUsuario = data.estado || "online";
+      } catch (e) {
+        estadoUsuario = "online";
+      }
+    }
     const cargarDatos = async () => {
       try {
         // Verificar si el usuario está autenticado antes de cargar
@@ -395,7 +466,7 @@
       console.log("Iniciando aplicación con funcionalidad de chat...");
 
       // Conexión en tiempo real con el servidor
-      socket = io("https://socket-5b6n.onrender.com/");
+      socket = io("https://vip2cars.pe:3000/");
 
       socket.on("conversacion_asignada", (data) => {
         const usuarioId = Number(localStorage.getItem("usuarioId"));
@@ -465,6 +536,18 @@
       setTimeout(() => {
         clearInterval(intervalCheck);
       }, 30000);
+
+      // Al iniciar, obtener el estado real del usuario desde la BD
+      obtenerEstadoUsuario().then(() => {
+        const selectEstado = document.getElementById("estado-usuario");
+        if (selectEstado) {
+          // Forzar actualización visual del select
+          setTimeout(() => {
+            selectEstado.value = estadoUsuario;
+          }, 0);
+          selectEstado.addEventListener("change", handleEstadoChange);
+        }
+      });
     });
 
     // --- Reemplazar la función iniciarSesion ---
@@ -523,8 +606,6 @@
         setTimeout(() => {
           cargarDatos();
         }, 2500);
-
-        
       } catch (error) {
         $f7.dialog.close();
         console.error("Error al iniciar sesión:", error);
@@ -551,15 +632,15 @@
 
       // ✅ Ejecutar logout local inmediatamente
       setTimeout(() => {
-      $f7.dialog.close();
+        $f7.dialog.close();
 
-      // Desconectar socket
-      if (socket) {
-        socket.disconnect();
-        socket = null;
-      }
+        // Desconectar socket
+        if (socket) {
+          socket.disconnect();
+          socket = null;
+        }
 
-      // Limpiar sesión local
+        // Limpiar sesión local
         $store.dispatch("cerrarSistema");
       }, 500);
     };

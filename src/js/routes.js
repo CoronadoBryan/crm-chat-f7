@@ -15,6 +15,17 @@ var routes = [
     },
   },
   {
+    path: '/usuario/perfil',
+    panel: {
+        componentUrl: '../pages/usuarios/perfil.f7',
+        //            backdrop: true,
+    },
+  },
+  {
+    path: '/usuario/editar-perfil',
+    componentUrl: '../pages/usuarios/editar-perfil.f7',
+  },
+  {
     path: "/messages/:conversacionId/",
     component: MessagesPage,
   },

@@ -1,0 +1,111 @@
+<template>
+    <!-- Modal de Editar Perfil -->
+    <div class="page" id="editarPerfilPopup">
+        <div class="view">
+            <div class="page">
+                <div class="navbar">
+                    <div class="navbar-inner">
+                        <div class="title">Editar Perfil</div>
+                        <div class="right">
+                            <a href="/dashboard" class="link close-popup">
+                                <i class="icon f7-icons">xmark</i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="page-content">
+                    <div class="block">
+                        <div class="list no-hairlines-md">
+                            <ul>
+                                <li class="item-content item-input">
+                                    <div class="item-inner">
+                                        <div class="item-title item-label">Nombre</div>
+                                        <div class="item-input-wrap">
+                                            <input type="text" id="nombre" placeholder="Ingresa tu nombre"
+                                                autocomplete="off" />
+                                        </div>
+                                    </div>
+                                </li>
+                                
+                                <li class="item-content item-input">
+                                    <div class="item-inner">
+                                        <div class="item-title item-label">Teléfono</div>
+                                        <div class="item-input-wrap">
+                                            <input type="text" id="telefono" placeholder="Ingresa tu número de teléfono"
+                                                autocomplete="off" />
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="block-footer">
+                            <div class="row">
+                                <div class="col">
+                                    <a href="/dashboard" class="button button-outline button-round color-red"
+                                        @click="${cancelarCambio}">
+                                        Cancelar
+                                    </a>
+                                </div>
+                                <div class="col">
+                                    <a href="#" class="button button-fill button-round color-green"
+                                        @click="${guardarCambios}">
+                                        Guardar Cambios
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</template>
+
+<script>
+    export default (props, { $, $f7 }) => {
+        const abrirModalEditarPerfil = () => {
+            $f7.popup.open('#editarPerfilPopup');
+        };
+
+        const cerrarModalEditarPerfil = () => {
+            $f7.popup.close('#editarPerfilPopup');
+        };
+
+        const cancelarCambio = () => {
+            $f7.notification.create({
+                text: 'Cambio de contraseña cancelado.',
+                icon: '<i class="icon f7-icons color-red">xmark_circle</i>',
+                closeTimeout: 2000,
+            }).open();
+
+            $f7.views.main.router.navigate('/dashboard', {
+                transition: 'f7-flip',
+                reloadCurrent: true, 
+            });
+        };
+
+        const guardarCambios = () => {
+            const nombre = $('#nombre').val();
+            const telefono = $('#telefono').val();
+
+            if (!nombre || !telefono) {
+                $f7.dialog.alert('Por favor, completa todos los campos.');
+                return;
+            }
+
+            $f7.dialog.preloader('Guardando cambios...');
+            setTimeout(() => {
+                $f7.dialog.close();
+                $f7.dialog.alert('Perfil actualizado con éxito');
+
+                cerrarModalEditarPerfil();
+            }, 1500);
+        };
+
+        return $render;
+    };
+
+</script>

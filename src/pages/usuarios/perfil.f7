@@ -1,0 +1,76 @@
+<template>
+    <div class="panel panel-right panel-floating panel-init" id="panel-ver-perfil">
+        <div class="view view-init">
+            <div class="page">
+                <div class="navbar">
+                    <div class="navbar-inner sliding">
+                        <div class="title">Perfil</div>
+                        <div class="right">
+                            <a href="#" class="link panel-close color-red">
+                                <i class="icon f7-icons">xmark_circle_fill</i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="page-content">
+                    <div class="block text-align-center">
+                        <div class="margin-bottom">
+                            <i class="icon f7-icons size-80 color-green">person_crop_circle_fill</i>
+                        </div>
+                        <h2 class="margin-bottom-half" id="">Lesly Carrillo</h2>
+                        <p class="text-muted">Administrador, Jefe de taller, Jefe de mecánica pesada</p>
+                    </div>
+
+                    <div class="list inset elevation-1">
+                        <ul>
+                            <li>
+                                <div class="item-content">
+                                    <div class="item-media">
+                                        <i class="icon f7-icons color-blue">envelope_fill</i>
+                                    </div>
+                                    <div class="item-inner">
+                                        <div class="item-after" id="">lesly@vip2cars.com</div>
+                                    </div>
+                                </div>
+                            </li>
+
+                            <li>
+                                <div class="item-content">
+                                    <div class="item-media">
+                                        <i class="icon f7-icons color-blue">phone_fill</i>
+                                    </div>
+                                    <div class="item-inner">
+                                        <div class="item-after" id="">+51 999 999 999</div>
+                                    </div>
+                                </div>
+                            </li>
+
+                            <li>
+                                <div class="item-content">
+                                    <div class="item-media">
+                                        <i class="icon f7-icons color-blue">person_crop_square_fill</i>
+                                    </div>
+                                    <div class="item-inner">
+                                        <div class="item-after">DNI</div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="block text-align-center">
+                        <a href="/usuario/editar-perfil" class="button button-outline button-round color-red">
+                            <i class="icon f7-icons size-20">square_pencil</i> Editar Perfil
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    export default (props, { $f7, $f7router, $f7ready }) => {
+        return $render;
+    }
+</script>
