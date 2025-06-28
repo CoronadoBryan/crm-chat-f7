@@ -33,13 +33,17 @@
        
     ];
 
-    export default (props, {$f7, $f7ready, $f7router}) => {
+    export default (props, {$f7, $f7router}) => {
         let current_route = $f7router.currentRoute;
 
-        $f7ready(function () {
+        const agregarRutas = () => {
             console.log('ready menu modulos');
             $f7.tools.addRoutes($f7router.routes, routes);
-        });
+        };
+
+        if (typeof window !== 'undefined') {
+            setTimeout(agregarRutas, 0);
+        }
 
         return $render;
     }

@@ -74,7 +74,7 @@
 <script>
   import { getConversaciones, getClientes } from "../js/services/index.js";
 
-  export default (props, { $f7, $f7ready }) => {
+  export default (props, { $f7 }) => {
     const cargarEstadisticas = async () => {
       try {
 
@@ -159,16 +159,12 @@
       }
     };
 
-    $f7ready(() => {
-
-      // Cargar estadísticas al iniciar
+    if (typeof window !== 'undefined') {
       setTimeout(() => {
         cargarEstadisticas();
+        setInterval(cargarEstadisticas, 30000);
       }, 1000);
-
-      // Recargar cada 30 segundos
-      setInterval(cargarEstadisticas, 30000);
-    });
+    }
 
     return $render;
   };

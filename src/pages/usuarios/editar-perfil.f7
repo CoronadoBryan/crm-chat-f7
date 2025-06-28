@@ -1,111 +1,157 @@
 <template>
-    <!-- Modal de Editar Perfil -->
-    <div class="page" id="editarPerfilPopup">
-        <div class="view">
-            <div class="page">
-                <div class="navbar">
-                    <div class="navbar-inner">
-                        <div class="title">Editar Perfil</div>
-                        <div class="right">
-                            <a href="/dashboard" class="link close-popup">
-                                <i class="icon f7-icons">xmark</i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="page-content">
-                    <div class="block">
-                        <div class="list no-hairlines-md">
-                            <ul>
-                                <li class="item-content item-input">
-                                    <div class="item-inner">
-                                        <div class="item-title item-label">Nombre</div>
-                                        <div class="item-input-wrap">
-                                            <input type="text" id="nombre" placeholder="Ingresa tu nombre"
-                                                autocomplete="off" />
-                                        </div>
-                                    </div>
-                                </li>
-                                
-                                <li class="item-content item-input">
-                                    <div class="item-inner">
-                                        <div class="item-title item-label">Teléfono</div>
-                                        <div class="item-input-wrap">
-                                            <input type="text" id="telefono" placeholder="Ingresa tu número de teléfono"
-                                                autocomplete="off" />
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div class="block-footer">
-                            <div class="row">
-                                <div class="col">
-                                    <a href="/dashboard" class="button button-outline button-round color-red"
-                                        @click="${cancelarCambio}">
-                                        Cancelar
-                                    </a>
-                                </div>
-                                <div class="col">
-                                    <a href="#" class="button button-fill button-round color-green"
-                                        @click="${guardarCambios}">
-                                        Guardar Cambios
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    <div class="page">
+        <div class="navbar">
+            <div class="navbar-inner">
+                <div class="title">Editar Perfil</div>
+                <div class="right">
+                    <a href="#" class="link color-red" @click="${cancelarCambio}">
+                        <i class="icon f7-icons">xmark_circle_fill</i>
+                    </a>
                 </div>
             </div>
         </div>
+        <div class="page-content">
+            <form id="form-editar-perfil">
+                <div class="list inset elevation-2">
+                    <ul>
+                        <li class="item-content item-input">
+                            <div class="item-inner">
+                                <div class="item-title item-label">Nombres</div>
+                                <div class="item-input-wrap">
+                                    <input type="text" id="nombres" placeholder="Ingresa tus nombres" autocomplete="off" required pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$" />
+                                </div>
+                            </div>
+                        </li>
+                        <li class="item-content item-input">
+                            <div class="item-inner">
+                                <div class="item-title item-label">Apellidos</div>
+                                <div class="item-input-wrap">
+                                    <input type="text" id="apellidos" placeholder="Ingresa tus apellidos" autocomplete="off" required pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$" />
+                                </div>
+                            </div>
+                        </li>
+                        <li class="item-content item-input">
+                            <div class="item-inner">
+                                <div class="item-title item-label">Correo</div>
+                                <div class="item-input-wrap">
+                                    <input type="email" id="correo" placeholder="Ingresa tu correo" autocomplete="off" required />
+                                </div>
+                            </div>
+                        </li>
+                        <li class="item-content item-input">
+                            <div class="item-inner">
+                                <div class="item-title item-label">Celular</div>
+                                <div class="item-input-wrap">
+                                    <input type="text" id="celular" placeholder="Ingresa tu número de celular" autocomplete="off" required pattern="^[0-9]{9,15}$" maxlength="15" />
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="block text-align-center">
+                    <a href="#" class="button button-fill button-round color-red" @click="${guardarCambios}">
+                        <i class="icon f7-icons size-20">checkmark_alt_circle</i> Guardar Cambios
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-
 </template>
 
 <script>
-    export default (props, { $, $f7 }) => {
-        const abrirModalEditarPerfil = () => {
-            $f7.popup.open('#editarPerfilPopup');
-        };
-
-        const cerrarModalEditarPerfil = () => {
-            $f7.popup.close('#editarPerfilPopup');
-        };
-
-        const cancelarCambio = () => {
-            $f7.notification.create({
-                text: 'Cambio de contraseña cancelado.',
-                icon: '<i class="icon f7-icons color-red">xmark_circle</i>',
-                closeTimeout: 2000,
-            }).open();
-
-            $f7.views.main.router.navigate('/dashboard', {
-                transition: 'f7-flip',
-                reloadCurrent: true, 
-            });
-        };
-
-        const guardarCambios = () => {
-            const nombre = $('#nombre').val();
-            const telefono = $('#telefono').val();
-
-            if (!nombre || !telefono) {
-                $f7.dialog.alert('Por favor, completa todos los campos.');
-                return;
+export default (props, { $, $f7, $f7router }) => {
+    let usuarioActual = null;
+    // Cargar datos y mostrar en campos
+    const cargarDatosPerfil = async () => {
+        const id_usuario = localStorage.getItem("usuarioId");
+        if (id_usuario && $f7.tools) {
+            try {
+                const res = await $f7.tools.sendRequest('GET', `/usuario/${id_usuario}`);
+                if (res && res.success) {
+                    const usuario = res.data;
+                    usuarioActual = usuario;
+                    // Inputs
+                    $('#nombres').val(usuario.nombres || '');
+                    $('#apellidos').val(usuario.apellidos || '');
+                    $('#correo').val(usuario.correo || '');
+                    $('#celular').val(usuario.celular || '');
+                }
+            } catch (e) {
+                $f7.dialog.alert('No se pudo cargar los datos del perfil');
             }
-
-            $f7.dialog.preloader('Guardando cambios...');
-            setTimeout(() => {
-                $f7.dialog.close();
-                $f7.dialog.alert('Perfil actualizado con éxito');
-
-                cerrarModalEditarPerfil();
-            }, 1500);
-        };
-
-        return $render;
+        }
     };
 
+    if (typeof window !== 'undefined') {
+        setTimeout(cargarDatosPerfil, 0);
+    }
+
+    // Validación extra JS antes de enviar
+    const validarCampos = () => {
+        const nombres = $('#nombres').val().trim();
+        const apellidos = $('#apellidos').val().trim();
+        const correo = $('#correo').val().trim();
+        const celular = $('#celular').val().trim();
+        const soloLetras = /^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$/;
+        const soloNumeros = /^[0-9]{9,15}$/;
+        if (!nombres.match(soloLetras)) {
+            $f7.dialog.alert('Nombres solo debe contener letras y espacios.');
+            return false;
+        }
+        if (!apellidos.match(soloLetras)) {
+            $f7.dialog.alert('Apellidos solo debe contener letras y espacios.');
+            return false;
+        }
+        if (!correo.match(/^\S+@\S+\.\S+$/)) {
+            $f7.dialog.alert('Correo no válido.');
+            return false;
+        }
+        if (!celular.match(soloNumeros)) {
+            $f7.dialog.alert('Celular solo debe contener entre 9 y 15 dígitos.');
+            return false;
+        }
+        return true;
+    };
+
+    const cancelarCambio = () => {
+        if ($f7.panel) $f7.panel.close('right');
+        window.location.reload();
+    };
+
+    const guardarCambios = async (e) => {
+        if (e) e.preventDefault();
+        if (!validarCampos()) return;
+        const id_usuario = localStorage.getItem("usuarioId");
+        const nombres = $('#nombres').val().trim();
+        const apellidos = $('#apellidos').val().trim();
+        const correo = $('#correo').val().trim();
+        const celular = $('#celular').val().trim();
+        $f7.dialog.preloader('Guardando cambios...');
+        try {
+            const res = await $f7.tools.sendRequest('PUT', `/usuario/${id_usuario}`, {
+                nombres,
+                apellidos,
+                correo,
+                celular,
+                usuario: usuarioActual ? usuarioActual.usuario : undefined
+            });
+            $f7.dialog.close();
+            if (res && res.success) {
+                $f7.dialog.alert('Perfil actualizado con éxito', () => {
+                    if ($f7.panel) $f7.panel.close('right');
+                    window.location.reload();
+                });
+            } else {
+                $f7.dialog.alert('No se pudo actualizar el perfil.');
+            }
+        } catch (e) {
+            $f7.dialog.close();
+            $f7.dialog.alert('Error al actualizar el perfil.');
+        }
+    };
+
+    $(document).on('submit', '#form-editar-perfil', guardarCambios);
+
+    return $render;
+};
 </script>
