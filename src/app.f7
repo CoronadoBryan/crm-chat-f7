@@ -200,7 +200,7 @@
             </li>
             <li>
               <a
-                href="/usuario/cambio/password"
+                href="/usuario/cambiar-contraseña"
                 class="item-link item-content popover-close"
               >
                 <div class="item-media">
@@ -572,6 +572,9 @@
 
         $store.dispatch("setToken", data.token);
 
+        // Mostrar el token en consola
+        console.log('TOKEN:', data.token);
+
         $f7.notification
           .create({
             icon: '<i class="icon f7-icons color-green size-50">hand_thumbsup_fill</i>',
@@ -650,6 +653,25 @@
       if (socket) {
         socket.disconnect();
         socket = null;
+      }
+    });
+
+    // --- LOGS PARA DEPURAR NAVEGACIÓN Y PANEL DE CAMBIAR CONTRASEÑA ---
+    $on('routeChange', (route) => {
+      console.log('[F7-LOG] Cambio de ruta:', route);
+      if (route && route.url && route.url.includes('/usuario/cambiar-contraseña')) {
+        console.log('[F7-LOG] Intentando abrir panel de cambiar contraseña:', route);
+      }
+    });
+
+    $on('panelOpen', (panel) => {
+      console.log('[F7-LOG] Panel abierto:', panel);
+    });
+
+    // Captura global de errores de parseo de componentes F7
+    window.addEventListener('error', function (e) {
+      if (e && e.message && e.message.includes('Unexpected token')) {
+        console.error('[F7-LOG] Error de parseo de componente:', e.message, e);
       }
     });
 

@@ -1,0 +1,123 @@
+<template>
+  <div class="panel panel-right panel-floating panel-init" id="panel-cambiar-password">
+    <div class="view view-init">
+      <div class="page">
+        <div class="navbar">
+          <div class="navbar-inner sliding">
+            <div class="title">Cambiar Contraseña</div>
+            <div class="right">
+              <a href="#" class="link panel-close color-red">
+                <i class="icon f7-icons">xmark_circle_fill</i>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="page-content">
+          <div id="cambiar-password-content"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default (props, { $f7, $f7router }) => {
+  // Renderiza el formulario en el div central
+  const renderForm = () => {
+    const html = `
+      <form id="form-cambiar-password">
+        <div class="list inset elevation-2">
+          <ul>
+            <li class="item-content item-input">
+              <div class="item-inner">
+                <div class="item-title item-label">Contraseña Actual</div>
+                <div class="item-input-wrap">
+                  <input type="password" id="password_actual" placeholder="Contraseña actual" autocomplete="off" required />
+                </div>
+              </div>
+            </li>
+            <li class="item-content item-input">
+              <div class="item-inner">
+                <div class="item-title item-label">Nueva Contraseña</div>
+                <div class="item-input-wrap">
+                  <input type="password" id="password_nueva" placeholder="Nueva contraseña" autocomplete="off" required />
+                </div>
+              </div>
+            </li>
+            <li class="item-content item-input">
+              <div class="item-inner">
+                <div class="item-title item-label">Repetir Nueva Contraseña</div>
+                <div class="item-input-wrap">
+                  <input type="password" id="password_repetir" placeholder="Repite la nueva contraseña" autocomplete="off" required />
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="block text-align-center">
+          <button type="submit" class="button button-fill button-round color-red">
+            <i class="icon f7-icons size-20">checkmark_alt_circle</i> Guardar Cambios
+          </button>
+        </div>
+      </form>
+    `;
+    document.getElementById("cambiar-password-content").innerHTML = html;
+  };
+
+  // Lógica para guardar cambios
+  const guardarCambios = async (e) => {
+    e && e.preventDefault();
+    const actual = document.getElementById('password_actual').value.trim();
+    const nueva = document.getElementById('password_nueva').value.trim();
+    const repetir = document.getElementById('password_repetir').value.trim();
+    console.log('[CambiarPassword] actual:', actual, 'nueva:', nueva, 'repetir:', repetir);
+    if (!actual || !nueva || !repetir) {
+      console.warn('[CambiarPassword] Faltan campos');
+      $f7.dialog.alert('Completa todos los campos.');
+      return;
+    }
+    if (nueva !== repetir) {
+      console.warn('[CambiarPassword] Las contraseñas nuevas no coinciden');
+      $f7.dialog.alert('Las contraseñas nuevas no coinciden.');
+      return;
+    }
+    $f7.dialog.preloader('Guardando...');
+    try {
+      console.log('[CambiarPassword] Enviando request', { actual, nueva });
+      const res = await $f7.tools.sendRequest('POST', '/auth/cambiar-password', {
+        password_actual: actual,
+        password_nueva: nueva
+      });
+      $f7.dialog.close();
+      console.log('[CambiarPassword] Respuesta:', res);
+      if (res && res.success) {
+        console.log('[CambiarPassword] Contraseña cambiada con éxito');
+        $f7.dialog.alert('Contraseña cambiada con éxito.', () => {
+          if ($f7.panel) $f7.panel.close('right');
+          if ($f7router) $f7router.back();
+        });
+      } else {
+        console.warn('[CambiarPassword] Error en respuesta:', res);
+        $f7.dialog.alert(res.messages?.error || 'No se pudo cambiar la contraseña.');
+      }
+    } catch (e) {
+      $f7.dialog.close();
+      console.error('[CambiarPassword] Error en catch:', e);
+      $f7.dialog.alert('Error al cambiar la contraseña.');
+    }
+  };
+
+  // Renderiza el formulario y asocia el submit
+  if (typeof window !== 'undefined') {
+    setTimeout(() => {
+      renderForm();
+      document.addEventListener('submit', function handler(ev) {
+        if (ev.target && ev.target.id === 'form-cambiar-password') {
+          guardarCambios(ev);
+        }
+      });
+    }, 0);
+  }
+
+  return $render;
+};
+</script>

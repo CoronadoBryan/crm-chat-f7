@@ -26,6 +26,12 @@ var routes = [
     componentUrl: '../pages/usuarios/editar-perfil.f7',
   },
   {
+    path: '/usuario/cambiar-contraseña',
+      panel : {
+        componentUrl: '../pages/usuarios/cambiar-contraseña.f7',
+    },
+  },
+  {
     path: "/messages/:conversacionId/",
     component: MessagesPage,
   },
