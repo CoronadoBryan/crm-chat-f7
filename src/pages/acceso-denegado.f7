@@ -1,0 +1,17 @@
+<template>
+  <div class="page acceso-denegado-page">
+    <div class="page-content display-flex flex-direction-column justify-content-center align-items-center" style="height:100vh;">
+      <div class="block text-align-center">
+        <i class="icon f7-icons color-red" style="font-size: 64px;">lock_fill</i>
+        <h2>Acceso Denegado</h2>
+        <p>No tienes permiso para acceder a esta sección.</p>
+        <a href="/" class="button button-fill color-blue">Ir al inicio</a>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+    export default (props, { $f7, $f7ready }) => {
+  return $render;
+}
+</script>

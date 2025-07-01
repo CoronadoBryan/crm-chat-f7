@@ -1,0 +1,125 @@
+<template>
+    <div class="popup">
+        <div class="view">
+            <div class="page" data-name="sistema_usuarios_roles_permisos_crear">
+                <div class="page-content">
+                    <div class="navbar">
+                        <div class="navbar-bg"></div>
+                        <div class="navbar-inner">
+                            <div class="left">
+                                <a class="link back icon-only">
+                                    <i class="icon icon-back"></i>
+                                </a>
+                            </div>
+                            <div class="title">Nuevo permiso grupo</div>
+                            <div class="right">
+                                <button class="button button-fill button-round">Guadar</button>
+                            </div>
+                        </div>
+                    </div>
+                    <form action="#" method="post">
+                        <div class="block">
+                            <div class="list">
+                                <ul>
+                                    <li>
+                                        <a class="item-link smart-select smart-select-init" data-open-in="popup" data-close-on-select="true">
+                                            <select name="grupo">
+                                              <option value="apple" selected>Grupo 1</option>
+                                              <option value="pineapple">Grupo 2</option>
+                                              <option value="pear">Grupo 3</option>
+                                              <option value="orange">Grupo 4</option>
+                                              <option value="melon">Grupo 5</option>
+                                              <option value="peach">Grupo 6</option>
+                                              <option value="banana">Grupo 7</option>
+                                            </select>
+                                            <div class="item-content">
+                                              <div class="item-inner">
+                                                <div class="item-title">Grupo</div>
+                                              </div>
+                                            </div>
+                                          </a>
+                                    </li>
+                                    <li>
+                                        <a class="item-link smart-select smart-select-init" data-open-in="popup" data-close-on-select="true">
+                                            <select name="permiso">
+                                              <option value="apple" selected>PERMISO 1</option>
+                                              <option value="pineapple">PERMISO 2</option>
+                                              <option value="pear">PERMISO 3</option>
+                                              <option value="orange">PERMISO 4</option>
+                                              <option value="melon">PERMISO 5</option>
+                                              <option value="peach">PERMISO 6</option>
+                                              <option value="banana">PERMISO 7</option>
+                                            </select>
+                                            <div class="item-content">
+                                              <div class="item-inner">
+                                                <div class="item-title">Permiso</div>
+                                              </div>
+                                            </div>
+                                          </a>
+                                    </li>
+                                    <li>
+                                        <label class="item-content">
+                                            <div class="item-inner">
+                                                <div class="item-title">Lectura</div>
+                                                <div class="item-after">
+                                                    <div class="toggle toggle-init">
+                                                        <input type="checkbox" name="lectura"/>
+                                                        <span class="toggle-icon"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label class="item-content">
+                                            <div class="item-inner">
+                                                <div class="item-title">Crear</div>
+                                                <div class="item-after">
+                                                    <div class="toggle toggle-init">
+                                                        <input type="checkbox" name="crear"/>
+                                                        <span class="toggle-icon"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label class="item-content">
+                                            <div class="item-inner">
+                                                <div class="item-title">Editar</div>
+                                                <div class="item-after">
+                                                    <div class="toggle toggle-init">
+                                                        <input type="checkbox" name="editar"/>
+                                                        <span class="toggle-icon"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label class="item-content">
+                                            <div class="item-inner">
+                                                <div class="item-title">Eliminar</div>
+                                                <div class="item-after">
+                                                    <div class="toggle toggle-init">
+                                                        <input type="checkbox" name="eliminar"/>
+                                                        <span class="toggle-icon"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    export default (props, {$f7, $f7router, $f7ready}) => {
+        return $render;
+    }
+</script>

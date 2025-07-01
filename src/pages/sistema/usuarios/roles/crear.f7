@@ -1,0 +1,105 @@
+<template>
+    <div class="popup">
+        <div class="view">
+            <div class="page" data-name="usuario_rol_crear">
+                <div class="page-content">
+                    <div class="navbar">
+                        <div class="navbar-bg"></div>
+                        <div class="navbar-inner">
+                            <div class="left">
+                                <a class="link back icon-only">
+                                    <i class="icon icon-back"></i>
+                                </a>
+                            </div>
+                            <div class="title">Nuevo rol de usuarios</div>
+                            <div class="right">
+                                <button class="button button-fill button-round color-green" @click="${formSave}">Guadar</button>
+                            </div>
+                        </div>
+                    </div>
+                    <form action="#" method="post"class="block container" autocomplete="off" id="formCrearRol">
+                        <div class="block">
+                            <div class="list">
+                                <ul>
+                                    <li class="item-content item-input item-input-outline">
+                                        <div class="item-inner">
+                                            <div class="item-title item-floating-label">Nombre</div>
+                                            <div class="item-input-wrap">
+                                                <input type="text" placeholder="Nombre" name="rol" validate data-validate-on-blur="true" data-error-message="Campo obligatorio." required/>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="item-content item-input item-input-outline">
+                                        <div class="item-inner">
+                                            <div class="item-title item-floating-label">Alias</div>
+                                            <div class="item-input-wrap">
+                                                <input type="text" placeholder="Alias" name="alias" validate data-validate-on-blur="true" data-error-message="Campo obligatorio." required/>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="item-content item-input item-input-outline">
+                                        <div class="item-inner">
+                                            <div class="item-title item-floating-label">Descripción</div>
+                                            <div class="item-input-wrap">
+                                            <textarea placeholder="Descripción" name="descripcion"></textarea>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    export default (props, {$f7, $f7router, $f7ready, $on}) => {
+        $on('pageInit', (e,page) => {
+        });
+        const formSave = function (ev) {
+            ev.preventDefault();
+            const form = document.querySelector('#formCrearRol');
+            let formData = $f7.form.convertToData(form);
+            form.reportValidity();
+            if (form.checkValidity()) {
+                $f7.tools.sendRequest('POST', '/grupo_usuario_rol/create', formData).then(async (response) => {
+                    if (response.success == true) {
+                        $f7.notification.create({
+                            icon: '<i class="icon f7-icons color-green size-50">checkmark_alt</i>',
+                            text: 'Rol creado correctamente.',
+                            closeTimeout: 2500,
+                            on:{
+                                close: function () {
+                                    $f7router.navigate('/sistema/usuarios/roles');
+                                }
+                            }
+                        }).open();
+                    } else {
+                        $f7.notification.create({
+                            icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                            text: response.message,
+                            closeTimeout: 3000
+                        }).open();
+                    }
+                }).catch((error) => {
+                    $f7.notification.create({
+                        icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                        text: 'Error al crear el rol.',
+                        closeTimeout: 3000
+                    }).open();
+                    
+                    $f7router.back();
+                });
+            } else {
+                $f7.notification.create({
+                    icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                    text: 'Por favor, complete todos los campos obligatorios.',
+                    closeTimeout: 3000
+                }).open();
+            }
+        };
+        return $render;
+    }
+</script>

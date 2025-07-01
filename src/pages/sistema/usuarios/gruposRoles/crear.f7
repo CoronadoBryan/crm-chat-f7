@@ -1,0 +1,95 @@
+<template>
+    <div class="page" data-name="grupos_roles_crear">
+        <div class="page-content">
+            <div class="navbar">
+                <div class="navbar-bg"></div>
+                <div class="navbar-inner sliding">
+                    <div class="left"><a class="link back icon-only"><i class="icon icon-back"></i></a></div>
+                    <div class="title">Asignar Usuarios - Roles</div>
+                    <div class="right"><button class="button button-fill">Guardar</button></div>
+                </div>
+            </div>
+        <form action="#" method="post" class="block">
+            <div class="block container">
+                <div class="list">
+                    <ul>
+                        <li class="item-content item-input item-input-outline">
+                            <div class="item-inner smart-select " data-open-in="popup" id="select_usuario">
+                                <div class="item-title item-floating-label">Usuarios</div>
+                                <select name="usuario[]" multiple>
+                                    <option value="usuario-1">usuario 1</option>
+                                    <option value="usuario-2">usuario 2</option>
+                                    <option value="usuario-3">usuario 3</option>
+                                </select>
+                            </div>
+                        </li>
+                        <li class="item-content item-input item-input-outline">
+                            <div class="item-inner smart-select smart-select-init" data-open-in="popup" id="select_role">
+                                <div class="item-title item-floating-label">Rol</div>
+                                <select name="role">
+                                    <option value="role-1">role 1</option>
+                                    <option value="role-2">role 2</option>
+                                    <option value="role-3">role 3</option>
+                                </select>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </form>
+      </div>
+    </div>
+  </template>
+  
+  <script>
+ export default (props, {$f7,$f7router,$on}) => {
+        console.log($f7router);
+
+        let renderSearchbarx = function(){
+            const iconNuevo = this.params.iconnew || 'plus_circle_fill';
+
+            if (!this.params.newItemUrl) {
+                console.error('renderSearchBarGrupo', 'Debe indicar la url para el botón de nuevo elemento: newItemUrl undefined');
+            }
+            return `<div class="subnavbar-inner">
+                        <div class="segmented">
+                            <a href="${this.params.newItemUrl || '#'}" class="link new-item">
+                                <i class="icon f7-icons color-green size-40">${iconNuevo}</i>
+                            </a>
+                            <form class="searchbar">
+                                <div class="searchbar-inner">
+                                    <div class="searchbar-input-wrap">
+                                        <input 
+                                            type="search" 
+                                            spellcheck="${this.params.searchbarSpellcheck || 'false'}" 
+                                            placeholder="${this.params.searchbarPlaceholder || 'Buscar...'}" />
+                                        <i class="searchbar-icon"></i>
+                                        <span class="input-clear-button"></span>
+                                    </div>
+                                    ${this.params.searchbarDisableButton 
+                                        ? `<span class="searchbar-disable-button">${this.params.searchbarDisableText || 'Cancelar'}</span>` 
+                                        : ''}
+                                </div>
+                            </form>
+                        </div>
+                    </div>`;
+        }
+
+        $on('pageInit', (e, page) => {
+            const smartSelectModulos = $f7.smartSelect.create({  
+                el: '#select_role',
+                openIn: 'popup',
+                closeOnSelect:true,
+                searchbar: true,
+                popupCloseLinkText:'Cerrar',
+                searchbarDisableText:'Cancelar',
+                searchbarPlaceholder:'Buscar',
+                iconnew: 'folder_fill_badge_plus',
+                newItemUrl: $f7router.generateUrl({ name: 'usuario_rol_crear' }),
+                renderSearchbar: renderSearchbarx
+            });
+        });
+        return $render;
+    }
+  </script>
+  

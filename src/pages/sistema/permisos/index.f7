@@ -1,0 +1,266 @@
+<template>
+    <div class="page" data-name="sistema_permisos">
+        <div class="page-content">
+            <div class="navbar">
+                <div class="navbar-bg"></div>
+                <div class="navbar-inner">
+                    <div class="left">
+                        <a class="link back icon-only">
+                            <i class="icon icon-back"></i>
+                        </a></div>
+                    <div class="title">Permisos</div>
+                    <div class="right">
+                        <div class="grid grid-cols-2 grid-gap">
+                            <a href="/sistema/permisos/crear" class="link" data-sheet=".modal-permiso">
+                                <i class="icon f7-icons ">plus_circle</i> Nuevo
+                            </a>
+                            <!-- <a href="#" id="btn-eliminar" class="link color-red" data-confirm="¿Eliminar permisos seleccionados?" data-confirm-title="Eliminar varios">
+                                <i class="icon f7-icons">trash</i> Eliminar
+                            </a> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="data-table data-table-init card card-raised">
+                <div class="searchbar">
+                    <form>
+                        <div class="searchbar-inner">
+                            <div class="searchbar-input-wrap">
+                                <input type="search" name="search" placeholder="Buscar permiso..." />
+                                <i class="searchbar-icon"></i>
+                                <span class="input-clear-button"></span>
+                            </div>
+                            <span class="searchbar-disable-button">Cancelar</span>
+                        </div>
+                    </form>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="checkbox-cell">
+                                <label class="checkbox">
+                                    <input type="checkbox" />
+                                    <i class="icon-checkbox"></i>
+                                </label>
+                            </th>
+                            <th>Nombre</th>
+                            <th>Grupo</th>
+                            <th>Descripcion</th>
+                            <th class="numeric-cell" width="10%">Activo</th>
+                            <th class="text-align-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="permisos-table-body">
+                    </tbody>
+                </table>
+                <div class="data-table-footer">
+                    <div class="data-table-rows-select">Por página:<div class="input input-dropdown">
+                            <select name="perPage" class="input-select" id="perPage">
+                                <option value="10">10</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="data-table-pagination">
+                        <span class="data-table-pagination-label">1-5 of 10</span>
+                        <a class="link disabled" id="btnPrevPage">
+                            <i class="icon icon-prev color-gray"></i>
+                        </a>
+                        <a class="link" id="btnNextPage">
+                            <i class="icon icon-next color-gray"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    const routes = [
+        {
+            path: '/sistema/permisos/crear',
+            componentUrl: '../pages/sistema/permisos/crear.f7',
+        },
+        {
+            path: '/sistema/permisos/editar/:id',
+            name: 'permiso_editar',
+            componentUrl: '../pages/sistema/permisos/editar.f7',
+        },
+        {
+            path: '/sistema/permisos/grupos/',
+            componentUrl: '../pages/sistema/permisos/grupos/index.f7',
+            routes:[
+                {
+                    name: 'permiso_grupo_crear',
+                    path: 'crear',
+                    popup: {
+                        componentUrl: '../pages/sistema/permisos/grupos/crear.f7'
+                    }
+                }
+            ]
+        }
+    ];
+    
+    export default (props, {$,$f7, $f7ready, $f7router, $store, $on}) => {
+        
+        let tabla_permisos;
+        let searchInput = '';
+        let currentPage = 1;
+        let perPage = 10;
+        let totalItems = 0;
+        let modulosData = [];
+        let from = 0;
+        let to = 0;
+        let nextPage = false;
+        let prevPage = false;
+
+        $f7ready(function () {
+            $f7.tools.addRoutes($f7router.routes, routes);
+
+            $on('pageInit', () => {
+                tabla_permisos = $('#permisos-table-body');
+                const perPageVal = $('#perPage').val();
+                perPage = perPageVal === 'all' ? 'all' : parseInt(perPageVal) || 10;
+                getDataPermisos();
+
+                // Eventos paginación
+                $("input[name='search']").on('keyup', function(e) {
+                    e.preventDefault();
+                    currentPage = 1;
+                    searchInput = '';
+                    if ($(this).val().length > 2) {
+                        searchInput = $(this).val();
+                        getDataPermisos();
+                    }else if($(this).val().length === 0) {
+                        searchInput = '';
+                        getDataPermisos();
+                    }
+                });
+
+                $("#btnPrevPage").on('click', (e) => {
+                    e.preventDefault();
+                    if (currentPage > 1) {
+                        currentPage--;
+                        getDataPermisos();
+                    }
+                });
+
+                $('#btnNextPage').on('click', (e) => {
+                    currentPage++;
+                    getDataPermisos();
+                });
+
+                $('#perPage').on('change', function() {
+                    const val = $(this).val();
+                    perPage = val === 'all' ? 'all' : parseInt(val) || 10;
+                    currentPage = 1;
+                    getDataPermisos();
+                });
+
+                tabla_permisos.on('click', 'a.eliminar-permiso', function(e) {
+                    e.preventDefault();
+                    const row = $(this).closest('tr');
+                    const id = row.attr('data-id-permiso');
+                    console.log(id);
+                    
+                    $f7.dialog.confirm('¿Seguro que deseas eliminar este permiso?','Eliminar permiso',() => {
+                        $f7.tools.sendRequest('DELETE', `/grupo_permiso/permisos/${id}`).then((response) => {
+                            if (response.success == true) {
+                                $f7.notification.create({
+                                    title: 'Éxito',
+                                    icon: '<i class="icon f7-icons color-green size-50">hand_thumbsup_fill</i>',
+                                    text: 'Permiso eliminado correctamente.',
+                                    closeTimeout: 3000,
+                                }).open();
+                                getDataPermisos();
+                            } else {
+                                $f7.notification.create({
+                                    title: 'Error',
+                                    text: response.message || 'No se pudo eliminar el pérmiso.',
+                                    closeTimeout: 3000,
+                                }).open();
+                            }
+                        });
+                    });
+                });
+
+                
+                tabla_permisos.on('change', 'input.toggle-estado', function(e) {
+                    e.preventDefault();
+                    const row = $(this).closest('tr');
+                    const id = row.attr('data-id-permiso');
+                    const estado = $(this).is(':checked') ? 1 : 0;
+
+                    $f7.tools.sendRequest('PUT', `/grupo_permiso/permisos/estado/${id}`, {estado:estado}).then((response) => {
+                        
+                        if (response.success) {
+                            $f7.notification.create({
+                            text: `Estado del permiso actualizado a ${estado ? 'activo' : 'inactivo'}.`,
+                            icon: '<i class="icon f7-icons color-green size-50">hand_thumbsup_fill</i>',
+                            closeTimeout: 3000
+                            }).open();
+                        } else {
+                            $f7.notification.create({
+                            title: 'Error',
+                            text: response.message || 'No se pudo actualizar el estado del permiso.',
+                            closeTimeout: 3000,
+                            }).open();
+                        }
+                    });
+                });
+            });
+
+            function renderTable() {
+                let dataPermisos = '';
+                permisosData.forEach(item => {
+                    dataPermisos += `
+                    <tr data-id-permiso="${item.id}">
+                        <td class="checkbox-cell">
+                            <label class="checkbox">
+                            <input type="checkbox" />
+                            <i class="icon-checkbox"></i>
+                            </label>
+                        </td>
+                        <td class="label-cell">${item.permiso}</td>
+                        <td class="label-cell">${item.grupo}</td>
+                        <td class="label-cell">${item.descripcion !== null ? item.descripcion : '-'}</td>
+                        <td>
+                            <label class="toggle toggle-init color-green">
+                            <input type="checkbox" class="toggle-estado" ${item.activo ? 'checked' : ''}/>
+                            <span class="toggle-icon"></span>
+                            </label>
+                        </td>
+                        <td class="numeric-cell">
+                            <a class="link icon-only" title="Editar" href="/sistema/permisos/editar/${item.id}"><i class="icon material-icons">edit</i></a>
+                            <a class="link icon-only eliminar-permiso" title="Eliminar"><i class="icon f7-icons">trash</i></a>
+                        </td>
+                    </tr>`;
+                });
+                tabla_permisos.html(dataPermisos);
+
+                $('.data-table-pagination-label').text(`${from}-${to} de ${totalItems}`);
+                $('#btnPrevPage')[prevPage ? 'removeClass' : 'addClass']('disabled');
+                $('#btnNextPage')[nextPage ? 'removeClass' : 'addClass']('disabled');
+            }
+
+            function getDataPermisos(){
+                $f7.tools.sendRequest('GET', `/grupo_permiso/permisos?page=${currentPage}&perPage=${perPage}&search=${searchInput}`).then((response) => {
+                    
+                    if(response.success === true) {
+                        permisosData = response.data || [];
+                        totalItems = response.pagination.total || 0;
+                        from = response.pagination.from || 0;
+                        to = response.pagination.to || 0;
+                        nextPage = response.pagination.hasNext ?? false;
+                        prevPage = response.pagination.hasPrev ?? false;
+                        renderTable();
+                    }
+                });
+            }
+        });
+
+        return $render;
+    }
+</script>

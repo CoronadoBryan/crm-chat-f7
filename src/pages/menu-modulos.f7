@@ -2,20 +2,75 @@
     <div class="panel panel-md panel-left panel-floating panel-init  menu-modulos sistema-configuraciones">
         <div class="list">
             <ul>
-
+                ${modulosFiltrados && modulosFiltrados.map(modulo => $h`
+                ${modulo.parents && modulo.parents.length === 0 ? $h`
                 <li>
-                    <a href="/chat" class="item-link item-content ${current_route.path === '/sistema/citas' && $h`item-active`}">
+                    <a href="${modulo.url || '#'}" class="item-link item-content ${current_route.path === modulo.url && $h`item-active`}">
                         <div class="item-media">
-                            <i class="icon f7-icons">macwindow</i>
+                            <i class="icon f7-icons">${modulo.icon || 'app'}</i>
                         </div>
                         <div class="item-inner">
                             <div class="item-title">
-                                Clientes
-                                <div class="item-footer">Gestor de Clientes</div>
+                                ${modulo.nombre || modulo.titulo}
+                                <div class="item-footer">${modulo.descripcion || ''}</div>
                             </div>
                         </div>
                     </a>
                 </li>
+                ` : $h`
+                <li class="accordion-list">
+                    <div class="item-content p-0">
+                        <div class="accordion-item ${(current_route.path === modulo.url || (modulo.children && modulo.children.some(child => current_route.path === child.url))) && $h`accordion-item-opened`}">
+                            <a class="item-link item-content">
+                                <div class="item-media">
+                                    <i class="icon f7-icons">${modulo.icon || 'app'}</i>
+                                </div>
+                                <div class="item-inner">
+                                    <div class="item-title">
+                                        ${modulo.nombre || modulo.titulo}
+                                        <div class="item-footer">${modulo.descripcion || ''}</div>
+                                    </div>
+                                </div>
+                            </a>
+                            <div class="accordion-item-content">
+                                <div class="block">
+                                    <ul>
+                                        <li>
+                                            <a href="${modulo.url || '#'}" class="item-link item-content ${current_route.path === modulo.url && $h`item-active`}">
+                                                <div class="item-media">
+                                                    <i class="icon f7-icons">${modulo.icon || 'app'}</i>
+                                                </div>
+                                                <div class="item-inner">
+                                                    <div class="item-title">
+                                                        ${modulo.nombre || modulo.titulo}
+                                                        <div class="item-footer d-none">${modulo.descripcion || ''}</div>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        ${modulo.parents && modulo.parents.map(child => $h`
+                                        <li>
+                                            <a href="${child.url || '#'}" class="item-link item-content ${current_route.path === child.url && $h`item-active`}">
+                                                <div class="item-media">
+                                                    <i class="icon f7-icons">${child.icon || 'app'}</i>
+                                                </div>
+                                                <div class="item-inner">
+                                                    <div class="item-title">
+                                                        ${child.nombre || child.titulo}
+                                                        <div class="item-footer d-none">${child.descripcion || ''}</div>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        `)}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                `}
+                `)}
             </ul>
         </div>
         <!-- <div class="list">
@@ -26,24 +81,45 @@
 
     const routes = [
         {
-            path: '/chat',
-            componentUrl: './pages/chat/principal.f7',
-
+            path: '/operaciones',
+            componentUrl: './pages/operaciones/index.f7',
+            routes: [
+                {
+                    path: 'mis-asignaciones',
+                    componentUrl: './pages/operaciones/asignaciones/index.f7'
+                }
+            ]
         },
-       
+        {
+            path: '/sistema/citas',
+            componentUrl: '../pages/citas/index.f7'
+        },
     ];
 
-    export default (props, {$f7, $f7router}) => {
+    export default (props, {$f7, $f7ready, $f7router, $store}) => {
         let current_route = $f7router.currentRoute;
+        let modulos = $store.getters.modulos.value;
+        let permisos = $store.state.permisosByUser;
+        console.log('modulos', modulos);
+        console.log('permisos', permisos);
 
-        const agregarRutas = () => {
-            console.log('ready menu modulos');
-            $f7.tools.addRoutes($f7router.routes, routes);
-        };
 
-        if (typeof window !== 'undefined') {
-            setTimeout(agregarRutas, 0);
+        function tienePermisoModulo(alias) {
+          const permisoAlias = $f7.tools.getPermisosByAlias(alias);
+          console.log('permisoAlias', permisoAlias);
+          return permisoAlias && permisoAlias.acc_read === true;
         }
+
+        let modulosFiltrados = modulos.filter(m => tienePermisoModulo(m.alias));
+        console.log('modulosFiltrados', modulosFiltrados);
+        modulosFiltrados = modulosFiltrados.map(m => ({
+          ...m,
+          parents: m.parents ? m.parents.filter(child => tienePermisoModulo(child.alias)) : []
+        }));
+
+        $f7ready(function () {
+            $f7.tools.addRoutes($f7router.routes, routes);
+        });
 
         return $render;
     }

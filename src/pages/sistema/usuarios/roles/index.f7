@@ -1,0 +1,249 @@
+<template>
+    <div class="page" data-name="sistema_usuarios_grupos">
+        <div class="page-content">
+          <div class="navbar">
+              <div class="navbar-bg"></div>
+              <div class="navbar-inner">
+                  <div class="left">
+                      <a class="link back icon-only">
+                          <i class="icon icon-back"></i>
+                      </a></div>
+                  <div class="title">Roles Usuarios</div>
+                  <div class="right">
+                      <div class="grid grid-cols-1 grid-gap">
+                          <a href="/sistema/usuario/roles/crear" class="link popup-open">
+                              <i class="icon f7-icons">plus_circle</i> Nuevo
+                          </a>
+                          <a href="#" id="btn-eliminar" class="link color-red d-none" data-confirm="¿Eliminar roles seleccionados?" data-confirm-title="Eliminar varios">
+                              <i class="icon f7-icons">trash</i> Eliminar
+                          </a>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <div class="data-table data-table-init card card-raised">
+            <div class="card-content">
+              <div class="searchbar">
+                <form>
+                    <div class="searchbar-inner">
+                        <div class="searchbar-input-wrap">
+                            <input type="search" placeholder="Buscar rol..." />
+                            <i class="searchbar-icon"></i>
+                            <span class="input-clear-button"></span>
+                        </div>
+                        <span class="searchbar-disable-button">Cancelar</span>
+                    </div>
+                </form>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th class="checkbox-cell d-none">
+                      <label class="checkbox">
+                          <input type="checkbox" />
+                          <i class="icon-checkbox"></i>
+                      </label>
+                    </th>
+                    <th>Nombre</th>
+                    <th>Alias</th>
+                    <th>Descripción</th>
+                    <th>Fecha de registro</th>
+                    <th class="text-align-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="roles-table">
+                  <tr data-id-usuario="1">
+                    <td class="checkbox-cell d-none">
+                      <label class="checkbox">
+                          <input type="checkbox" class="chk-usuario-rol"/>
+                          <i class="icon-checkbox"></i>
+                      </label>
+                    </td>
+                    <td>Grupo rol 1</td>
+                    <td>rol-1</td>
+                    <td>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Similique assumenda, molestiae suscipit, culpa atque aperiam asperiores explicabo quis eligendi quas quo, unde modi animi facere illum nisi odit ipsum neque.</td>
+                    <td>14/05/2025 11:28</td>
+                    <td class="actions-cell">
+                      <a class="link icon-only page-open" href="/sistema/usuario/roles/permiso/list/1">
+                        <i class="icon f7-icons">lock_shield</i>
+                      </a>
+                      <a class="link popup-open" href="/sistema/usuario/roles/editar/1">
+                          <i class="icon f7-icons if-not-md">square_pencil</i>
+                          <i class="icon material-icons md-only">edit</i>
+                      </a>
+                      <a class="link icon-only borrar d-none">
+                          <i class="icon f7-icons if-not-md">trash</i>
+                          <i class="icon material-icons md-only">delete</i>
+                      </a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="data-table-footer">
+                <div class="data-table-rows-select">Per page:<div class="input input-dropdown">
+                        <select>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="data-table-pagination">
+                    <span class="data-table-pagination-label">1-5 de 10</span>
+                    <a class="link disabled" id="btnPrevPage">
+                        <i class="icon icon-prev color-gray"></i>
+                    </a>
+                    <a class="link" id="btnNextPage">
+                        <i class="icon icon-next color-gray"></i>
+                    </a>
+                </div>
+            </div>
+          </div>
+        </div>
+    </div>
+</template>
+<script>
+    const routes = [
+        {
+            path: '/sistema/usuario/roles',
+            componentUrl: '../pages/sistema/usuarios/roles/index.f7',
+            routes:[
+                {
+                    name: 'usuario_rol_crear',
+                    path: 'crear',
+                    popup: {
+                        componentUrl: '../pages/sistema/usuarios/roles/crear.f7'
+                    }
+                },
+                {
+                    name: 'usuario_rol_editar',
+                    path: 'editar/:id',
+                    popup: {
+                        componentUrl: '../pages/sistema/usuarios/roles/editar.f7'
+                    }
+                },
+                {
+                    path: 'permiso/list/:id',
+                    name: 'sistema_usuarios_roles_permisos',
+                    componentUrl: '../pages/sistema/usuarios/roles/permisos/index.f7'
+                },
+                {
+                    path: 'permiso/crear',
+                    name: 'sistema_usuarios_roles_permisos_crear',
+                    popup: {
+                      componentUrl: '../pages/sistema/usuarios/roles/permisos/crear.f7'
+                    }
+                }
+            ]
+        }
+    ];
+
+    export default (props, {$, $f7, $f7ready, $f7router, $on}) => {
+        let searchInput = '';
+        let currentPage = 1;
+        let perPage = 10;
+        let totalItems = 0;
+        let rolesData = [];
+        let from = 0;
+        let to = 0;
+        let nextPage = false;
+        let prevPage = false;
+        $f7ready(function () {
+            $f7.tools.addRoutes($f7router.routes, routes);
+            $on('pageInit',() => {
+              getDataRoles();
+
+              //ACCIONES DE PAGINACION
+              $("input[name='search']").on('keyup', function(e) {
+                  e.preventDefault();
+                  currentPage = 1;
+                  searchInput = '';
+                  if ($(this).val().length > 2) {
+                      searchInput = $(this).val();
+                      getDataUsuarios();
+                  }else if($(this).val().length === 0) {
+                      searchInput = '';
+                      getDataUsuarios();
+                  }
+              });
+
+              $("#btnPrevPage").on('click', (e) => {
+                  e.preventDefault();
+                  if (currentPage > 1) {
+                      currentPage--;
+                      getDataUsuarios();
+                  }
+              });
+              $('#btnNextPage').on('click', (e) => {
+                  e.preventDefault();
+                  currentPage++;
+                  getDataUsuarios();
+              });
+              $('#perPage').on('change', function() {
+                    const val = $(this).val();
+                    perPage = val === 'all' ? 'all' : parseInt(val) || 10;
+                    currentPage = 1;
+                    getDataUsuarios();
+              });
+            });
+            function renderTable() {
+              let dataRoles = '';
+                rolesData.forEach(role => {
+                    dataRoles += `
+                      <tr data-id-usuario="${role.id}">
+                        <td class="checkbox-cell d-none">
+                            <label class="checkbox">
+                                <input type="checkbox" class="chk-usuario-rol" />
+                                <i class="icon-checkbox"></i>
+                            </label>
+                        </td>
+                        <td>${role.rol}</td>
+                        <td>${role.alias}</td>
+                        <td>${role.descripcion}</td>
+                        <td>${new Date(role.created_at.date).toLocaleString()}</td>
+                        <td class="actions-cell">
+                            <a class="link icon-only page-open" href="/sistema/usuario/roles/permiso/list/${role.id}">
+                                <i class="icon f7-icons">lock_shield</i>
+                            </a>
+                            <a class="link popup-open" href="/sistema/usuario/roles/editar/${role.id}">
+                                <i class="icon f7-icons if-not-md">square_pencil</i>
+                                <i class="icon material-icons md-only">edit</i>
+                            </a>
+                        </td>
+                    </tr>`;
+
+                    $("#roles-table").html(dataRoles);
+                    const paginationLabel = `${from}-${to} de ${totalItems}`;
+                    $('#btnPrevPage')[prevPage ? 'removeClass' : 'addClass']('disabled');
+                    $('#btnNextPage')[nextPage ? 'removeClass' : 'addClass']('disabled');
+                    $('.data-table-pagination-label').text(paginationLabel);
+                });
+            }
+
+            function getDataRoles(){
+              $f7.tools.sendRequest('GET', `/grupo_usuario_rol?page=${currentPage}&perPage=${perPage}&search=${searchInput}`).then((response) => {
+                  if (response.success == true) {
+                    rolesData = response.data || [];
+                    totalItems = response.pagination.total || 0;
+                    from = response.pagination.from || 0;
+                    to = response.pagination.to || 0;
+                    nextPage = response.pagination.hasNext ?? false;
+                    prevPage = response.pagination.hasPrev ?? false;
+                    renderTable();
+                  }else{
+                    $f7.notifications.create({
+                        title: 'Error',
+                        text: response.message,
+                        closeTimeout: 3000,
+                        icon: '<i class="icon f7-icons">exclamationmark_triangle</i>',
+                        closeButton: true
+                    }).open();
+                  }
+                });
+            }
+        });
+        
+        return $render;
+    }
+</script>

@@ -1,0 +1,11 @@
+<template>
+    <div class="block">
+      <h2>Historial</h2>
+      <p>Historial de acciones del usuario.</p>
+    </div>
+</template>
+<script>
+export default (props, { $f7, $f7router, $on }) => {
+  return $render;
+}
+</script>

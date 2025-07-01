@@ -1,0 +1,100 @@
+<template>
+    <div class="popup">
+        <div class="view">
+            <div class="page" data-name="usuario_grupo_permiso_crear">
+                <div class="page-content">
+                    <div class="navbar">
+                        <div class="navbar-bg"></div>
+                        <div class="navbar-inner">
+                            <div class="left">
+                                <a class="link back icon-only">
+                                    <i class="icon icon-back"></i>
+                                </a>
+                            </div>
+                            <div class="title">Nuevo grupo permiso</div>
+                            <div class="right">
+                                <button class="button button-fill button-round">Guadar</button>
+                            </div>
+                        </div>
+                    </div>
+                    <form action="#" method="post">
+                        <div class="block">
+                            <div class="list">
+                                <ul>
+                                    <li class="item-content item-smart-select item-smart-select-outline">
+                                        <div class="item-link smart-select" data-open-in="popup" data-close-on-select="true">
+                                            <select name="permiso" data-error-message="Campo obligatorio." required>
+                                            </select>
+                                            <div class="item-content">
+                                              <div class="item-inner">
+                                                <div class="item-title">Permiso</div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                    </li>
+                                    <li>
+                                        <label class="item-content">
+                                            <div class="item-inner">
+                                                <div class="item-title">Lectura</div>
+                                                <div class="item-after">
+                                                    <div class="toggle toggle-init">
+                                                        <input type="checkbox" name="lectura" checked/>
+                                                        <span class="toggle-icon"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label class="item-content">
+                                            <div class="item-inner">
+                                                <div class="item-title">Crear</div>
+                                                <div class="item-after">
+                                                    <div class="toggle toggle-init">
+                                                        <input type="checkbox" name="crear" checked/>
+                                                        <span class="toggle-icon"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label class="item-content">
+                                            <div class="item-inner">
+                                                <div class="item-title">Editar</div>
+                                                <div class="item-after">
+                                                    <div class="toggle toggle-init">
+                                                        <input type="checkbox" name="editar" checked/>
+                                                        <span class="toggle-icon"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label class="item-content">
+                                            <div class="item-inner">
+                                                <div class="item-title">Eliminar</div>
+                                                <div class="item-after">
+                                                    <div class="toggle toggle-init">
+                                                        <input type="checkbox" name="eliminar" checked/>
+                                                        <span class="toggle-icon"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    export default (props, {$f7, $f7router, $f7ready}) => {
+        return $render;
+    }
+</script>

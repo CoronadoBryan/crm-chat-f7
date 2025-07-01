@@ -1,0 +1,198 @@
+<template>
+    <div class="page" data-name="sistema_modulos">
+        <div class="page-content">
+            <div class="block-title block-title-large">Módulos</div>
+            <div class="data-table data-table-init card card-raised">
+                <div class="card-header">
+                    <div class="data-table-links">
+                        <a href="/sistema/modulos/crear" class="link">
+                            <i class="icon f7-icons ">plus_circle</i> Nuevo
+                        </a>
+                        <a class="link color-red eliminar-modulo">
+                            <i class="icon f7-icons ">trash</i> Eliminar
+                        </a>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="checkbox-cell">
+                                    <label class="checkbox">
+                                        <input type="checkbox" />
+                                        <i class="icon-checkbox"></i>
+                                    </label>
+                                </th>
+                                <th class="label-cell">Nombres</th>
+                                <th class="label-cell">Descripcion</th>
+                                <th class="numeric-cell" width="10%">Activo</th>
+                                <th class="numeric-cell" width="10%">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modulos-table-body"></tbody>
+                    </table>
+                    <div class="data-table-footer">
+                        <div class="data-table-rows-select">Por página:<div class="input input-dropdown">
+                                <select name="perPage" class="input-select" id="perPage">
+                                    <option value="10">10</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                    <option value="all">All</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="data-table-pagination">
+                            <span class="data-table-pagination-label">1-5 of 10</span>
+                            <a class="link disabled" id="btnPrevPage">
+                                <i class="icon icon-prev color-gray"></i>
+                            </a>
+                            <a class="link" id="btnNextPage">
+                                <i class="icon icon-next color-gray"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    const routes = [
+        {
+            path: '/sistema/modulos/crear',
+            componentUrl: '../pages/sistema/modulos/crear.f7',
+        },
+        {
+            path: '/sistema/modulos/editar/:id',
+            componentUrl: '../pages/sistema/modulos/editar.f7',
+        },
+        {
+            path: '/sistema/modulos/grupos/',
+            componentUrl: '../pages/sistema/modulos/grupos/index.f7',
+            routes: [
+                {
+                    name: 'modulo_grupo_crear',
+                    path: 'crear',
+                    popup: {
+                        componentUrl: '../pages/sistema/modulos/grupos/crear.f7',
+                    },
+                },
+                {
+                    name: 'modulo_grupo_editar',
+                    path: 'editar',
+                    componentUrl: '../pages/sistema/modulos/grupos/editar.f7',
+                },
+            ]
+        },
+    ];
+
+    export default (props, {$, $f7, $f7ready, $f7router, $store, $on}) => {
+        let current_route = $f7router.currentRoute;
+
+        let currentPage = 1;
+        let perPage = 10;
+        let totalItems = 0;
+        let modulosData = [];
+        let from = 0;
+        let to = 0;
+        let nextPage = false;
+        let prevPage = false;
+
+        $f7ready(() => {
+            $f7.tools.addRoutes($f7router.routes, routes);
+
+            $on('pageInit', () => {
+                const perPageVal = $('#perPage').val();
+                perPage = perPageVal === 'all' ? 'all' : parseInt(perPageVal) || 10;
+                getDataModulos();
+
+                // Eventos paginación
+                $("#btnPrevPage").on('click', (e) => {
+                    e.preventDefault();
+                    if (currentPage > 1) {
+                        currentPage--;
+                        getDataModulos();
+                    }
+                });
+
+                $('#btnNextPage').on('click', (e) => {
+                    currentPage++;
+                    getDataModulos();
+                });
+
+                $('#perPage').on('change', function () {
+                    const val = $(this).val();
+                    perPage = val === 'all' ? 'all' : parseInt(val) || 10;
+                    currentPage = 1;
+                    getDataModulos();
+                });
+
+                $('#modulos-table-body').on('click', '.eliminar-modulo', function () {
+                    const id = $(this).data('modulo-id');
+                    $f7.dialog.confirm('¿Estás seguro de eliminar este módulo?', 'Confirmar eliminación', () => {
+                        $f7.tools.sendRequest('DELETE', `/modulo/${id}`).then((response) => {
+                            if (response.success == true) {
+                                $f7.notification.create({
+                                    title: 'Éxito',
+                                    icon: '<i class="icon f7-icons color-green size-50">hand_thumbsup_fill</i>',
+                                    text: 'Módulo eliminado correctamente.',
+                                    closeTimeout: 3000,
+                                }).open();
+                                getDataModulos();
+                            } else {
+                                $f7.notification.create({
+                                    title: 'Error',
+                                    text: response.message || 'No se pudo eliminar el módulo.',
+                                    closeTimeout: 3000,
+                                }).open();
+                            }
+                        });
+                    });
+                });
+            });
+
+            function renderTable() {
+                let dataModulos = '';
+                modulosData.forEach(item => {
+                    dataModulos += `<tr>
+                        <td class="checkbox-cell">
+                            <label class="checkbox">
+                            <input type="checkbox" />
+                            <i class="icon-checkbox"></i>
+                            </label>
+                        </td>
+                        <td class="label-cell">${item.nombre}</td>
+                        <td class="label-cell">${item.descripcion}</td>
+                        <td class="numeric-cell">${item.activo ? '<div class="chip color-green"><label class="chip-label">Activo</label></div>' : '<div class="chip color-red"><label class="chip-label">Inactivo</label></div>'}</td>
+                        <td class="numeric-cell">
+                            <a class="link icon-only" href="/sistema/modulos/editar/${item.id}"><i class="icon material-icons">edit</i></a>
+                            <a class="link icon-only eliminar-modulo" data-modulo-id="${item.id}"><i class="icon f7-icons">trash</i></a>
+                        </td>
+                    </tr>`;
+                });
+                $('#modulos-table-body').html(dataModulos);
+                const paginationLabel = `${from}-${to} de ${totalItems}`;
+                $('#btnPrevPage')[prevPage ? 'removeClass' : 'addClass']('disabled');
+                $('#btnNextPage')[nextPage ? 'removeClass' : 'addClass']('disabled');
+                $('.data-table-pagination-label').text(paginationLabel);
+            }
+
+            function getDataModulos() {
+                $f7.tools.sendRequest('GET', `/modulo?page=${currentPage}&perPage=${perPage}`).then((response) => {
+                    if (response.success === true) {
+                        modulosData = response.data || [];
+                        totalItems = response.pagination.total || 0;
+                        from = response.pagination.from || 0;
+                        to = response.pagination.to || 0;
+                        nextPage = response.pagination.hasNext ?? false;
+                        prevPage = response.pagination.hasPrev ?? false;
+                        renderTable();
+                    }
+                });
+            }
+        });
+
+        return $render;
+    }
+
+</script>

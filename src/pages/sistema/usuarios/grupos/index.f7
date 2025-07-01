@@ -1,0 +1,267 @@
+<template>
+    <div class="page" data-name="sistema_usuarios_grupos">
+        <div class="page-content">
+          <div class="navbar">
+              <div class="navbar-bg"></div>
+              <div class="navbar-inner">
+                  <div class="left">
+                      <a class="link back icon-only">
+                          <i class="icon icon-back"></i>
+                      </a></div>
+                  <div class="title">Grupos Usuarios</div>
+                  <div class="right">
+                      <div class="grid grid-cols-1 grid-gap">
+                          <a href="/sistema/usuario/grupos/crear" class="link popup-open">
+                              <i class="icon f7-icons">plus_circle</i> Nuevo
+                          </a>
+                          <a href="#" id="btn-eliminar" class="link color-red d-none" data-confirm="¿Eliminar usuarios seleccionados?" data-confirm-title="Eliminar varios">
+                              <i class="icon f7-icons">trash</i> Eliminar
+                          </a>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <div class="data-table data-table-init card card-raised">
+            <div class="card-content">
+              <div class="searchbar">
+                <div class="searchbar-inner">
+                    <div class="searchbar-input-wrap">
+                        <input type="search" name="search" placeholder="Buscar grupo..." />
+                        <i class="searchbar-icon"></i>
+                        <span class="input-clear-button"></span>
+                    </div>
+                    <span class="searchbar-disable-button">Cancelar</span>
+                </div>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th class="checkbox-cell d-none">
+                      <label class="checkbox">
+                          <input type="checkbox" />
+                          <i class="icon-checkbox"></i>
+                      </label>
+                    </th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Fecha de registro</th>
+                    <th class="text-align-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody  id="grupos-table-body">
+                  <tr data-id-grupo="1">
+                    <td class="checkbox-cell d-none">
+                      <label class="checkbox">
+                          <input type="checkbox" class="chk-grupo"/>
+                          <i class="icon-checkbox"></i>
+                      </label>
+                    </td>
+                    <td>Grupo usuario 1</td>
+                    <td>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Similique assumenda, molestiae suscipit, culpa atque aperiam asperiores explicabo quis eligendi quas quo, unde modi animi facere illum nisi odit ipsum neque.</td>
+                    <td>14/05/2025 11:28</td>
+                    <td class="actions-cell">
+                      <a class="link popup-open" href="/sistema/usuario/grupos/editar/1">
+                          <i class="icon f7-icons if-not-md">square_pencil</i>
+                          <i class="icon material-icons md-only">edit</i>
+                      </a>
+                      <a class="link icon-only borrar d-none">
+                          <i class="icon f7-icons if-not-md">trash</i>
+                          <i class="icon material-icons md-only">delete</i>
+                      </a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="data-table-footer">
+                <div class="data-table-rows-select">Per page:<div class="input input-dropdown">
+                        <select>
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="data-table-pagination">
+                    <span class="data-table-pagination-label">1-5 de 10</span>
+                    <a class="link disabled" id="btnPrevPage">
+                        <i class="icon icon-prev color-gray"></i>
+                    </a>
+                    <a class="link" id="btnNextPage">
+                        <i class="icon icon-next color-gray"></i>
+                    </a>
+                </div>
+            </div>
+          </div>
+        </div>
+    </div>
+</template>
+<script>
+    const routes = [
+        {
+            path: '/sistema/usuario/grupos',
+            componentUrl: '../pages/sistema/usuarios/grupos/index.f7',
+            routes:[
+                {
+                    name: 'usuario_grupo_crear',
+                    path: 'crear',
+                    popup: {
+                        componentUrl: '../pages/sistema/usuarios/grupos/crear.f7'
+                    }
+                },
+                {
+                    name: 'usuario_grupo_editar',
+                    path: 'editar/:id',
+                    popup: {
+                        componentUrl: '../pages/sistema/usuarios/grupos/editar.f7'
+                    }
+                },
+                {
+                    name: 'sistema_usuarios_grupos_permisos',
+                    path: ':id/permisos',
+                    componentUrl: '../pages/sistema/usuarios/grupos/permisos/index.f7'
+                },
+                {
+                    name: 'sistema_usuarios_grupos_asignar_usuarios',
+                    path: ':id/asignar-usuarios',
+                    componentUrl: '../pages/sistema/usuarios/grupos/asignar.f7'
+                }
+            ]
+        },
+        {
+            path: '/sistema/usuario/roles',
+            componentUrl: '../pages/sistema/usuarios/roles/index.f7',
+            routes:[
+                {
+                    name: 'usuario_rol_crear',
+                    path: 'crear',
+                    popup: {
+                        componentUrl: '../pages/sistema/usuarios/roles/crear.f7'
+                    }
+                },
+                {
+                    name: 'usuario_rol_editar',
+                    path: 'editar/:id',
+                    popup: {
+                        componentUrl: '../pages/sistema/usuarios/roles/editar.f7'
+                    }
+                }
+            ]
+        },
+        {
+            path: '/sistema/usuario/grupo-role/asignar/:id',
+            componentUrl: '../pages/sistema/usuarios/gruposRoles/crear.f7',
+        }
+    ];
+
+    export default (props, {$, $f7, $f7ready, $f7router, $on}) => {
+        let searchInput = '';
+        let currentPage = 1;
+        let perPage = 10;
+        let totalItems = 0;
+        let gruposData = [];
+        let from = 0;
+        let to = 0;
+        let nextPage = false;
+        let prevPage = false;
+        $f7ready(function () {
+            $f7.tools.addRoutes($f7router.routes, routes);
+            $on('pageInit',()=>{
+                getDataGrupos();
+
+                //ACCIONES DE PAGINACION
+              $("input[name='search']").on('keyup', function(e) {
+                  e.preventDefault();
+                  currentPage = 1;
+                  searchInput = '';
+                  if ($(this).val().length > 2) {
+                      searchInput = $(this).val();
+                      getDataGrupos();
+                  }else if($(this).val().length === 0) {
+                      searchInput = '';
+                      getDataGrupos();
+                  }
+              });
+
+              $("#btnPrevPage").on('click', (e) => {
+                  e.preventDefault();
+                  if (currentPage > 1) {
+                      currentPage--;
+                      getDataGrupos();
+                  }
+              });
+              $('#btnNextPage').on('click', (e) => {
+                  e.preventDefault();
+                  currentPage++;
+                  getDataGrupos();
+              });
+              $('#perPage').on('change', function() {
+                    const val = $(this).val();
+                    perPage = val === 'all' ? 'all' : parseInt(val) || 10;
+                    currentPage = 1;
+                    getDataGrupos();
+              });
+            });
+            $f7.on('grupo:creado', () => {
+                getDataGrupos();
+            });
+            function renderTable(){
+                let dataGrupos = '';
+                gruposData.forEach((grupo) => {
+                    dataGrupos += `
+                        <tr data-id-grupo="${grupo.id}">
+                            <td class="checkbox-cell d-none">
+                                <label class="checkbox">
+                                    <input type="checkbox" class="chk-grupo" />
+                                    <i class="icon-checkbox"></i>
+                                </label>
+                            </td>
+                            <td>${grupo.grupo}</td>
+                            <td>${grupo.descripcion || ''}</td>
+                            <td>${new Date(grupo.created_at.date).toLocaleString()}</td>
+                            <td class="actions-cell">
+                                <a class="link icon-only tooltip-init-permisos page-open" href="/sistema/usuario/grupos/${grupo.id}/permisos">
+                                    <i class="icon f7-icons">lock_shield</i>
+                                </a>
+                                <a class="link icon-only tooltip-init-asignar" href="/sistema/usuario/grupos/${grupo.id}/asignar-usuarios">
+                                    <i class="icon material-icons">group_add</i>
+                                </a>
+                                <a class="link icon-only popup-open" href="/sistema/usuario/grupos/editar/${grupo.id}">
+                                    <i class="icon material-icons">edit</i>
+                                </a>
+                            </td>
+                        </tr>
+                    `;
+                });
+                $("#grupos-table-body").html(dataGrupos);
+                const paginationLabel = `${from}-${to} de ${totalItems}`;
+                $('#btnPrevPage')[prevPage ? 'removeClass' : 'addClass']('disabled');
+                $('#btnNextPage')[nextPage ? 'removeClass' : 'addClass']('disabled');
+                $('.data-table-pagination-label').text(paginationLabel);
+            }
+            function getDataGrupos() {
+                $f7.tools.sendRequest('GET', `/grupo_usuario?page=${currentPage}&perPage=${perPage}&search=${searchInput}`).then((response) => {
+                    if (response.success == true) {
+                        gruposData = response.data || [];
+                        totalItems = response.pagination.total || 0;
+                        from = response.pagination.from || 0;
+                        to = response.pagination.to || 0;
+                        nextPage = response.pagination.hasNext ?? false;
+                        prevPage = response.pagination.hasPrev ?? false;
+
+                        renderTable();
+                    } else {
+                        $f7.notification.create({
+                            title: 'Error',
+                            text: response.message || 'No se pudo cargar los usuarios.',
+                            closeTimeout: 3000,
+                        }).open();
+                    }
+                });
+            }
+        });
+        
+        return $render;
+    }
+</script>

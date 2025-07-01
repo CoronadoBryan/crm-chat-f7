@@ -1,0 +1,152 @@
+<template>
+    <div class="popup">
+        <div class="view">
+            <div class="page" data-name="sistema_usuarios_permisos_crear">
+                <div class="page-content">
+                    <div class="navbar">
+                        <div class="navbar-bg"></div>
+                        <div class="navbar-inner">
+                            <div class="left">
+                                <a class="link back icon-only">
+                                    <i class="icon icon-back"></i>
+                                </a>
+                            </div>
+                            <div class="title">Nuevo permiso grupo</div>
+                            <div class="right">
+                                <button class="button button-fill button-round">Guadar</button>
+                            </div>
+                        </div>
+                    </div>
+                    <form action="#" method="post">
+                        <div class="block">
+                            <div class="list">
+                                <ul>
+                                    <li class="item-content item-smart-select item-smart-select-outline">
+                                        <div class="item-link smart-select" id="smart-select-grupo" data-open-in="popup" data-close-on-select="true" data-popup-close-link-text="Cerrar" data-searchbar="true" data-searchbar-placeholder="Buscar grupo...">
+                                            <select name="grupo" data-error-message="Campo obligatorio." required></select>
+                                            <div class="item-content">
+                                                <div class="item-inner">
+                                                    <div class="item-title">Grupo</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="item-content item-smart-select item-smart-select-outline">
+                                        <div class="item-link smart-select" id="smart-select-permiso" data-open-in="popup" data-close-on-select="true" data-popup-close-link-text="Cerrar" data-searchbar="true" data-searchbar-placeholder="Buscar permiso...">
+                                            <select name="permiso" data-error-message="Campo obligatorio." required></select>
+                                            <div class="item-content">
+                                              <div class="item-inner">
+                                                <div class="item-title">Permiso</div>
+                                              </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="item-content item-smart-select item-smart-select-outline">
+                                        <label class="item-content width-100">
+                                            <div class="item-inner">
+                                                <div class="item-title">Lectura</div>
+                                                <div class="item-after">
+                                                    <div class="toggle toggle-init">
+                                                        <input type="checkbox" name="lectura"/>
+                                                        <span class="toggle-icon"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </li>
+                                    <li class="item-content item-smart-select item-smart-select-outline">
+                                        <label class="item-content width-100">
+                                            <div class="item-inner">
+                                                <div class="item-title">Crear</div>
+                                                <div class="item-after">
+                                                    <div class="toggle toggle-init">
+                                                        <input type="checkbox" name="crear"/>
+                                                        <span class="toggle-icon"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </li>
+                                    <li class="item-content item-smart-select item-smart-select-outline">
+                                        <label class="item-content width-100">
+                                            <div class="item-inner">
+                                                <div class="item-title">Editar</div>
+                                                <div class="item-after">
+                                                    <div class="toggle toggle-init">
+                                                        <input type="checkbox" name="editar"/>
+                                                        <span class="toggle-icon"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </li>
+                                    <li class="item-content item-smart-select item-smart-select-outline">
+                                        <label class="item-content width-100">
+                                            <div class="item-inner">
+                                                <div class="item-title">Eliminar</div>
+                                                <div class="item-after">
+                                                    <div class="toggle toggle-init">
+                                                        <input type="checkbox" name="eliminar"/>
+                                                        <span class="toggle-icon"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    export default (props, {$f7, $f7router, $f7ready, $on}) => {
+        $on('popupOpen', (e, popup) => {
+            getGrupos();
+        });
+        function getGrupos(){
+            const selectGrupos = document.querySelector('#smart-select-grupo select');
+            selectGrupos.innerHTML = '';
+            const optionDefault = document.createElement('option');
+            optionDefault.value = '';
+            optionDefault.textContent = 'Seleccionar Grupo';
+            optionDefault.disabled = true;
+            optionDefault.selected = true;
+            selectGrupos.appendChild(optionDefault);
+            $f7.tools.sendRequest('GET','/grupo_usuario?perPage=all').then((response) => {
+                if (response && response.success==true) {
+                    response.data.forEach((grupo) => {
+                        const option = document.createElement('option');
+                        option.value = grupo.id;
+                        option.textContent = grupo.grupo;
+                        selectGrupos.appendChild(option);
+                    });
+                }
+            });
+        }
+        function getPermisos(){
+            const selectPermisos = document.querySelector('#smart-select-permiso');
+            selectPermisos.innerHTML = '';
+            const optionDefault = document.createElement('option');
+            optionDefault.value = '';
+            optionDefault.textContent = 'Seleccionar Permiso';
+            optionDefault.disabled = true;
+            optionDefault.selected = true;
+            selectPermisos.appendChild(optionDefault);
+            $f7.tools.sendRequest('GET','/grupo_usuario?perPage=all').then((response) => {
+                if (response && response.success==true) {
+                    response.data.forEach((grupo) => {
+                        const option = document.createElement('option');
+                        option.value = grupo.id;
+                        option.textContent = grupo.grupo;
+                        selectPermisos.appendChild(option);
+                    });
+                }
+            });
+        }
+        return $render;
+    }
+</script>

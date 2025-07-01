@@ -1,0 +1,188 @@
+<template>
+    <div class="popup">
+        <div class="view">
+            <div class="page">
+                <div class="navbar">
+                    <div class="navbar-inner">
+                        <div class="title">Nuevo Asignación</div>
+                        <div class="right"><a class="link popup-close">Cerrar</a></div>
+                    </div>
+                </div>
+                <div class="page-content">
+                    <form id="form-nueva-asignacion" class="block container">
+                        <div class="list">
+                            <ul>
+                                <li class="item-content item-smart-select item-smart-select-outline mx-0">
+                                    <a class="item-link smart-select"
+                                       data-open-in="popup"
+                                       data-searchbar="true"
+                                       data-searchbar-placeholder="Buscar usuario"
+                                       data-close-on-select="true"
+                                       data-popup-close-link-text="Cerrar">
+                                        <select name="id_usuario" id="select-usuario">
+                                            <option value="" selected>Seleccionar usuario</option>
+                                        </select>
+                                        <div class="item-content">
+                                            <div class="item-inner">
+                                                <div class="item-title">Usuario</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                
+                                <li class="item-content item-smart-select item-smart-select-outline mx-0">
+                                    <a class="item-link smart-select"
+                                       data-open-in="popup"
+                                       data-searchbar="true"
+                                       data-searchbar-placeholder="Buscar rol"
+                                       data-close-on-select="true"
+                                       data-popup-close-link-text="Cerrar">
+                                        <select name="id_grupo_usuario_rol" id="select-rol">
+                                            <option value="" selected>Seleccionar rol</option>
+                                        </select>
+                                        <div class="item-content">
+                                            <div class="item-inner">
+                                                <div class="item-title">Rol</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="block footer">
+                            <button type="submit" class="button button-fill">Asignar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+export default (props, {$,$f7, $f7router, $f7ready, $on}) => {
+    const { id_grupo_usuario } = props;
+    console.log('props', props);
+    console.log('Asignación Nuevo', id_grupo_usuario);
+    let usuarios = [];
+    let roles = [];
+
+    $f7ready(function () {
+        $f7.tools.sendRequest('GET','/usuario?perPage=all').then((response) => {
+            if (response.success) {
+                usuarios = response.data || [];
+                const selectUsuario = document.getElementById('select-usuario');
+                selectUsuario.innerHTML = '<option value="" selected>Seleccionar usuario</option>';
+                usuarios.forEach(u => {
+                    const option = document.createElement('option');
+                    option.value = u.id_usuario;
+                    option.textContent = 
+                        (u.nombres && u.apellidos ? u.nombres + " " + u.apellidos : u.usuario) ||
+                        u.usuario ||
+                        u.correo ||
+                        `Usuario ${u.id_usuario}`;
+                    if (u.nombre_documento && u.nro_documento) {
+                        option.textContent += ` || ${u.nombre_documento}: ${u.nro_documento}`;
+                    }
+                    selectUsuario.appendChild(option);
+                });
+                if (selectUsuario.f7SmartSelect) {
+                    selectUsuario.f7SmartSelect.destroy();
+                }
+                $f7.smartSelect.create({ el: selectUsuario});
+            }
+        });
+
+        $f7.tools.sendRequest('GET','/grupo_usuario_rol?perPage=all').then((response) => {
+            if (response.success) {
+                roles = response.data || [];
+                const selectRol = document.getElementById('select-rol');
+                selectRol.innerHTML = '<option value="" selected>Seleccionar rol</option>';
+                roles.forEach(r => {
+                    const option = document.createElement('option');
+                    option.value = r.id;
+                    option.textContent = r.rol || r.descripcion || `Rol ${r.id}`;
+                    selectRol.appendChild(option);
+                });
+                if (selectRol.f7SmartSelect) {
+                    selectRol.f7SmartSelect.destroy();
+                }
+                $f7.smartSelect.create({ el: selectRol});
+            }
+        });
+    
+        $on('popup:opened', (e, popup) => {
+            const form = document.getElementById('form-nueva-asignacion');
+            if (form) {
+                form.addEventListener('submit', async function(ev) {
+                    const idUsuario = document.getElementById('select-usuario').value;
+                    const rolId = document.getElementById('select-rol').value;
+                    if (!idUsuario) {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                    $f7.notification.create({
+                        icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                        text: 'Por favor selecciona un usuario.',
+                        closeTimeout: 3000
+                    }).open();
+                        return;
+                    }
+                    if (!rolId) {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        $f7.notification.create({
+                            icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                            text: 'Por favor selecciona un rol.',
+                            closeTimeout: 3000
+                        }).open();
+                        return;
+                    }
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    if (!form.checkValidity()) {
+                        $f7.notification.create({
+                            icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                            text: 'Por favor, complete todos los campos obligatorios.',
+                            closeTimeout: 3000
+                        }).open();
+                        return;
+                    }
+                    $f7.preloader.show();
+                    try {
+                        const resp = await $f7.tools.sendRequest('POST', '/grupo_usuario_usuario/create', {
+                            id_grupo_usuario: id_grupo_usuario,
+                            id_usuario: idUsuario,
+                            id_grupo_usuario_rol: rolId
+                        });
+                        $f7.preloader.hide();
+                        if (resp.success == true) {
+                            $f7.emit('usuarioAsignado');
+                            $f7.popup.close();
+                            if (resp.data && resp.data.permisos && resp.data.permisos.length == 0) {
+                                setTimeout(() => {
+                                    $f7router.navigate(`/sistema/usuario/grupos/${id_grupo_usuario}/${rolId}/permisos`);
+                                }, 350);
+                            }
+                        } else {
+                            $f7.notification.create({
+                                icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                                text: resp.data || 'Error al asignar rol',
+                                closeTimeout: 3000
+                            }).open();
+                        }
+                    } catch (err) {
+                        $f7.preloader.hide();
+                        $f7.notification.create({
+                            icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                            text: 'Error de red o servidor',
+                            closeTimeout: 3000
+                        }).open();
+                    }
+                });
+            }
+        });
+    });
+
+    return $render;
+}
+</script>

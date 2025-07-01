@@ -1,0 +1,261 @@
+<template>
+    <div class="page" data-name="sistema_usuarios_grupos_asignacion_usuarios">
+        <div class="page-content">
+            <div class="navbar">
+                <div class="navbar-bg"></div>
+                <div class="navbar-inner">
+                    <div class="left">
+                        <a class="link back icon-only">
+                            <i class="icon icon-back"></i>
+                        </a></div>
+                    <div class="title">Asignar usuarios al grupo <span id="grupo-nombre"></span></div>
+                    
+                  <div class="right">
+                      <div class="grid grid-cols-1 grid-gap">
+                          <a href="#" class="link" id="btn-nueva-asignacion">
+                            <i class="icon f7-icons">plus_circle</i> Nuevo
+                          </a>
+                          <a href="#" id="btn-eliminar" class="link color-red d-none" data-confirm="¿Eliminar usuarios seleccionados?" data-confirm-title="Eliminar varios">
+                              <i class="icon f7-icons">trash</i> Eliminar
+                          </a>
+                      </div>
+                  </div>
+                </div>
+            </div>
+            <div class="data-table data-table-init card card-raised">
+                <div class="card-content">
+                    <div class="searchbar">
+                        <div class="searchbar-input-wrap">
+                            <input type="text" placeholder="Buscar usuarios..." class="searchbar-input" name="search"/>
+                            <i class="searchbar-icon"></i>
+                            <span class="input-clear-button"></span>
+                        </div>
+                        <span class="searchbar-disable-button">Cancelar</span>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="label-cell">Usuario</th>
+                                <th class="label-cell">Rol</th>
+                                <th class="label-cell">Nombre</th>
+                                <th class="label-cell">Documento</th>
+                                <th class="label-cell">Email</th>
+                                <th class="label-cell">Pertenece</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usuarios-table-body">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="data-table-footer">
+                    <div class="data-table-rows-select">Por página:<div class="input input-dropdown">
+                            <select id="perPage">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="data-table-pagination">
+                        <span class="data-table-pagination-label"></span>
+                        <a class="link disabled" id="btnPrevPage">
+                            <i class="icon icon-prev color-gray"></i>
+                        </a>
+                        <a class="link" id="btnNextPage">
+                            <i class="icon icon-next color-gray"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    const routes = [
+        {
+            path: '/popup/nueva-asignacion/:id_grupo_usuario',
+            popup: {
+                componentUrl: '../pages/sistema/usuarios/grupos/asignacion_nuevo.f7'
+            }
+        },
+        {
+            path: '/asignacion-tabs/:usuarioId/:rolUsuarioId/:grupoUsuarioId/',
+            componentUrl: '../pages/sistema/usuarios/grupos/asignacion_tab.f7',
+            tabs: [
+                {
+                    path: 'permisos/usuario/:usuarioId/:grupoUsuarioId/',
+                    id: 'tab-general',
+                    componentUrl: '../pages/sistema/usuarios/grupos/asignacion_permisos_usuario.f7',
+                },
+                {
+                    path: 'permisos/rol/:grupoUsuarioId/:rolUsuarioId/',
+                    id: 'tab-permisos',
+                    componentUrl: '../pages/sistema/usuarios/grupos/asignacion_permisos_rol.f7',
+                }
+            ]
+        }
+    ];
+    export default (props, {$,$f,$f7,$f7ready,$f7router,$on}) => {
+        const { id } = props;
+        let currentPage = 1;
+        let perPage = 10;
+        let totalItems = 0;
+        let usuariosData = [];
+        let from = 0;
+        let to = 0;
+        let nextPage = false;
+        let prevPage = false;
+        $f7ready(function(){
+            $f7.tools.addRoutes($f7router.routes, routes);
+            console.log('Rutas agregadas:', $f7router.routes);
+            $f7.on('usuarioAsignado', () => {
+                getDataUsuarios();
+            });
+            $on('pageInit', () => {
+                const perPageVal = $('#perPage').val();
+                perPage = perPageVal === 'all' ? 'all' : parseInt(perPageVal) || 10;
+                getDataUsuarios();
+
+                $("input[name='search']").on('keyup', function(e) {
+                  e.preventDefault();
+                  currentPage = 1;
+                  if ($(this).val().length > 2) {
+                      getDataUsuarios();
+                  }else if($(this).val().length === 0) {
+                      getDataUsuarios();
+                  }
+              });
+
+              $("#btnPrevPage").on('click', (e) => {
+                  e.preventDefault();
+                  if (currentPage > 1) {
+                      currentPage--;
+                      getDataUsuarios();
+                  }
+              });
+              $('#btnNextPage').on('click', (e) => {
+                  e.preventDefault();
+                  currentPage++;
+                  getDataUsuarios();
+              });
+              $('#perPage').on('change', function() {
+                    const val = $(this).val();
+                    perPage = val === 'all' ? 'all' : parseInt(val) || 10;
+                    currentPage = 1;
+                    getDataUsuarios();
+              });
+              $('#btn-nueva-asignacion').on('click', function(e) {
+                e.preventDefault();
+                $f7router.navigate(`/popup/nueva-asignacion/${id}`);
+              });
+            });
+
+            function renderTable(){
+              let dataUsuarios = '';
+              usuariosData.forEach((usuario) => {
+                  dataUsuarios += `
+                    <tr data-id-usuario="${usuario.id_usuario}" data-role-usuario="${usuario.id_rol ? usuario.id_rol : null}" data-grupo-usuario-usuario="${usuario.id}">
+                      <td>${usuario.usuario}</td>
+                      <td>${usuario.rol ? usuario.rol : ''}</td>
+                      <td>${usuario.nombres ? usuario.nombres : ''} ${usuario.apellidos ? usuario.apellidos : ''}</td>
+                      <td>${usuario.nombre_documento}: ${usuario.nro_documento}</td>
+                      <td>${usuario.correo ? usuario.correo : ''}</td>
+                      <td class="actions-cell">
+                          <a class="link icon-only tooltip-init-permisos page-open ripple-inset" href="/asignacion-tabs/${usuario.id_usuario}/${usuario.id_grupo_usuario_rol}/${usuario.id_grupo_usuario}/permisos/usuario/${usuario.id_usuario}/${usuario.id_grupo_usuario}/">
+                              <i class="icon f7-icons color-blue">lock_shield</i>
+                            </a>
+                          <a class="link icon-only tooltip-init-eliminar btn-eliminar-usuario" href="#" data-confirm="¿Eliminar usuario del grupo?" data-confirm-title="Eliminar al usuario del grupo" data-id-grupo-usuario-usuario="${usuario.id}">
+                            <i class="icon f7-icons color-red">trash</i>
+                          </a>
+                      </td>
+                    </tr>`;
+              });
+              $("#usuarios-table-body").html(dataUsuarios);
+              if ($f7.tooltip.get('.tooltip-init')) {
+                    $f7.tooltip.destroy('.tooltip-init');
+                }
+                
+                // Inicialización de tooltips
+                const tooltips = [
+                  { selector: '.tooltip-init-permisos', text: 'Seleccionar permisos' },
+                  { selector: '.tooltip-init-perfil', text: 'Ver perfil' },
+                  { selector: '.tooltip-init-editar', text: 'Editar usuario' },
+                  { selector: '.tooltip-init-eliminar', text: 'Eliminar usuario' }
+                ];
+                tooltips.forEach(t => {
+                  $(t.selector).each(function () {
+                    $f7.tooltip.create({
+                      targetEl: this,
+                      text: t.text,
+                      trigger: 'hover'
+                    });
+                  });
+                });
+
+              $('.btn-eliminar-usuario').on('click', function(e) {
+                e.preventDefault();
+                console.log($(this))
+                const idGrupoUsuarioUsuario = $(this).data('id-grupo-usuario-usuario');
+                console.log('ID Grupo Usuario Usuario:', idGrupoUsuarioUsuario);
+                const $row = $(this).closest('tr');
+                $f7.dialog.confirm('¿Eliminar usuario del grupo?', 'Confirmar', function () {
+                  $f7.preloader.show();
+                  $f7.tools.sendRequest('DELETE', `/grupo_usuario_usuario/${idGrupoUsuarioUsuario}`)
+                    .then((response) => {
+                      $f7.preloader.hide();
+                      if (response.success) {
+                        //$row.remove();
+                        getDataUsuarios();
+                        
+                        $f7.notification.create({
+                            title: 'Éxito',
+                            text: response.message || 'Se elimino al usuario del grupo.',
+                            icon: '<i class="icon f7-icons color-green size-50">checkmark_circle_fill</i>',
+                            closeTimeout: 3000,
+                        }).open();
+                      } else {
+                        $f7.notification.create({
+                            title: 'Error',
+                            text: response.message || 'No se pudo eliminar.',
+                            icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                            closeTimeout: 3000,
+                        }).open();
+                      }
+                    })
+                    .catch(() => {
+                      $f7.preloader.hide();
+                      $f7.notification.create({
+                          title: 'Error',
+                          text: 'Error al eliminar',
+                          icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                          closeTimeout: 3000,
+                      }).open();
+                    });
+                });
+              });
+
+              const paginationLabel = `${from}-${to} de ${totalItems}`;
+              $('#btnPrevPage')[prevPage ? 'removeClass' : 'addClass']('disabled');
+              $('#btnNextPage')[nextPage ? 'removeClass' : 'addClass']('disabled');
+              $('.data-table-pagination-label').text(paginationLabel);
+            }
+            function getDataUsuarios() {
+              $f7.tools.sendRequest('GET', `/grupo_usuario_usuario/list/${id}`).then((response) => {
+                if (response.success == true) {
+                    usuariosData = response.data || [];
+                    renderTable();
+                } else {
+                    $f7.notification.create({
+                        title: 'Error',
+                        text: response.message,
+                        closeTimeout: 3000,
+                        icon: '<i class="icon f7-icons">exclamationmark_triangle</i>',
+                        closeButton: true
+                    }).open();
+                }
+              });
+            }
+        });
+        return $render;
+    };
+</script>

@@ -1,0 +1,460 @@
+<template>
+  <div class="page" data-name="sistema_usuarios">
+    <div class="page-content">
+      <div class="navbar">
+        <div class="navbar-bg"></div>
+        <div class="navbar-inner">
+          <div class="left">
+            <a class="link back icon-only">
+              <i class="icon icon-back"></i>
+            </a>
+          </div>
+          <div class="title">Usuarios</div>
+          <div class="right">
+            <div class="grid grid-cols-2 grid-gap">
+              <a href="/sistema/usuario/crear" class="link">
+                <i class="icon f7-icons">plus_circle</i> Nuevo
+              </a>
+              <a
+                href="#"
+                id="btn-eliminar"
+                class="link color-red"
+                data-confirm="¿Eliminar usuarios seleccionados?"
+                data-confirm-title="Eliminar varios"
+              >
+                <i class="icon f7-icons">trash</i> Eliminar
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="panel panel-right panel-cover panel-init panel-resizable"
+        id="panel-perfil"
+      >
+        <div class="block">
+          <div class="list">
+            <ul>
+              <li>
+                <div class="item-content item-input item-input-outline">
+                  <div class="item-inner">
+                    <div class="item-title">Nombres y apellidos</div>
+                    <div class="item-input-wrap">
+                      <input type="text" name="nombres" id="nombres" readonly />
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li>
+                <div class="item-content item-input item-input-outline">
+                  <div class="item-inner">
+                    <div class="item-title">Correo</div>
+                    <div class="item-input-wrap">
+                      <input type="text" name="correo" id="correo" readonly />
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li>
+                <div class="item-content item-input item-input-outline">
+                  <div class="item-inner">
+                    <div class="item-title">Celular</div>
+                    <div class="item-input-wrap">
+                      <input
+                        type="text"
+                        name="telefono"
+                        id="telefono"
+                        readonly
+                      />
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="data-table data-table-init card card-raised">
+        <div class="card-content">
+          <div class="searchbar">
+            <div class="searchbar-inner">
+              <div class="searchbar-input-wrap">
+                <input
+                  type="search"
+                  name="search"
+                  placeholder="Buscar usuario..."
+                />
+                <i class="searchbar-icon"></i>
+                <span class="input-clear-button"></span>
+              </div>
+              <span class="searchbar-disable-button">Cancelar</span>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th class="checkbox-cell">
+                  <label class="checkbox">
+                    <input type="checkbox" />
+                    <i class="icon-checkbox"></i>
+                  </label>
+                </th>
+                <th>Usuario</th>
+                <th>Nombre</th>
+                <!-- <th>Documento</th> -->
+                <th>Correo</th>
+                <th>Bloqueado</th>
+                <th>Fecha de bloqueado</th>
+                <th>Fecha de registro</th>
+                <th>Estado</th>
+                <th class="text-align-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="usuarios-table-body"></tbody>
+          </table>
+        </div>
+        <div class="data-table-footer">
+          <div class="data-table-rows-select">
+            Por página:
+            <div class="input input-dropdown">
+              <select>
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="all">All</option>
+              </select>
+            </div>
+          </div>
+          <div class="data-table-pagination">
+            <span class="data-table-pagination-label">1-5 de 10</span>
+            <a class="link disabled" id="btnPrevPage">
+              <i class="icon icon-prev color-gray"></i>
+            </a>
+            <a class="link" id="btnNextPage">
+              <i class="icon icon-next color-gray"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  const routes = [
+    {
+      path: "/sistema/usuario/crear",
+      componentUrl: "../pages/sistema/usuarios/crear.f7",
+    },
+    {
+      path: "/sistema/usuario/editar/:id",
+      name: "usuarios_editar",
+      componentUrl: "../pages/sistema/usuarios/editar.f7",
+    },
+    {
+      path: "/sistema/usuario/permisos/list/:usuarioId",
+      name: "sistema_usuarios_permisos",
+      componentUrl: "../pages/sistema/usuarios/permisos/index.f7",
+    },
+    {
+      name: "sistema_usuarios_permisos_crear",
+      path: "/sistema/usuario/permiso/crear",
+      popup: {
+        componentUrl: "../pages/sistema/usuarios/permisos/crear.f7",
+      },
+    },
+  ];
+
+  export default (props, { $, $f7, $f7ready, $f7router, $on }) => {
+    let searchInput = "";
+    let currentPage = 1;
+    let perPage = 10;
+    let totalItems = 0;
+    let usuariosData = [];
+    let from = 0;
+    let to = 0;
+    let nextPage = false;
+    let prevPage = false;
+    $f7ready(function () {
+      $f7.tools.addRoutes($f7router.routes, routes);
+      $on("pageInit", () => {
+        const perPageVal = $("#perPage").val();
+        perPage = perPageVal === "all" ? "all" : parseInt(perPageVal) || 10;
+        getDataUsuarios();
+        //ACCIONES DE LA TABLA
+        $("#usuarios-table-body").on("click", ".open-perfil", function (e) {
+          e.preventDefault();
+          const row = $(this).closest("tr");
+          const id = row.attr("data-id-usuario");
+          $f7.tools.sendRequest("GET", `/usuario/${id}`).then((response) => {
+            if (!response.success) {
+              $f7.notification
+                .create({
+                  title: "Error",
+                  text:
+                    response.message ||
+                    "No se pudo cargar el perfil del usuario.",
+                  closeTimeout: 3000,
+                })
+                .open();
+              return;
+            }
+            const data = response.data;
+            if (!data) {
+              $f7.notification
+                .create({
+                  title: "Error",
+                  text: "No se encontraron datos del usuario.",
+                  closeTimeout: 3000,
+                })
+                .open();
+              return;
+            }
+
+            $("#nombres").val(
+              (data.nombres ? data.nombres : "") +
+                " " +
+                (data.apellido_paterno ? data.apellido_paterno : "") +
+                " " +
+                (data.apellido_materno ? data.apellido_materno : "")
+            );
+            $("#documento").val(
+              data.nombre_documento + ": " + data.nro_documento
+            );
+            $("#correo").val(data.correo ? data.correo : "");
+            $("#telefono").val(data.celular);
+            $f7.panel.open("#panel-perfil");
+          });
+        });
+        $("#usuarios-table-body").on("click", ".borrar", (e) => {
+          e.preventDefault();
+          const row = $(e.currentTarget).closest("tr");
+          const id = row.attr("data-id-usuario");
+          $f7.dialog.confirm(
+            "¿Seguro que deseas eliminar este usuario?",
+            "Eliminar usuario",
+            () => {
+              $f7.notification
+                .create({
+                  text: "usuario eliminado.",
+                  icon: '<i class="icon f7-icons color-green size-50">hand_thumbsup_fill</i>',
+                  closeTimeout: 3000,
+                })
+                .open();
+            },
+            () => {
+              $f7.notification.create({ text: "Operación cancelada." }).open();
+            }
+          );
+        });
+        $("#usuarios-table-body").on(
+          "change",
+          "input.toggle-estado",
+          function (e) {
+            e.preventDefault();
+            const row = $(this).closest("tr");
+            const id = row.attr("data-id-usuario");
+            const estado = $(this).is(":checked") ? 1 : 0;
+
+            $f7.tools
+              .sendRequest("PUT", `/usuario/estado/${id}`, { estado: estado })
+              .then((response) => {
+                if (response.success) {
+                  $f7.notification
+                    .create({
+                      text: `Estado del usuario actualizado a ${
+                        estado ? "activo" : "inactivo"
+                      }.`,
+                      icon: '<i class="icon f7-icons color-green size-50">hand_thumbsup_fill</i>',
+                      closeTimeout: 3000,
+                    })
+                    .open();
+                } else {
+                  $f7.notification
+                    .create({
+                      title: "Error",
+                      text:
+                        response.message ||
+                        "No se pudo actualizar el estado del usuario.",
+                      closeTimeout: 3000,
+                    })
+                    .open();
+                }
+              });
+          }
+        );
+
+        $("#btn-eliminar").on("click", (e) => {
+          e.preventDefault();
+          const seleccionados = [];
+          $(".chk-usuario:checked").each((i, el) => {
+            seleccionados.push($(el).closest("tr").attr("data-id-usuario"));
+          });
+          if (seleccionados.length === 0) {
+            $f7.notification
+              .create({ text: "No hay usuarios seleccionados." })
+              .open();
+            return;
+          }
+          $f7.dialog.confirm(
+            `Vas a eliminar ${seleccionados.length} usuario(s). ¿Continuar?`,
+            "Eliminar múltiples",
+            () => {
+              $f7.notification
+                .create({
+                  text: "usuarios eliminados.",
+                  icon: '<i class="icon f7-icons color-green size-50">hand_thumbsup_fill</i>',
+                  closeTimeout: 3000,
+                })
+                .open();
+            },
+            () => {
+              $f7.notification.create({ text: "Operación cancelada." }).open();
+            }
+          );
+        });
+
+        //ACCIONES DE PAGINACION
+        $("input[name='search']").on("keyup", function (e) {
+          e.preventDefault();
+          currentPage = 1;
+          searchInput = "";
+          if ($(this).val().length > 2) {
+            searchInput = $(this).val();
+            getDataUsuarios();
+          } else if ($(this).val().length === 0) {
+            searchInput = "";
+            getDataUsuarios();
+          }
+        });
+
+        $("#btnPrevPage").on("click", (e) => {
+          e.preventDefault();
+          if (currentPage > 1) {
+            currentPage--;
+            getDataUsuarios();
+          }
+        });
+        $("#btnNextPage").on("click", (e) => {
+          e.preventDefault();
+          currentPage++;
+          getDataUsuarios();
+        });
+        $("#perPage").on("change", function () {
+          const val = $(this).val();
+          perPage = val === "all" ? "all" : parseInt(val) || 10;
+          currentPage = 1;
+          getDataUsuarios();
+        });
+      });
+
+      function renderTable() {
+        let dataUsuarios = "";
+        usuariosData.forEach((usuario) => {
+          dataUsuarios += `
+                    <tr data-id-usuario="${usuario.id_usuario}">
+                      <td class="checkbox-cell">
+                        <label class="checkbox">
+                          <input type="checkbox" class="chk-usuario"/>
+                          <i class="icon-checkbox"></i>
+                        </label>
+                      </td>
+                      <td>${usuario.usuario}</td>
+                      <td>${usuario.nombres ? usuario.nombres : ""} ${usuario.apellidos ? usuario.apellidos : ""}</td>
+                      <td>${usuario.correo ? usuario.correo : ""}</td>
+                      <td><span class="badge ${
+                        usuario.cuenta_bloqueada ? "color-red" : "color-green"
+                      }">${usuario.cuenta_bloqueada ? "SI" : "NO"}</span></td>
+                      <td>${usuario.fecha_bloqueado || "-"}</td>
+                      <td>${new Date(
+                        usuario.created_at.date
+                      ).toLocaleString()}</td>
+                      <td>
+                        <label class="toggle toggle-init color-green">
+                          <input type="checkbox" class="toggle-estado" ${
+                            usuario.activo ? "checked" : ""
+                          }/>
+                          <span class="toggle-icon"></span>
+                        </label>
+                      </td>
+                      <td class="actions-cell">
+                        <a class="link icon-only tooltip-init-permisos page-open" href="/sistema/usuario/permisos/list/${
+                          usuario.id_usuario
+                        }">
+                          <i class="icon f7-icons">lock_shield</i>
+                        </a>
+                        <a class="link icon-only tooltip-init-perfil open-perfil">
+                          <i class="icon f7-icons">person_crop_square_fill</i>
+                        </a>
+                        <a class="link icon-only tooltip-init-editar" href="/sistema/usuario/editar/${
+                          usuario.id_usuario
+                        }">
+                            <i class="icon f7-icons if-not-md">square_pencil</i>
+                            <i class="icon material-icons md-only">edit</i>
+                        </a>
+                        <a class="link icon-only tooltip-init-eliminar borrar">
+                            <i class="icon f7-icons if-not-md">trash</i>
+                            <i class="icon material-icons md-only">delete</i>
+                        </a>
+                      </td>
+                    </tr>`;
+        });
+        $("#usuarios-table-body").html(dataUsuarios);
+        if ($f7.tooltip.get(".tooltip-init")) {
+          $f7.tooltip.destroy(".tooltip-init");
+        }
+        $(".tooltip-init").each(function () {
+          console.log(this.data);
+        });
+
+        const tooltips = [
+          { selector: ".tooltip-init-permisos", text: "Seleccionar permisos" },
+          { selector: ".tooltip-init-perfil", text: "Ver perfil" },
+          { selector: ".tooltip-init-editar", text: "Editar usuario" },
+          { selector: ".tooltip-init-eliminar", text: "Eliminar usuario" },
+        ];
+        tooltips.forEach((t) =>
+          $f7.tooltip.create({
+            targetEl: t.selector,
+            text: t.text,
+            trigger: "hover",
+          })
+        );
+        const paginationLabel = `${from}-${to} de ${totalItems}`;
+        $("#btnPrevPage")[prevPage ? "removeClass" : "addClass"]("disabled");
+        $("#btnNextPage")[nextPage ? "removeClass" : "addClass"]("disabled");
+        $(".data-table-pagination-label").text(paginationLabel);
+      }
+      function getDataUsuarios() {
+        $f7.tools
+          .sendRequest(
+            "GET",
+            `/usuario?page=${currentPage}&perPage=${perPage}&search=${searchInput}`
+          )
+          .then((response) => {
+            if (response.success == true) {
+              usuariosData = response.data || [];
+              totalItems = response.pagination.total || 0;
+              from = response.pagination.from || 0;
+              to = response.pagination.to || 0;
+              nextPage = response.pagination.hasNext ?? false;
+              prevPage = response.pagination.hasPrev ?? false;
+
+              renderTable();
+            } else {
+              $f7.notification
+                .create({
+                  title: "Error",
+                  text: response.message,
+                  closeTimeout: 3000,
+                  icon: '<i class="icon f7-icons">exclamationmark_triangle</i>',
+                  closeButton: true,
+                })
+                .open();
+            }
+          });
+      }
+    });
+
+    return $render;
+  };
+</script>

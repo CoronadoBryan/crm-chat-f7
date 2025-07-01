@@ -32,6 +32,13 @@ var routes = [
     },
   },
   {
+    path: '/sistema/configuraciones',
+    panel: {
+        componentUrl: '../pages/sistema/configuraciones.f7',
+        //            backdrop: true,
+    },
+  },
+  {
     path: "/messages/:conversacionId/",
     component: MessagesPage,
   },
@@ -39,6 +46,40 @@ var routes = [
     path: "/historial-finalizado/:conversacionId/",
     component: HistorialFinalizadoPage,
   },
+
+  //permisos y roles
+  
+  {
+      path: '/sistema/citas',
+      componentUrl: '../pages/citas/index.f7',
+  },
+  {
+      path: '/sistema/permisos',
+      componentUrl: '../pages/sistema/permisos/index.f7',
+  },
+  {
+      name: 'sistema_citadetalles',
+      path: '/sistema/cita/citadetalle',
+      popup: {
+          componentUrl: '../pages/citas/citadetalle.f7'
+      }
+  },
+  {
+      name: 'popup-editar',
+      path: '/sistema/citas/editar',
+      popup: {
+          componentUrl: '../pages/citas/editar.f7'
+      }
+  },
+  {
+      path: '/sistema/cita/espacios',
+      componentUrl: '../pages/citas/espacios.f7',
+  },
+  {
+      path: '/no-autorizado',
+      componentUrl: '../pages/acceso-denegado.f7',
+  }
+
 ];
 
 export default routes;

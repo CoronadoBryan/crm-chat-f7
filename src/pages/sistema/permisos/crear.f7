@@ -1,0 +1,195 @@
+<template>
+    <div class="page" data-name="permisos_crear">
+        <div class="page-content">
+            <div class="navbar">
+                <div class="navbar-bg"></div>
+                <div class="navbar-inner">
+                    <div class="left">
+                        <a class="link back icon-only">
+                            <i class="icon icon-back"></i>
+                        </a></div>
+                    <div class="title">Crear permiso</div>
+                    <div class="right">
+                        <button class="button button-fill button-round" @click="${formSave}">Guardar</button>
+                    </div>
+                </div> 
+            </div>
+            <form id="form-permisos" action="#" method="post" class="block container" autocomplete="off">
+                <div class="block">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <div class="list">
+                                <ul>
+                                    <li class="item-content item-input item-input-outline">
+                                        <div class="item-inner">
+                                            <div class="item-title item-floating-label">Nombre</div>
+                                            <div class="item-input-wrap">
+                                                <input type="text" placeholder="Nombre del permiso" name="permiso" validate data-validate-on-blur="true" data-error-message="Campo obligatorio." required/>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="item-content item-input item-input-outline">
+                                        <div class="item-inner">
+                                            <div class="item-title item-floating-label">Alias</div>
+                                            <div class="item-input-wrap">
+                                            <input 
+                                                id="alias-permiso" 
+                                                type="text" 
+                                                name="alias" 
+                                                placeholder="Alias" 
+                                                validate data-validate-on-blur="true" 
+                                                data-error-message="Campo obligatorio."
+                                                pattern="[a-z0-9_]+" 
+                                                required/>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="item-content item-input item-input-outline">
+                                        <div class="item-inner">
+                                            <div class="item-title item-floating-label">Descripción</div>
+                                            <div class="item-input-wrap">
+                                            <textarea placeholder="Descripción" name="descripcion"></textarea>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="list">
+                                <ul>
+                                    <li class="item-content item-smart-select item-smart-select-outline mx-0">
+                                        <div id="smart-select-grupo" class="item-link smart-select">
+                                            <select name="id_grupo_permiso">
+                                            </select>
+                                            <div class="item-content">
+                                                <div class="item-inner">
+                                                    <div class="item-title">Grupo</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</template>
+<script>
+    export default (props, {$, $f7,$f7router,$on}) => {
+
+        let input_alias;
+        let smartSelectGrupoInstance = null;
+        let renderSearchbarx = function(){
+            const iconNuevo = this.params.iconnew || 'plus_circle_fill';
+
+            if (!this.params.newItemUrl) {
+                console.error('renderSearchBarGrupo', 'Debe indicar la url para el botón de nuevo elemento: newItemUrl undefined');
+            }
+            return `<div class="subnavbar-inner">
+                        <div class="segmented">
+                            <a href="${this.params.newItemUrl || '#'}" class="link new-item">
+                                <i class="icon f7-icons color-green size-40">${iconNuevo}</i>
+                            </a>
+                            <form class="searchbar">
+                                <div class="searchbar-inner">
+                                    <div class="searchbar-input-wrap">
+                                        <input 
+                                            type="search" 
+                                            spellcheck="${this.params.searchbarSpellcheck || 'false'}" 
+                                            placeholder="${this.params.searchbarPlaceholder || 'Buscar...'}" />
+                                        <i class="searchbar-icon"></i>
+                                        <span class="input-clear-button"></span>
+                                    </div>
+                                    ${this.params.searchbarDisableButton 
+                                        ? `<span class="searchbar-disable-button">${this.params.searchbarDisableText || 'Cancelar'}</span>` 
+                                        : ''}
+                                </div>
+                            </form>
+                        </div>
+                    </div>`;
+        }
+
+        const formSave = function (ev) {
+            ev.preventDefault();
+            const form = document.querySelector('#form-permisos');
+            let formData = $f7.form.convertToData(form);
+
+            $f7.tools.sendRequest('POST', '/grupo_permiso/permisos/create', formData).then((response) => {
+                if(response.success==true) {
+                    $f7.notification.create({
+                        icon: '<i class="icon f7-icons color-green size-50">checkmark_alt_circle_fill</i>',
+                        text: 'Permiso creado correctamente',
+                        closeTimeout: 2500,
+                        on:{
+                            close: () => {
+                                $f7router.navigate('/sistema/permisos');
+                            }
+                        }
+                    }).open();
+                } else {
+                    $f7.notification.create({
+                        icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                        text: 'Error al crear el permiso',
+                        closeTimeout: 2500
+                    }).open();
+                }
+            });
+        };
+
+        $on('pageInit', async (e, page) => {
+            input_alias = $('#alias-permiso');
+            input_alias.on('input', function () {
+                this.value = this.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+            });
+            await getGruposPermisos();
+           
+            document.addEventListener('grupoPermisoCreado', async () => {
+                if (smartSelectGrupoInstance && smartSelectGrupoInstance.opened) {
+                    smartSelectGrupoInstance.close();
+                }
+                await getGruposPermisos();
+                smartSelectGrupoInstance.open();
+            });
+        });
+
+        function getGruposPermisos() {
+            return $f7.tools.sendRequest('GET', '/grupo_permiso').then((response) => {
+                if(response.success === true) {
+                    const grupos = response.data;
+                    const select = document.querySelector('#smart-select-grupo select');
+                    select.innerHTML = '';
+                    grupos.forEach(grupo => {
+                        const option = document.createElement('option');
+                        option.value = grupo.id;
+                        option.textContent = grupo.grupo;
+                        select.appendChild(option);
+                    });
+
+                    if (smartSelectGrupoInstance) {
+                        smartSelectGrupoInstance.destroy();
+                    }
+                    smartSelectGrupoInstance = $f7.smartSelect.create({
+                        el: '#smart-select-grupo',
+                        openIn: 'popup',
+                        closeOnSelect: true,
+                        searchbar: true,
+                        popupCloseLinkText:'Cerrar',
+                        searchbarDisableText:'Cancelar',
+                        searchbarPlaceholder:'Buscar',
+                        iconnew: 'folder_fill_badge_plus',
+                        newItemUrl: $f7router.generateUrl({name: 'permiso_grupo_crear'}),
+                        renderSearchbar: renderSearchbarx
+                    });
+                } else {
+                    console.error('Error al cargar los grupos de permisos:', response.message);
+                }
+            });
+        }
+
+        return $render;
+    }
+</script>

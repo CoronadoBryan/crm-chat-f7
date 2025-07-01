@@ -1,0 +1,201 @@
+<template>
+    <div class="page" data-name="sistema_usuarios_permisos">
+        <div class="page-content">
+            <div class="navbar">
+                <div class="navbar-bg"></div>
+                <div class="navbar-inner">
+                    <div class="left">
+                        <a class="link back icon-only">
+                            <i class="icon icon-back"></i>
+                        </a>
+                    </div>
+                    <div class="title">Permisos <span id="nombre-usuario">NOMBRE DEL USUARIO</span></div>
+                    <div class="right">
+                        <div class="grid grid-cols-1 grid-gap">
+                            <a href="/sistema/usuario/permiso/crear" class="link popup-open">
+                                <i class="icon f7-icons">plus_circle</i> Nuevo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="data-table data-table-init card card-raised">
+                <div class="card-content">
+                    <div class="searchbar">
+                        <form>
+                            <div class="searchbar-inner">
+                                <div class="searchbar-input-wrap">
+                                    <input type="search" placeholder="Buscar permiso..." />
+                                    <i class="searchbar-icon"></i>
+                                    <span class="input-clear-button"></span>
+                                </div>
+                                <span class="searchbar-disable-button">Cancelar</span>
+                            </div>
+                        </form>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="checkbox-cell d-none">
+                                    <label class="checkbox">
+                                        <input type="checkbox" />
+                                        <i class="icon-checkbox"></i>
+                                    </label>
+                                </th>
+                                <th>Permiso</th>
+                                <th>Lectura</th>
+                                <th>Crear</th>
+                                <th>Editar</th>
+                                <th>Eliminar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="permisos-lista">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+export default (props, { $, $f7, $f7ready, $f7router, $on }) => {
+    const {usuarioId} = props;
+        let permisoChangeTimeout = null; 
+    $f7ready(function() {
+        $on('pageInit', function(tab) {
+            getPermisosUsuario();
+            $("#permisos-lista").on('change', 'input[type="checkbox"]', function() {
+                const $row = $(this).closest('tr');
+                const column = $(this).data('column');
+                const checked = $(this).is(':checked');
+                if (column == 'acc_read' && checked == false) {
+                    if ($row.find('.toggle-create').is(':checked')) {
+                        $row.find('.toggle-create').prop('checked', false).trigger('change');
+                    }
+                    if ($row.find('.toggle-edit').is(':checked')) {
+                        $row.find('.toggle-edit').prop('checked', false).trigger('change');
+                    }
+                    if ($row.find('.toggle-delete').is(':checked')) {
+                        $row.find('.toggle-delete').prop('checked', false).trigger('change');
+                    }
+                } else if (column != 'acc_read' && checked == true) {
+                    if (!$row.find('.toggle-read').is(':checked')) {
+                        $row.find('.toggle-read').prop('checked', true).trigger('change');
+                    }
+                    if (column == 'acc_delete' && checked == true) {
+                        if (!$row.find('.toggle-create').is(':checked')) {
+                            $row.find('.toggle-create').prop('checked', true).trigger('change');
+                        }
+                    }
+                }
+
+                if (column == 'acc_create' && checked == false) {
+                    if ($row.find('.toggle-delete').is(':checked')) {
+                        $row.find('.toggle-delete').prop('checked', false).trigger('change');
+                    }
+                }
+
+                clearTimeout(permisoChangeTimeout);
+                permisoChangeTimeout = setTimeout(() => {
+                    const permisoId = $row.data('id');
+                    const acc_read = $row.find('.toggle-read').is(':checked');
+                    const acc_create = $row.find('.toggle-create').is(':checked');
+                    const acc_update = $row.find('.toggle-edit').is(':checked');
+                    const acc_delete = $row.find('.toggle-delete').is(':checked');
+
+                    $f7.tools.sendRequest('PUT', `/usuario/permiso_especial`, {
+                        id_usuario: usuarioId,
+                        id_permiso: permisoId,
+                        acc_read:acc_read,
+                        acc_create:acc_create,
+                        acc_update:acc_update,
+                        acc_delete:acc_delete
+                    }).then(response => {
+                        if (response.success != true) {
+                            $f7.notification.create({
+                                title: 'Error',
+                                text: response.message || 'No se pudo actualizar el permiso.',
+                                icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                                closeTimeout: 3000,
+                            }).open();
+                        }
+                    }).catch(error => {
+                        console.error('Error updating permission:', error);
+                        $f7.notification.create({
+                            title: 'Error',
+                            text: 'Ocurrió un error al actualizar el permiso.',
+                            icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                            closeTimeout: 3000,
+                        }).open();
+                    });
+                }, 200);
+            });
+        });
+
+        function getPermisosUsuario() {
+            $f7.tools.sendRequest('GET', `/usuario/permiso_especial/${usuarioId}`).then((response) => {
+                if (response.success == true) {
+                    const permisos = response.data;
+                    $("#nombre-usuario").text(permisos.usuario || 'Usuario Desconocido');
+                    let rows = '';
+                    if (Array.isArray(permisos.permisos)) {
+                        permisos.permisos.forEach(permiso => {
+                            rows += `
+                                <tr data-id="${permiso.id}">
+                                    <td class="checkbox-cell d-none">
+                                        <label class="checkbox">
+                                            <input type="checkbox" class="chk-permiso" />
+                                            <i class="icon-checkbox"></i>
+                                        </label>
+                                    </td>
+                                    <td>${permiso.permiso || 'Permiso Desconocido'}</td>
+                                    <td>
+                                        <label class="toggle toggle-init color-green">
+                                            <input type="checkbox" class="toggle-read" data-column="acc_read" ${permiso.acc_read ? 'checked' : ''}/>
+                                            <span class="toggle-icon"></span>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <label class="toggle toggle-init color-green">
+                                            <input type="checkbox" class="toggle-create" data-column="acc_create" ${permiso.acc_create ? 'checked' : ''}/>
+                                            <span class="toggle-icon"></span>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <label class="toggle toggle-init color-green">
+                                            <input type="checkbox" class="toggle-edit" data-column="acc_update" ${permiso.acc_update ? 'checked' : ''}/>
+                                            <span class="toggle-icon"></span>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <label class="toggle toggle-init color-green">
+                                            <input type="checkbox" class="toggle-delete" data-column="acc_delete" ${permiso.acc_delete ? 'checked' : ''}/>
+                                            <span class="toggle-icon"></span>
+                                        </label>
+                                    </td>
+                                </tr>`;
+                        });
+                    }
+                    $('#permisos-lista').html(rows);
+                } else {
+                    $f7.notification.create({
+                        title: 'Error',
+                        text: response.error || 'No se pudieron cargar los permisos',
+                        icon: 'icon f7-icons alert',
+                        closeButton: true
+                    }).open();
+                }
+            }).catch((error) => {
+                console.error(error);
+                $f7.notification.create({
+                    title: 'Error',
+                    text: 'Error al obtener los permisos del usuario',
+                    icon: 'icon f7-icons alert',
+                    closeButton: true
+                }).open();
+            });
+        }
+    });
+    return $render;
+}
+</script>

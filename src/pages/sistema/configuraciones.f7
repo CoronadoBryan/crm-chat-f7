@@ -1,0 +1,138 @@
+<template>
+    <div class="panel panel-md panel-left panel-floating panel-init sistema-configuraciones">
+        <div class="list">
+            <ul>
+                <li>
+                    <a href="/sistema/modulos" class="item-link item-content ${current_route.path === '/sistema/modulos' && $h`item-active`}">
+                        <div class="item-media">
+                            <i class="icon f7-icons">square_stack_3d_down_right</i>
+                        </div>
+                        <div class="item-inner">
+                            <div class="item-title">
+                                Módulos
+                                <div class="item-footer">Gestión de los módulos del sistema.</div>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+
+                <!--
+                <li>
+                    <a href="/sistema/citas" class="item-link item-content ${current_route.path === '/sistema/citas' && $h`item-active`}">
+                        <div class="item-media">
+                            <i class="icon f7-icons">text_quote</i>
+                        </div>
+                        <div class="item-inner">
+                            <div class="item-title">
+                                Citas
+                                <div class="item-footer">Gestión de los módulos del sistema.</div>
+                            </div>
+                        </div>
+                    </a>
+                </li> 
+                -->
+
+                <li class="accordion-list ">
+                    <div class="accordion-item ${(current_route.path === '/sistema/usuarios' || current_route.path === '/sistema/usuarios/grupos' || current_route.path === '/sistema/usuarios/roles') && $h`accordion-item-opened`}">
+                        <a class="item-link item-content">
+                            <div class="item-media">
+                                <i class="icon f7-icons">person_3_fill</i>
+                            </div>
+                            <div class="item-inner">
+                                <div class="item-title">
+                                    Usuarios
+                                    <div class="item-footer">Gestión de los módulos del sistema.</div>
+                                </div>
+
+                            </div>
+                        </a>
+                        <div class="accordion-item-content">
+                            <div class="block">
+                                <ul>
+                                    <li>
+                                        <a href="/sistema/usuarios" class="item-link item-content ${current_route.path === '/sistema/usuarios' && $h`item-active`}">
+                                            <div class="item-inner">
+                                                <div class="item-title">
+                                                    Usuarios
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/sistema/usuarios/grupos" class="item-link item-content ${current_route.path === '/sistema/usuarios/grupos' && $h`item-active`}">
+                                            <div class="item-inner">
+                                                <div class="item-title">
+                                                    Grupos
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/sistema/usuarios/roles" class="item-link item-content ${current_route.path === '/sistema/usuarios/roles' && $h`item-active`}">
+                                            <div class="item-inner">
+                                                <div class="item-title">
+                                                    Roles
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <li>
+                    <a href="/sistema/permisos" class="item-link item-content ${current_route.path === '/sistema/permisos' && $h`item-active`}">
+                        <div class="item-media">
+                            <i class="icon f7-icons">lock_shield_fill</i>
+                        </div>
+                        <div class="item-inner">
+                            <div class="item-title">
+                                Permisos
+                                <div class="item-footer">Gestión de los permisos del sistema.</div>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</template>
+<script>
+
+    const routes = [
+        {
+            path: '/sistema/modulos',
+            componentUrl: '../pages/sistema/modulos/index.f7',
+        },
+        {
+            path: '/sistema/usuarios',
+            componentUrl: '../pages/sistema/usuarios.f7',
+            routes: [
+                {
+                    path: 'grupos',
+                    componentUrl: '../pages/sistema/usuarios/grupos/index.f7'
+                },
+                {
+                    path: 'roles',
+                    componentUrl: '../pages/sistema/usuarios/roles/index.f7'
+                }
+            ]
+        },
+        {
+            path: '/sistema/permisos',
+            componentUrl: '../pages/sistema/permisos/index.f7',
+        },
+    ];
+
+
+    export default (props, {$f7, $f7ready, $f7router}) => {
+        let current_route = $f7router.currentRoute;
+
+        $f7ready(function () {
+            $f7.tools.addRoutes($f7router.routes, routes);
+        });
+
+        return $render;
+    }
+</script>

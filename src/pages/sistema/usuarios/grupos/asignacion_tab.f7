@@ -1,0 +1,62 @@
+<template>
+  <div class="page" data-name="sistema_usuarios_grupos_asignacion_tab">
+    <div class="page-content">
+        <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner">
+                <div class="left">
+                    <a class="link back icon-only">
+                        <i class="icon icon-back"></i>
+                    </a>
+                </div>
+                <div class="title">Asignar usuarios al grupo <span id="grupo-nombre"></span></div>
+            </div>
+        </div>
+        
+        <div class="toolbar tabbar">
+            <div class="toolbar-inner">
+                <a href="#" class="tab-link tab-link-active" id="tab-general-link">Permisos Usuario</a>
+                <a href="#" class="tab-link" id="tab-permisos-link">Permisos Rol</a>
+            </div>
+        </div>
+        <div class="tabs tabs-routable">
+            <div id="tab-general" class="tab page-content tab-active"></div>
+            <div id="tab-permisos" class="tab page-content"></div>
+        </div>
+        
+    </div>
+    
+  </div>
+</template>
+<script>
+export default (props, { $, $f7, $f7router, $on }) => {
+  $on('pageInit', () => {
+    const {usuarioId, grupoUsuarioId, rolUsuarioId} = props;
+    $('#tab-general-link').attr('href', `permisos/usuario/${usuarioId}/${grupoUsuarioId}/`);
+    $('#tab-permisos-link').attr('href', `permisos/rol/${grupoUsuarioId}/${rolUsuarioId}/`);
+    if ($('.toolbar-inner .tab-link-highlight').length === 0) {
+      $('.toolbar-inner').append('<span class="tab-link-highlight"></span>');
+    }
+    const updateHighlight = () => {
+      const $active = $('.toolbar-inner .tab-link.tab-link-active');
+      const $highlight = $('.toolbar-inner .tab-link-highlight');
+      if ($active.length && $highlight.length) {
+        const parentRect = $active.parent()[0].getBoundingClientRect();
+        const activeRect = $active[0].getBoundingClientRect();
+        const width = activeRect.width;
+        const left = activeRect.left - parentRect.left;
+        $highlight.css({
+          width: width + 'px',
+          transform: `translate3d(${left}px,0,0)`
+        });
+      }
+    };
+    updateHighlight();
+    $('.toolbar-inner .tab-link').on('click', function () {
+      setTimeout(updateHighlight, 10);
+    });
+    $f7router.on('routeChange', () => setTimeout(updateHighlight, 10));
+  });
+  return $render;
+};
+</script>
