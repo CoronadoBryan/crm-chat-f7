@@ -1,100 +1,138 @@
 <template>
-    <div class="page" data-name="sistema_usuarios_grupos_permisos">
-        <div class="page-content">
-            <div class="navbar">
-                <div class="navbar-bg"></div>
-                <div class="navbar-inner">
-                    <div class="left">
-                        <a class="link back icon-only">
-                            <i class="icon icon-back"></i>
-                        </a></div>
-                    <div class="title">Grupos Usuarios Permisos</div>
-                </div>
-            </div>
-            <div class="container" id="grupos-usuarios-permisos-list">
-
-            </div>
+  <div class="page" data-name="sistema_usuarios_grupos_permisos">
+    <div class="page-content">
+      <div class="navbar">
+        <div class="navbar-bg"></div>
+        <div class="navbar-inner">
+          <div class="left">
+            <a class="link back icon-only">
+              <i class="icon icon-back"></i>
+            </a>
+          </div>
+          <div class="title">Grupos Usuarios Permisos</div>
         </div>
+      </div>
+      <div class="container" id="grupos-usuarios-permisos-list"></div>
     </div>
+  </div>
 </template>
 <script>
-    export default (props, {$, $f7, $f7ready, $f7router, $on}) => {
-        const {id} = props;
-        $f7ready(function () {
-            $on('pageInit',()=>{
-                getDataGruposUsuariosPermisos();
+  export default (props, { $, $f7, $f7ready, $f7router, $on }) => {
+    const { id } = props;
+    $f7ready(function () {
+      $on("pageInit", () => {
+        getDataGruposUsuariosPermisos();
 
-                $("#grupos-usuarios-permisos-list").on("change",".toggle-read, .toggle-create, .toggle-edit, .toggle-delete", function(){
-                    let grupoUsuarioId = id;
-                    let permisoId = $(this).attr('name').split('-')[2];
-                    let checked = $(this).is(':checked');
-                    let column = $(this).attr('data-column');
-                    if(column == 'acc_read' && checked==false) {
-                        if($(this).closest('tr').find('.toggle-create').is(':checked')) {
-                            $(this).closest('tr').find('.toggle-create').prop('checked', false).trigger('change');
-                        }
-                        if($(this).closest('tr').find('.toggle-edit').is(':checked')) {
-                            $(this).closest('tr').find('.toggle-edit').prop('checked', false).trigger('change');
-                        }
-                        if($(this).closest('tr').find('.toggle-delete').is(':checked')) {
-                            $(this).closest('tr').find('.toggle-delete').prop('checked', false).trigger('change');
-                        }
-                    }else if(column != 'acc_read' && checked==true) {
-                        if(!$(this).closest('tr').find('.toggle-read').is(':checked')) {
-                            $(this).closest('tr').find('.toggle-read').prop('checked', true).trigger('change');
-                        }
-                        
-                        if(column == 'acc_delete' && checked==true) {
-                            if(!$(this).closest('tr').find('.toggle-create').is(':checked')) {
-                                $(this).closest('tr').find('.toggle-create').prop('checked', true).trigger('change');
-                            }
+        $("#grupos-usuarios-permisos-list").on(
+          "change",
+          ".toggle-read, .toggle-create, .toggle-edit, .toggle-delete",
+          function () {
+            let grupoUsuarioId = id;
+            let permisoId = $(this).attr("name").split("-")[2];
+            let checked = $(this).is(":checked");
+            let column = $(this).attr("data-column");
+            if (column == "acc_read" && checked == false) {
+              if ($(this).closest("tr").find(".toggle-create").is(":checked")) {
+                $(this)
+                  .closest("tr")
+                  .find(".toggle-create")
+                  .prop("checked", false)
+                  .trigger("change");
+              }
+              if ($(this).closest("tr").find(".toggle-edit").is(":checked")) {
+                $(this)
+                  .closest("tr")
+                  .find(".toggle-edit")
+                  .prop("checked", false)
+                  .trigger("change");
+              }
+              if ($(this).closest("tr").find(".toggle-delete").is(":checked")) {
+                $(this)
+                  .closest("tr")
+                  .find(".toggle-delete")
+                  .prop("checked", false)
+                  .trigger("change");
+              }
+            } else if (column != "acc_read" && checked == true) {
+              if (!$(this).closest("tr").find(".toggle-read").is(":checked")) {
+                $(this)
+                  .closest("tr")
+                  .find(".toggle-read")
+                  .prop("checked", true)
+                  .trigger("change");
+              }
 
-                        }
-                    }
+              if (column == "acc_delete" && checked == true) {
+                if (
+                  !$(this).closest("tr").find(".toggle-create").is(":checked")
+                ) {
+                  $(this)
+                    .closest("tr")
+                    .find(".toggle-create")
+                    .prop("checked", true)
+                    .trigger("change");
+                }
+              }
+            }
 
-                    
-                    // Nueva validación: si es acc_create y lo desmarcan, quitar acc_delete si está marcado
-                    if (column == 'acc_create' && checked == false) {
-                        if ($row.find('.toggle-delete').is(':checked')) {
-                            $row.find('.toggle-delete').prop('checked', false).trigger('change');
-                        }
-                    }
+            // Nueva validación: si es acc_create y lo desmarcan, quitar acc_delete si está marcado
+            if (column == "acc_create" && checked == false) {
+              if ($row.find(".toggle-delete").is(":checked")) {
+                $row
+                  .find(".toggle-delete")
+                  .prop("checked", false)
+                  .trigger("change");
+              }
+            }
 
-                    
-                    $f7.tools.sendRequest('PUT',`/grupos-usuarios-permisos/${id}/update`, {
-                        grupo_usuario_id: grupoUsuarioId,
-                        permiso_id: permisoId,
-                        column: column,
-                        value: checked
-                    }).then(response => {
-                        if (response.success  != true) {
-                            $f7.notification.create({
-                                title: 'Error',
-                                text: response.message || 'No se pudo actualizar el permiso.',
-                                icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
-                                closeTimeout: 3000,
-                            }).open();
-                        }
-                    }).catch(error => {
-                        console.error('Error updating permission:', error);
-                        $f7.notification.create({
-                            title: 'Error',
-                            text: 'Ocurrió un error al actualizar el permiso.',
-                            icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
-                            closeTimeout: 3000,
-                        }).open();
-                    });
-                });
-            });
-        });
-        function getDataGruposUsuariosPermisos() {
-            $f7.tools.sendRequest('GET',`/grupos-usuarios-permisos/${id}`)
-            .then(response => {
-                if (response.success == true) {
-                    dataResponse = response.data;
-                    htmlData = '';
-                    dataResponse.forEach(element => {
-                        htmlData += `
+            $f7.tools
+              .sendRequest("PUT", `/grupos-usuarios-permisos/${id}/update`, {
+                grupo_usuario_id: grupoUsuarioId,
+                permiso_id: permisoId,
+                column: column,
+                value: checked,
+              })
+              .then((response) => {
+                if (response.success != true) {
+                  $f7.notification
+                    .create({
+                      title: "Error",
+                      text:
+                        response.message || "No se pudo actualizar el permiso.",
+                      icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                      closeTimeout: 3000,
+                    })
+                    .open();
+                }
+              })
+              .catch((error) => {
+                console.error("Error updating permission:", error);
+                $f7.notification
+                  .create({
+                    title: "Error",
+                    text: "Ocurrió un error al actualizar el permiso.",
+                    icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                    closeTimeout: 3000,
+                  })
+                  .open();
+              });
+          }
+        );
+      });
+    });
+    function getDataGruposUsuariosPermisos() {
+      console.log("Fetching data for grupos usuarios permisos with ID:", id);
+      $f7.tools
+        .sendRequest("GET", `/grupos-usuarios-permisos/${id}`)
+        .then((response) => {
+          console.log("Response received:", response);
+          if (response.success == true) {
+            dataResponse = response.data;
+            console.log("Data response:", dataResponse);
+            htmlData = "";
+            dataResponse.forEach((element) => {
+              console.log("Processing element:", element);
+              htmlData += `
                         <div class="data-table data-table-init card card-raised">
                         <div class="card-content">
                             <ul class="list accordion-list">
@@ -120,20 +158,28 @@
                                             </tr>
                                         </thead>
                                         <tbody>`;
-                        let permisos = JSON.parse(element.permisos).map(permiso => {
-                            return {
-                                ...permiso,
-                                accesos: JSON.parse(permiso.accesos)
-                            };
-                        });
-                        permisos.forEach(permiso => {
-                            htmlData += `
-                                                <tr data-grupo-usuario-permido="${permiso.id}">
+              let permisos = Array.isArray(element.permisos) ? element.permisos : JSON.parse(element.permisos);
+                permisos = permisos.map(permiso => {
+                    return {
+                        ...permiso,
+                        accesos: typeof permiso.accesos === 'object' ? permiso.accesos : JSON.parse(permiso.accesos)
+                    };
+                });
+              permisos.forEach((permiso) => {
+                console.log("Adding permiso to HTML:", permiso);
+                htmlData += `
+                                                <tr data-grupo-usuario-permido="${
+                                                  permiso.id
+                                                }">
                                                     <td>${permiso.permiso}</td>
                                                     <td>
                                                         <div class="toggle">
                                                             <label>
-                                                                <input type="checkbox" name="toggle-read-${permiso.id}" class="toggle-read" data-column="acc_read" ${permiso.accesos.acc_read ? 'checked' : ''}/>
+                                                                <input type="checkbox" name="toggle-read-${
+                                                                  permiso.id
+                                                                }" class="toggle-read" data-column="acc_read" ${
+                  permiso.accesos.acc_read ? "checked" : ""
+                }/>
                                                                 <span class="toggle-icon"></span>
                                                             </label>
                                                         </div>
@@ -141,7 +187,11 @@
                                                     <td>
                                                         <div class="toggle">
                                                             <label>
-                                                                <input type="checkbox" name="toggle-create-${permiso.id}" class="toggle-create" data-column="acc_create" ${permiso.accesos.acc_create ? 'checked' : ''}/>
+                                                                <input type="checkbox" name="toggle-create-${
+                                                                  permiso.id
+                                                                }" class="toggle-create" data-column="acc_create" ${
+                  permiso.accesos.acc_create ? "checked" : ""
+                }/>
                                                                 <span class="toggle-icon"></span>
                                                             </label>
                                                         </div>
@@ -149,7 +199,11 @@
                                                     <td>
                                                         <div class="toggle">
                                                             <label>
-                                                                <input type="checkbox" name="toggle-edit-${permiso.id}" class="toggle-edit" data-column="acc_update" ${permiso.accesos.acc_update ? 'checked' : ''}/>
+                                                                <input type="checkbox" name="toggle-edit-${
+                                                                  permiso.id
+                                                                }" class="toggle-edit" data-column="acc_update" ${
+                  permiso.accesos.acc_update ? "checked" : ""
+                }/>
                                                                 <span class="toggle-icon"></span>
                                                             </label>
                                                         </div>
@@ -157,31 +211,39 @@
                                                     <td>
                                                         <div class="toggle">
                                                             <label>
-                                                                <input type="checkbox" name="toggle-delete-${permiso.id}" class="toggle-delete" data-column="acc_delete" ${permiso.accesos.acc_delete ? 'checked' : ''}/>
+                                                                <input type="checkbox" name="toggle-delete-${
+                                                                  permiso.id
+                                                                }" class="toggle-delete" data-column="acc_delete" ${
+                  permiso.accesos.acc_delete ? "checked" : ""
+                }/>
                                                                 <span class="toggle-icon"></span>
                                                             </label>
                                                         </div>
                                                     </td>
                                                 </tr>`;
-                        });
-                        htmlData += `</tbody></table></div></li></ul></div></div>`;
-                    });
-                    $('#grupos-usuarios-permisos-list').html(htmlData);
-                    $f7.toggle.create('.toggle');
-                }else{
-                    $f7.notification.create({
-                        title: 'Error',
-                        text: response.message || 'No se pudieron obtener los permisos del grupo.',
-                        icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
-                        closeTimeout: 3000,
-                    }).open();
-            }
-            })
-            .catch(error => {
-                console.log("error", error);
-                console.error('Error fetching grupos usuarios permisos:', error);
+              });
+              htmlData += `</tbody></table></div></li></ul></div></div>`;
             });
-        }
-        return $render;
+            $("#grupos-usuarios-permisos-list").html(htmlData);
+            $f7.toggle.create(".toggle");
+          } else {
+            console.error("Error in response:", response.message);
+            $f7.notification
+              .create({
+                title: "Error",
+                text:
+                  response.message ||
+                  "No se pudieron obtener los permisos del grupo.",
+                icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                closeTimeout: 3000,
+              })
+              .open();
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching grupos usuarios permisos:", error);
+        });
     }
+    return $render;
+  };
 </script>

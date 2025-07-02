@@ -1,289 +1,386 @@
 <template>
-    <div class="page" data-name="modulos_crear">
-        <div class="page-content">
-            <div class="navbar">
-                <div class="navbar-bg"></div>
-                <div class="navbar-inner">
-                    <div class="left">
-                        <a class="link back icon-only">
-                            <i class="icon icon-back"></i>
-                        </a>
-                    </div>
-                    <div class="tittle">Crear nuevo módulo</div>
-                    <div class="right">
-                        <button class="button button-fill button-round color-green"  @click="${formSave}">Guardar</button>
-                    </div>
-                </div>
-            </div>
-            <form id="form-modulos" action="#" method="post" class="block container" autocomplete="off">
-                <div class="block-title block-title-large">Crear nuevo módulo</div>
-                <div class="row">
-                    <div class="col-12 col-md-8">
-                        <div class="list my-0">
-                            <ul>
-                                <li class="item-content item-input item-input-outline mx-0">
-                                    <div class="item-inner">
-                                        <div class="item-title item-floating-label">Nombre</div>
-                                        <div class="item-input-wrap">
-                                            <input type="text" name="nombre" required validate data-validate-on-blur="true" data-error-message="Campo obligatorio." />
-                                            <span class="input-clear-button"></span>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="item-content item-input item-input-outline mx-0">
-                                    <div class="item-inner">
-                                        <div class="item-title item-floating-label">Alias</div>
-                                        <div class="item-input-wrap">
-                                            <input type="text" name="alias" required validate data-validate-on-blur="true" data-error-message="Campo obligatorio." pattern="[a-z0-9_]+"/>
-                                            <span class="input-clear-button"></span>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="item-content item-input item-input-outline mx-0">
-                                    <div class="item-inner">
-                                        <div class="item-title item-floating-label">Descripción</div>
-                                        <div class="item-input-wrap">
-                                            <textarea class="resizable" name="descripcion"></textarea>
-                                            <span class="input-clear-button"></span>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="item-content item-input item-input-outline mx-0">
-                                    <div class="item-inner">
-                                        <div class="item-title item-floating-label">Url</div>
-                                        <div class="item-input-wrap">
-                                            <input type="text" name="url" required validate data-validate-on-blur="true" data-error-message="Campo obligatorio" pattern="^\/?([a-zA-Z0-9\-_]+\/?)*$" placeholder="/ejemplo/ruta" />
-                                            <span class="input-clear-button"></span>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-md-4">
-                        <div class="list my-0">
-                            <ul>
-                                <li class="item-content item-smart-select item-smart-select-outline mx-0">
-                                    <div id="smart-select-modulo-padre" class="item-link smart-select">
-                                        <select name="parent_id">
-                                        </select>
-                                        <div class="item-content">
-                                            <div class="item-inner">
-                                                <div class="item-title">Modulo Padre</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="item-content item-smart-select item-smart-select-outline mx-0">
-                                    <div id="smart-select-grupo" class="item-link smart-select">
-                                        <select name="id_modulo_grupo">
-                                        </select>
-                                        <div class="item-content">
-                                            <div class="item-inner">
-                                                <div class="item-title">Grupo</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="item-content item-input item-input-outline mx-0">
-                                    <div class="item-inner">
-                                        <div class="item-title item-floating-label">Orden</div>
-                                        <div class="item-input-wrap">
-                                            <input type="number" name="orden" value="0" min="0" />
-                                            <span class="input-clear-button"></span>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="item-content item-toggle item-toggle-outline mx-0">
-                                    <div class="item-inner">
-                                        <div class="item-title">Activar módulo</div>
-                                        <div class="item-after">
-                                            <label class="toggle toggle-init">
-                                                <input type="checkbox" name="activo" value="1" />
-                                                <span class="toggle-icon"></span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="item-content item-input item-input-outline mx-0">
-                                    <div class="item-inner">
-                                        <div class="item-title item-floating-label">Icono (f7-icons)</div>
-                                        <div class="item-input-wrap">
-                                            <input type="text" name="icon" value="" />
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-5 d-none">
-                    <div class="col-12 d-md-flex justify-content-center">
-                        <button type="reset" class="button button-fill button-large color-red button-form-cancel mb-3 me-md-3">
-                            <i class="icon f7-icons size-18 me-2">xmark</i>
-                            Cancelar
-                        </button>
-                        <button type="submit" class="button button-fill button-large color-green button-form-submit mb-3 ms-md-3">
-                            <i class="icon f7-icons size-18 me-2">floppy_disk</i>
-                            Guardar
-                        </button>
-                    </div>
-                </div>
-            </form>
+  <div class="page" data-name="modulos_crear">
+    <div class="page-content">
+      <div class="navbar">
+        <div class="navbar-bg"></div>
+        <div class="navbar-inner">
+          <div class="left">
+            <a class="link back icon-only">
+              <i class="icon icon-back"></i>
+            </a>
+          </div>
+          <div class="tittle">Crear nuevo módulo</div>
+          <div class="right">
+            <button
+              class="button button-fill button-round color-green"
+              @click="${formSave}"
+            >
+              Guardar
+            </button>
+          </div>
         </div>
+      </div>
+      <form
+        id="formCrearModulo"
+        action="#"
+        method="post"
+        class="block container"
+        autocomplete="off"
+      >
+        <div class="block-title block-title-large">Crear nuevo módulo</div>
+        <div class="row">
+          <div class="col-12 col-md-8">
+            <div class="list my-0">
+              <ul>
+                <li class="item-content item-input item-input-outline mx-0">
+                  <div class="item-inner">
+                    <div class="item-title item-floating-label">Nombre</div>
+                    <div class="item-input-wrap">
+                      <input
+                        type="text"
+                        name="nombre"
+                        required
+                        validate
+                        data-validate-on-blur="true"
+                        data-error-message="Campo obligatorio."
+                      />
+                      <span class="input-clear-button"></span>
+                    </div>
+                  </div>
+                </li>
+                <li class="item-content item-input item-input-outline mx-0">
+                  <div class="item-inner">
+                    <div class="item-title item-floating-label">Alias</div>
+                    <div class="item-input-wrap">
+                      <input
+                        type="text"
+                        name="alias"
+                        required
+                        validate
+                        data-validate-on-blur="true"
+                        data-error-message="Campo obligatorio."
+                        pattern="[a-z0-9_]+"
+                      />
+                      <span class="input-clear-button"></span>
+                    </div>
+                  </div>
+                </li>
+                <li class="item-content item-input item-input-outline mx-0">
+                  <div class="item-inner">
+                    <div class="item-title item-floating-label">
+                      Descripción
+                    </div>
+                    <div class="item-input-wrap">
+                      <textarea class="resizable" name="descripcion"></textarea>
+                      <span class="input-clear-button"></span>
+                    </div>
+                  </div>
+                </li>
+                <li class="item-content item-input item-input-outline mx-0">
+                  <div class="item-inner">
+                    <div class="item-title item-floating-label">Url</div>
+                    <div class="item-input-wrap">
+                      <input
+                        type="text"
+                        name="url"
+                        required
+                        validate
+                        data-validate-on-blur="true"
+                        data-error-message="Campo obligatorio"
+                        pattern="^?([a-zA-Z0-9_-]+?)*$"
+                        placeholder="/ejemplo/ruta"
+                      />
+                      <span class="input-clear-button"></span>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <div class="list my-0">
+              <ul>
+                <li
+                  class="item-content item-smart-select item-smart-select-outline mx-0"
+                >
+                  <div
+                    id="smart-select-modulo-padre"
+                    class="item-link smart-select"
+                  >
+                    <select name="parent_id"></select>
+                    <div class="item-content">
+                      <div class="item-inner">
+                        <div class="item-title">Modulo Padre</div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li
+                  class="item-content item-smart-select item-smart-select-outline mx-0"
+                >
+                  <div id="smart-select-grupo" class="item-link smart-select">
+                    <select name="id_modulo_grupo"></select>
+                    <div class="item-content">
+                      <div class="item-inner">
+                        <div class="item-title">Grupo</div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li class="item-content item-input item-input-outline mx-0">
+                  <div class="item-inner">
+                    <div class="item-title item-floating-label">Orden</div>
+                    <div class="item-input-wrap">
+                      <input type="number" name="orden" value="0" min="0" />
+                      <span class="input-clear-button"></span>
+                    </div>
+                  </div>
+                </li>
+                <li class="item-content item-toggle item-toggle-outline mx-0">
+                  <div class="item-inner">
+                    <div class="item-title">Activar módulo</div>
+                    <div class="item-after">
+                      <label class="toggle toggle-init">
+                        <input type="checkbox" name="activo" value="1" />
+                        <span class="toggle-icon"></span>
+                      </label>
+                    </div>
+                  </div>
+                </li>
+                <li class="item-content item-input item-input-outline mx-0">
+                  <div class="item-inner">
+                    <div class="item-title item-floating-label">
+                      Icono (f7-icons)
+                    </div>
+                    <div class="item-input-wrap">
+                      <input type="text" name="icon" value="" />
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="row mt-5 d-none">
+          <div class="col-12 d-md-flex justify-content-center">
+            <button
+              type="reset"
+              class="button button-fill button-large color-red button-form-cancel mb-3 me-md-3"
+            >
+              <i class="icon f7-icons size-18 me-2">xmark</i>
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="button button-fill button-large color-green button-form-submit mb-3 ms-md-3"
+            >
+              <i class="icon f7-icons size-18 me-2">floppy_disk</i>
+              Guardar
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
+  </div>
 </template>
 <script>
-    export default (props, {$,$f7, $f7router, $on}) => {
-        let input_alias;
-        let smartSelectGrupoInstance = null;
-        let smartSelectModulosInstance = null;
-        let renderSearchbarx = function () {
-            const ss = this;
-            let iconNew = (!ss.params.iconnew) ? 'plus_circle_fill' : ss.params.iconnew;
+  export default (props, { $, $f7, $f7router, $on }) => {
+    let input_alias;
+    let smartSelectGrupoInstance = null;
+    let smartSelectModulosInstance = null;
+    let renderSearchbarx = function () {
+      const ss = this;
+      let iconNew = !ss.params.iconnew ? "plus_circle_fill" : ss.params.iconnew;
 
-            if (!ss.params.newItemUrl) {
-                console.error('renderSearchbarx', 'Debe indicar la url para el boton de nuevo elemento: newItemUrl undefined');
-            }
+      if (!ss.params.newItemUrl) {
+        console.error(
+          "renderSearchbarx",
+          "Debe indicar la url para el boton de nuevo elemento: newItemUrl undefined"
+        );
+      }
 
-            return (`<div class="subnavbar-inner">
+      return `<div class="subnavbar-inner">
                         <div class="segmented">
-                            <a href="${ss.params.newItemUrl ?? '#'}" class="link new-item">
+                            <a href="${
+                              ss.params.newItemUrl ?? "#"
+                            }" class="link new-item">
                                 <i class="icon f7-icons color-green size-40">${iconNew}</i></a>
                             </a>
                             <form class="searchbar">
                                 <div class="searchbar-inner">
                                     <div class="searchbar-input-wrap">
-                                        <input type="search" spellcheck=${ss.params.searchbarSpellcheck || 'false'} placeholder=${ss.params.searchbarPlaceholder} />
+                                        <input type="search" spellcheck=${
+                                          ss.params.searchbarSpellcheck ||
+                                          "false"
+                                        } placeholder=${
+        ss.params.searchbarPlaceholder
+      } />
                                         <i class="searchbar-icon"></i>
                                         <span class="input-clear-button"></span>
                                     </div>
-                                    ${ss.params.searchbarDisableButton && (`<span class="searchbar-disable-button">{ss.params.searchbarDisableText}</span>`)}
+                                    ${
+                                      ss.params.searchbarDisableButton &&
+                                      `<span class="searchbar-disable-button">{ss.params.searchbarDisableText}</span>`
+                                    }
                                 </div>
                             </form>
                         </div>
-                    </div>`);
-        };
+                    </div>`;
+    };
 
-        const formSave = function (ev) {
-            ev.preventDefault();
-            const form = document.querySelector('form');
-            let formData = $f7.form.convertToData(form);
+    const formSave = function (ev) {
+      ev.preventDefault();
+      const form = document.querySelector("#formCrearModulo");
+      if (!form) {
+        console.error("Formulario no encontrado: #formCrearModulo");
+        return;
+      }
 
-            $f7.tools.sendRequest('POST', '/modulo/create', formData).then((response) => {
-                if(response.success==true) {
-                    $f7.notification.create({
-                        icon: '<i class="icon f7-icons color-green size-50">checkmark_alt_circle_fill</i>',
-                        text: 'Módulo creado correctamente',
-                        closeTimeout: 2500,
-                        on:{
-                            close: () => {
-                                $f7router.navigate('/sistema/modulos');
-                            }
-                        }
-                    }).open();
-                } else {
-                    $f7.notification.create({
-                        icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
-                        text: 'Error al crear el módulo',
-                        closeTimeout: 2500
-                    }).open();
-                }
-            });
-        };
+      let formData = $f7.form.convertToData(form);
+      console.log("Datos del formulario enviados:", formData);
 
-        $on('pageInit', async (e, page) => {
-            input_alias = $('input[name="alias"]');
-            input_alias.on('input', function () {
-                this.value = this.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
-            });
-            await getGruposModulos();
-            document.addEventListener('grupoModuloCreado', async () => {
-                if (smartSelectGrupoInstance && smartSelectGrupoInstance.opened) {
-                    smartSelectGrupoInstance.close();
-                }
-                await getGruposModulos();
-                smartSelectGrupoInstance.open();
-            });
+      $f7.tools
+        .sendRequest("POST", "/modulo/create", formData)
+        .then((response) => {
+          console.log("Respuesta del servidor:", response);
 
-            await getModulos();
-
+          if (response.success == true) {
+            $f7.notification
+              .create({
+                icon: '<i class="icon f7-icons color-green size-50">checkmark_alt_circle_fill</i>',
+                text: "Módulo creado correctamente",
+                closeTimeout: 2500,
+                on: {
+                  close: () => {
+                    $f7router.navigate("/sistema/modulos");
+                  },
+                },
+              })
+              .open();
+          } else {
+            console.error(
+              "Error en la respuesta del servidor:",
+              response.message
+            );
+            $f7.notification
+              .create({
+                icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                text: "Error al crear el módulo",
+                closeTimeout: 2500,
+              })
+              .open();
+          }
+        })
+        .catch((error) => {
+          console.error("Error durante la solicitud:", error);
+          $f7.notification
+            .create({
+              icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+              text: "Error al crear el módulo",
+              closeTimeout: 2500,
+            })
+            .open();
         });
+    };
 
-        function getGruposModulos() {
-            return $f7.tools.sendRequest('GET', '/modulo/grupo').then((response) => {
-                if(response.success === true) {
-                    const grupos = response.data;
-                    const select = document.querySelector('#smart-select-grupo select');
-                    select.innerHTML = '';
-                    grupos.forEach(grupo => {
-                        const option = document.createElement('option');
-                        option.value = grupo.id;
-                        option.textContent = grupo.grupo;
-                        select.appendChild(option);
-                    });
-
-                    if (smartSelectGrupoInstance) {
-                        smartSelectGrupoInstance.destroy();
-                    }
-                    smartSelectGrupoInstance = $f7.smartSelect.create({
-                        el: '#smart-select-grupo',
-                        openIn: 'popup',
-                        closeOnSelect: true,
-                        searchbar: true,
-                        popupCloseLinkText:'Cerrar',
-                        searchbarDisableText:'Cancelar',
-                        searchbarPlaceholder:'Buscar',
-                        iconnew: 'folder_fill_badge_plus',
-                        newItemUrl: $f7router.generateUrl({name: 'modulo_grupo_crear'}),
-                        renderSearchbar: renderSearchbarx
-                    });
-                } else {
-                    console.error('Error al cargar los grupos de módulos:', response.message);
-                }
-            });
+    $on("pageInit", async (e, page) => {
+      input_alias = $('input[name="alias"]');
+      input_alias.on("input", function () {
+        this.value = this.value.toLowerCase().replace(/[^a-z0-9_]/g, "");
+      });
+      await getGruposModulos();
+      document.addEventListener("grupoModuloCreado", async () => {
+        if (smartSelectGrupoInstance && smartSelectGrupoInstance.opened) {
+          smartSelectGrupoInstance.close();
         }
+        await getGruposModulos();
+        smartSelectGrupoInstance.open();
+      });
 
-        function getModulos(){
-            return $f7.tools.sendRequest('GET', '/modulo?perPage=all').then((response) => {
-                if(response.success === true) {
-                    const modulos = response.data;
-                    const select = document.querySelector('#smart-select-modulo-padre select');
-                    select.innerHTML = '';
-                    const option = document.createElement('option');
-                    option.value = '';
-                    option.textContent = 'Seleccionar módulo padre';
-                    option.disabled = true;
-                    option.selected = true;
-                    select.appendChild(option);
+      await getModulos();
+    });
 
-                    modulos.forEach(modulo => {
-                        const option = document.createElement('option');
-                        option.value = modulo.id;
-                        option.textContent = modulo.nombre;
-                        select.appendChild(option);
-                    });
+    function getGruposModulos() {
+      return $f7.tools.sendRequest("GET", "/modulo/grupo").then((response) => {
+        if (response.success === true) {
+          const grupos = response.data;
+          const select = document.querySelector("#smart-select-grupo select");
+          select.innerHTML = "";
+          grupos.forEach((grupo) => {
+            const option = document.createElement("option");
+            option.value = grupo.id;
+            option.textContent = grupo.grupo;
+            select.appendChild(option);
+          });
 
-                    if (smartSelectModulosInstance) {
-                        smartSelectModulosInstance.destroy();
-                    }
-
-                    smartSelectModulosInstance = $f7.smartSelect.create({
-                        el: '#smart-select-modulo-padre',
-                        openIn: 'popup',
-                        closeOnSelect: true,
-                        searchbar: true,
-                        popupCloseLinkText:'Cerrar',
-                        searchbarDisableText:'Cancelar',
-                        searchbarPlaceholder:'Buscar'
-                    });
-                } else {
-                    console.error('Error al cargar los módulos:', response.message);
-                }
-            });
+          if (smartSelectGrupoInstance) {
+            smartSelectGrupoInstance.destroy();
+          }
+          smartSelectGrupoInstance = $f7.smartSelect.create({
+            el: "#smart-select-grupo",
+            openIn: "popup",
+            closeOnSelect: true,
+            searchbar: true,
+            popupCloseLinkText: "Cerrar",
+            searchbarDisableText: "Cancelar",
+            searchbarPlaceholder: "Buscar",
+            iconnew: "folder_fill_badge_plus",
+            newItemUrl: $f7router.generateUrl({ name: "modulo_grupo_crear" }),
+            renderSearchbar: renderSearchbarx,
+          });
+        } else {
+          console.error(
+            "Error al cargar los grupos de módulos:",
+            response.message
+          );
         }
-
-        return $render;
+      });
     }
+
+    function getModulos() {
+      return $f7.tools
+        .sendRequest("GET", "/modulo?perPage=all")
+        .then((response) => {
+          if (response.success === true) {
+            const modulos = response.data;
+            const select = document.querySelector(
+              "#smart-select-modulo-padre select"
+            );
+            select.innerHTML = "";
+            const option = document.createElement("option");
+            option.value = "";
+            option.textContent = "Seleccionar módulo padre";
+            option.disabled = true;
+            option.selected = true;
+            select.appendChild(option);
+
+            modulos.forEach((modulo) => {
+              const option = document.createElement("option");
+              option.value = modulo.id;
+              option.textContent = modulo.nombre;
+              select.appendChild(option);
+            });
+
+            if (smartSelectModulosInstance) {
+              smartSelectModulosInstance.destroy();
+            }
+
+            smartSelectModulosInstance = $f7.smartSelect.create({
+              el: "#smart-select-modulo-padre",
+              openIn: "popup",
+              closeOnSelect: true,
+              searchbar: true,
+              popupCloseLinkText: "Cerrar",
+              searchbarDisableText: "Cancelar",
+              searchbarPlaceholder: "Buscar",
+            });
+          } else {
+            console.error("Error al cargar los módulos:", response.message);
+          }
+        });
+    }
+
+    return $render;
+  };
 </script>

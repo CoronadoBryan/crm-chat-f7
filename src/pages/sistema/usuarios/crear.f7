@@ -1,347 +1,283 @@
 <template>
-    <div class="page" data-name="usuarios_crear">
-        <div class="page-content">
-            <div class="navbar">
-                <div class="navbar-bg"></div>
-                <div class="navbar-inner">
-                    <div class="left">
-                        <a class="link back icon-only">
-                            <i class="icon icon-back"></i>
-                        </a></div>
-                    <div class="title">Crear usuario</div>
-                    <div class="right">
-                        <button class="button button-fill button-round color-green" @click="${formSave}" >Guadar</button>
-                    </div>
-                </div>
-            </div>
-            <form action="#" method="post" class="block container" autocomplete="off" id="formCrearUsuario">
-                <div class="block container">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="list my-0">
-                                <ul>
-                                    <li>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <li class="item-content item-smart-select item-smart-select-outline">
-                                                    <div class="item-link smart-select" id="smart-select-tipo-documento">
-                                                        <select name="id_tipo_documento" data-error-message="Campo obligatorio." required>
-                                                        </select>
-                                                        <div class="item-content">
-                                                            <div class="item-inner">
-                                                                <div class="item-title">Tipo documento</div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="item-content item-input item-input-outline">
-                                                    <div class="item-inner">
-                                                        <div class="item-title item-floating-label">Número de documento</div>
-                                                        <div class="item-input-wrap">
-                                                            <input type="text" placeholder="Ingrese su documento" name="nro_documento" disabled/>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-1 d-flex align-items-center justify-content-center">
-                                                <button class="button button-fill button-round color-secondary button-preloader" type="button" style="margin-top: 0; cursor: not-allowed; opacity: 0.6;" disabled title="Bloqueado" id="btnBuscarDocumento">
-                                                    <span class="preloader"></span>
-                                                    <span><i class="icon f7-icons">searchbar-icon</i></span>
-                                                </button>
-                                            </div>
-
-                                        </div>
-                                    </li>
-                                    <li id="div_razon_social" class="d-none">
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <div class="item-content item-input item-input-outline">
-                                                    <div class="item-inner">
-                                                        <div class="item-title item-floating-label">Razón social</div>
-                                                        <div class="item-input-wrap">
-                                                            <input type="text" placeholder="Ingrese su razón social" name="razon_social" />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
-                                    <li id="div_persona_natural">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="item-content item-input item-input-outline">
-                                                    <div class="item-inner">
-                                                        <div class="item-title item-floating-label">Nombres</div>
-                                                        <div class="item-input-wrap">
-                                                            <input type="text" placeholder="Ingrese sus nombres" name="nombres" validate data-validate-on-blur="true" data-error-message="Campo obligatorio." required/>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="item-content item-input item-input-outline">
-                                                    <div class="item-inner">
-                                                        <div class="item-title item-floating-label">Apellidos</div>
-                                                        <div class="item-input-wrap">
-                                                            <input type="text" placeholder="Ingrese sus apellidos" name="apellidos" validate data-validate-on-blur="true" data-error-message="Campo obligatorio." required/>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="item-content item-input item-input-outline">
-                                                    <div class="item-inner">
-                                                        <div class="item-title item-floating-label">Correo</div>
-                                                        <div class="item-input-wrap">
-                                                            <input type="text" placeholder="Ingrese su correo" name="correo" validate data-validate-on-blur="true" data-error-message="Campo obligatorio." required/>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="item-content item-input item-input-outline">
-                                                    <div class="item-inner">
-                                                        <div class="item-title item-floating-label">Celular</div>
-                                                        <div class="item-input-wrap">
-                                                            <input type="text" placeholder="Ingrese su Nº de celular" name="celular"/>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="item-content item-input item-input-outline">
-                                                    <div class="item-inner">
-                                                        <div class="item-title item-floating-label">Usuario</div>
-                                                        <div class="item-input-wrap">
-                                                            <input type="text" placeholder="Ingrese su usuario" name="usuario" validate data-validate-on-blur="true" data-error-message="Campo obligatorio." autocomplete="new-username" required />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="item-content item-input item-input-outline">
-                                                    <div class="item-inner">
-                                                        <div class="item-title item-floating-label">Contraseña</div>
-                                                        <div class="item-input-wrap">
-                                                            <input type="password" placeholder="Ingrese su contraseña" name="password" validate data-validate-on-blur="true" data-error-message="Campo obligatorio." autocomplete="new-password" required/>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
+  <div class="page" data-name="usuarios_crear">
+    <div class="page-content">
+      <div class="navbar">
+        <div class="navbar-bg"></div>
+        <div class="navbar-inner">
+          <div class="left">
+            <a class="link back icon-only">
+              <i class="icon icon-back"></i>
+            </a>
+          </div>
+          <div class="title">Crear usuario</div>
+          <div class="right">
+            <button
+              class="button button-fill button-round color-green"
+              @click="${formSave}"
+            >
+              Guadar
+            </button>
+          </div>
         </div>
+      </div>
+      <form
+        action="#"
+        method="post"
+        class="block container"
+        autocomplete="off"
+        id="formCrearUsuarioUnico"
+      >
+        <div class="block container">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="list my-0">
+                <ul>
+                  <li id="div_persona_natural">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="item-content item-input item-input-outline">
+                          <div class="item-inner">
+                            <div class="item-title item-floating-label">
+                              Nombres
+                            </div>
+                            <div class="item-input-wrap">
+                              <input
+                                type="text"
+                                placeholder="Ingrese sus nombres"
+                                name="nombres"
+                                validate
+                                data-validate-on-blur="true"
+                                data-error-message="Campo obligatorio."
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="item-content item-input item-input-outline">
+                          <div class="item-inner">
+                            <div class="item-title item-floating-label">
+                              Apellidos
+                            </div>
+                            <div class="item-input-wrap">
+                              <input
+                                type="text"
+                                placeholder="Ingrese sus apellidos"
+                                name="apellidos"
+                                validate
+                                data-validate-on-blur="true"
+                                data-error-message="Campo obligatorio."
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="item-content item-input item-input-outline">
+                          <div class="item-inner">
+                            <div class="item-title item-floating-label">
+                              Correo
+                            </div>
+                            <div class="item-input-wrap">
+                              <input
+                                type="text"
+                                placeholder="Ingrese su correo"
+                                name="correo"
+                                validate
+                                data-validate-on-blur="true"
+                                data-error-message="Campo obligatorio."
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="item-content item-input item-input-outline">
+                          <div class="item-inner">
+                            <div class="item-title item-floating-label">
+                              Celular
+                            </div>
+                            <div class="item-input-wrap">
+                              <input
+                                type="text"
+                                placeholder="Ingrese su Nº de celular"
+                                name="celular"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="item-content item-input item-input-outline">
+                          <div class="item-inner">
+                            <div class="item-title item-floating-label">
+                              Usuario
+                            </div>
+                            <div class="item-input-wrap">
+                              <input
+                                type="text"
+                                placeholder="Ingrese su usuario"
+                                name="usuario"
+                                validate
+                                data-validate-on-blur="true"
+                                data-error-message="Campo obligatorio."
+                                autocomplete="new-username"
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="item-content item-input item-input-outline">
+                          <div class="item-inner">
+                            <div class="item-title item-floating-label">
+                              Contraseña
+                            </div>
+                            <div class="item-input-wrap">
+                              <input
+                                type="password"
+                                placeholder="Ingrese su contraseña"
+                                name="password"
+                                validate
+                                data-validate-on-blur="true"
+                                data-error-message="Campo obligatorio."
+                                autocomplete="new-password"
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="item-content item-input item-input-outline">
+                          <div class="item-inner">
+                            <div class="item-title item-floating-label">
+                              Tipo de Documento
+                            </div>
+                            <div class="item-input-wrap">
+                              <input
+                                type="text"
+                                placeholder="Ingrese el tipo de documento"
+                                name="id_tipo_documento"
+                                validate
+                                data-validate-on-blur="true"
+                                data-error-message="Campo obligatorio."
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="item-content item-input item-input-outline">
+                          <div class="item-inner">
+                            <div class="item-title item-floating-label">
+                              Número de Documento
+                            </div>
+                            <div class="item-input-wrap">
+                              <input
+                                type="text"
+                                placeholder="Ingrese el número de documento"
+                                name="nro_documento"
+                                validate
+                                data-validate-on-blur="true"
+                                data-error-message="Campo obligatorio."
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
     </div>
+  </div>
 </template>
 <script>
-    export default (props, {$f7,$f7router,$on,$}) => {
-        let smartSelectDocumentoInstance = null;
-        $on('pageInit', (e, page) => {
-            getDocumentos();
-            
-            $("input[name='nro_documento']").on('input', function() {
-                const input = $(this);
-                const longitud = parseInt(input.data('longitud'));
-                const longitudMinima = parseInt(input.data('minimo'));
-                const valor = input.val();
-                let btnBuscarDocumento = $('#btnBuscarDocumento');
-                if (!input.prop('disabled') && input.data('longitud') && !isNaN(longitud) && (valor.length === longitud ) && (valor.length >= longitudMinima)) {
-                    btnBuscarDocumento.removeClass('color-secondary').addClass('color-green');
-                    btnBuscarDocumento.removeAttr('disabled');
-                    btnBuscarDocumento.attr('title', 'Buscar documento');
-                    btnBuscarDocumento.css({
-                        'cursor': 'pointer',
-                        'opacity': '1'
-                    });
-                }else{
-                    btnBuscarDocumento.removeClass('color-secondary').addClass('color-green');
-                    btnBuscarDocumento.removeAttr('disabled');
-                    btnBuscarDocumento.attr('title', 'Buscar documento');
-                    btnBuscarDocumento.css({
-                        'cursor': 'pointer',
-                        'opacity': '1'
-                    });
-                }
-            });
-
-            
-            $("#btnBuscarDocumento").on('click', function() {
-                $('#btnBuscarDocumento').addClass('button-loading');
-                const inputNroDocumento = document.querySelector('input[name="nro_documento"]');
-                const nroDocumento = inputNroDocumento.value.trim();
-                if (nroDocumento) {
-                    getDataByDocumento(nroDocumento);
-                } else {
-                    $('#btnBuscarDocumento').removeClass('button-loading');
-                    $f7.notification.create({
-                        icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
-                        text: 'Por favor, ingrese un número de documento válido.',
-                        closeTimeout: 3000
-                    }).open();
-                }
-            });
-        });
-        const formSave = function (ev) {
-            ev.preventDefault();
-            const form = document.querySelector('#formCrearUsuario');
-            let formData = $f7.form.convertToData(form);
-            form.reportValidity();
-            if (form.checkValidity()) {
-                $f7.tools.sendRequest('POST', '/usuario/create', formData).then(async (response) => {
-                    if (response.success == true) {
-                        $f7.notification.create({
-                            icon: '<i class="icon f7-icons color-green size-50">checkmark_alt</i>',
-                            text: 'Usuario creado correctamente.',
-                            closeTimeout: 2500,
-                            on:{
-                                close: function () {
-                                    $f7router.navigate('/sistema/usuarios');
-                                }
-                            }
-                        }).open();
-                    } else {
-                        $f7.notification.create({
-                            icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
-                            text: response.message,
-                            closeTimeout: 3000
-                        }).open();
-                    }
-                }).catch((error) => {
-                    $f7.notification.create({
-                        icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
-                        text: 'Error al crear el usuario.',
-                        closeTimeout: 3000
-                    }).open();
-                    
-                    $f7router.back();
-                });
+  export default (props, { $f7, $f7router, $on, $ }) => {
+    const formSave = function (ev) {
+      ev.preventDefault();
+      console.log("Form save initiated");
+      const form = document.querySelector("#formCrearUsuarioUnico");
+      let formData = $f7.form.convertToData(form);
+      console.log("Form data:", formData);
+      form.reportValidity();
+      if (form.checkValidity()) {
+        console.log("Form is valid, sending request...");
+        $f7.tools
+          .sendRequest("POST", "/usuario/create", formData)
+          .then(async (response) => {
+            console.log("Response received:", response);
+            if (response.success == true) {
+              $f7.notification
+                .create({
+                  icon: '<i class="icon f7-icons color-green size-50">checkmark_alt</i>',
+                  text: "Usuario creado correctamente.",
+                  closeTimeout: 2500,
+                  on: {
+                    close: function () {
+                      $f7router.navigate("/sistema/usuarios");
+                    },
+                  },
+                })
+                .open();
             } else {
-                $f7.notification.create({
-                    icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
-                    text: 'Por favor, complete todos los campos obligatorios.',
-                    closeTimeout: 3000
-                }).open();
+              console.error("Error in response:", response.message);
+              $f7.notification
+                .create({
+                  icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                  text: response.message,
+                  closeTimeout: 3000,
+                })
+                .open();
             }
-        };
+          })
+          .catch((error) => {
+            console.error("Request failed:", error);
+            $f7.notification
+              .create({
+                icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+                text: "Error al crear el usuario.",
+                closeTimeout: 3000,
+              })
+              .open();
 
-        function getDocumentos(){
-            $f7.tools.getDocumentos().then((data) => {
-                const documentos = data;
-                    const select = document.querySelector('#smart-select-tipo-documento select');
-                    select.innerHTML = '';
-                    const optionDefault = document.createElement('option');
-                    optionDefault.value = '';
-                    optionDefault.textContent = 'Seleccionar tipo de documento';
-                    optionDefault.disabled = true;
-                    optionDefault.selected = true;
-                    select.appendChild(optionDefault);
+            $f7router.back();
+          });
+      } else {
+        console.warn("Form validation failed");
+        $f7.notification
+          .create({
+            icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
+            text: "Por favor, complete todos los campos obligatorios.",
+            closeTimeout: 3000,
+          })
+          .open();
+      }
+    };
 
-                    documentos.forEach(documento => {
-                        const option = document.createElement('option');
-                        option.value = documento.id;
-                        option.textContent = documento.tipo;
-                        option.dataset.longitud = documento.longitud;
-                        select.appendChild(option);
-                    });
-
-                    if (smartSelectDocumentoInstance) {
-                        smartSelectDocumentoInstance.destroy();
-                    }
-                    smartSelectDocumentoInstance = $f7.smartSelect.create({
-                        el: '#smart-select-tipo-documento',
-                        openIn: 'popup',
-                        closeOnSelect: true,
-                        searchbar: true,
-                        popupCloseLinkText:'Cerrar',
-                        searchbarDisableText:'Cancelar',
-                        searchbarPlaceholder:'Buscar',
-                        on:{
-                            close: function () {
-                                const selectedOption = select.options[select.selectedIndex];
-                                const inputNroDocumento = document.querySelector('input[name="nro_documento"]');
-                                const longitud = parseInt(selectedOption.dataset.longitud, 10);
-
-                                inputNroDocumento.value = '';
-                                if (selectedOption && selectedOption.dataset.longitud) {
-                                    if(selectedOption.value === '1'){ //si es RUC
-                                        document.querySelector('#div_razon_social').classList.remove('d-none');
-                                        document.querySelector('#div_persona_natural').classList.add('d-none');
-                                        document.querySelector('input[name="nombres"], input[name="apellidos"]').removeAttribute('required');
-                                        document.querySelector('input[name="nombres"], input[name="apellidos"]').removeAttribute('validate');
-                                        
-                                        document.querySelectorAll('input[name="nombres"], input[name="apellidos"]').forEach(input => {
-                                            input.removeAttribute('required');
-                                            input.removeAttribute('validate');
-                                        });
-                                        document.querySelector('input[name="razon_social"]').setAttribute('required', 'required');
-                                        document.querySelector('input[name="razon_social"]').setAttribute('validate', 'true');
-                                    }else{
-                                        document.querySelector('#div_razon_social').classList.add('d-none');
-                                        document.querySelector('#div_persona_natural').classList.remove('d-none');
-                                        document.querySelector('input[name="razon_social"]').removeAttribute('required');
-                                        document.querySelector('input[name="razon_social"]').removeAttribute('validate');
-                                        document.querySelectorAll('input[name="nombres"], input[name="apellidos"]').forEach(input => {
-                                            input.setAttribute('required', 'required');
-                                            input.setAttribute('validate', 'true');
-                                        });
-                                    }
-                                    inputNroDocumento.setAttribute('maxlength', longitud);
-                                    inputNroDocumento.setAttribute('minlength', (longitud == 12) ? 9 : longitud);
-                                    inputNroDocumento.setAttribute('data-longitud', longitud);
-                                    inputNroDocumento.setAttribute('data-validate', `true;minlength=${longitud};maxlength=${longitud}`);
-                                    inputNroDocumento.removeAttribute('disabled');
-                                } else {
-                                    inputNroDocumento.addAttribute('disabled', 'disabled');
-                                    inputNroDocumento.removeAttribute('maxlength');
-                                    inputNroDocumento.removeAttribute('minlength');
-                                    inputNroDocumento.removeAttribute('data-longitud');
-                                    inputNroDocumento.removeAttribute('data-validate');
-                                }
-                            }
-                        }
-                    });
-            });
-        }
-
-        function getDataByDocumento($numeroDocumento) {
-            $f7.tools.getDatabyDocument($numeroDocumento).then((data) => {
-                const select = document.querySelector('#smart-select-tipo-documento select');
-                const selectedOption = select.options[select.selectedIndex];
-                if(selectedOption.value === '1'){
-                    $("input[name='razon_social']").val(data.razon_social).change();
-                }else{
-                    $("input[name='nombres']").val(data.nombres).change();
-                    $("input[name='apellidos']").val(data.apellido_paterno + ' ' + data.apellido_materno).change();
-                }
-                
-                    $('#btnBuscarDocumento').removeClass('button-loading');
-            }).catch((error) => {
-                console.error('Error al buscar el documento:', error);
-                $f7.notification.create({
-                    icon: '<i class="icon f7-icons color-red size-50">exclamationmark_triangle_fill</i>',
-                    text: 'Error al buscar el documento.',
-                    closeTimeout: 3000
-                }).open();
-                
-                    $('#btnBuscarDocumento').removeClass('button-loading');
-            });
-        }
-        return $render;
-    }
+    return $render;
+  };
 </script>

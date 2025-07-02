@@ -359,7 +359,9 @@
                         </label>
                       </td>
                       <td>${usuario.usuario}</td>
-                      <td>${usuario.nombres ? usuario.nombres : ""} ${usuario.apellidos ? usuario.apellidos : ""}</td>
+                      <td>${usuario.nombres ? usuario.nombres : ""} ${
+            usuario.apellidos ? usuario.apellidos : ""
+          }</td>
                       <td>${usuario.correo ? usuario.correo : ""}</td>
                       <td><span class="badge ${
                         usuario.cuenta_bloqueada ? "color-red" : "color-green"
@@ -398,31 +400,26 @@
                       </td>
                     </tr>`;
         });
-        $("#usuarios-table-body").html(dataUsuarios);
-        if ($f7.tooltip.get(".tooltip-init")) {
-          $f7.tooltip.destroy(".tooltip-init");
-        }
-        $(".tooltip-init").each(function () {
-          console.log(this.data);
-        });
 
-        const tooltips = [
-          { selector: ".tooltip-init-permisos", text: "Seleccionar permisos" },
-          { selector: ".tooltip-init-perfil", text: "Ver perfil" },
-          { selector: ".tooltip-init-editar", text: "Editar usuario" },
-          { selector: ".tooltip-init-eliminar", text: "Eliminar usuario" },
-        ];
-        tooltips.forEach((t) =>
-          $f7.tooltip.create({
-            targetEl: t.selector,
-            text: t.text,
-            trigger: "hover",
-          })
-        );
+        console.log("Usuarios renderizados:", usuariosData); // Log para depuración
+
+        const tableBody = document.querySelector("#usuarios-table-body");
+        if (!tableBody) {
+          console.error("No se encontró el selector #usuarios-table-body");
+          return;
+        }
+
+        tableBody.innerHTML = dataUsuarios;
+
         const paginationLabel = `${from}-${to} de ${totalItems}`;
-        $("#btnPrevPage")[prevPage ? "removeClass" : "addClass"]("disabled");
-        $("#btnNextPage")[nextPage ? "removeClass" : "addClass"]("disabled");
-        $(".data-table-pagination-label").text(paginationLabel);
+        document
+          .querySelector("#btnPrevPage")
+          .classList.toggle("disabled", !prevPage); // Corregido
+        document
+          .querySelector("#btnNextPage")
+          .classList.toggle("disabled", !nextPage); // Corregido
+        document.querySelector(".data-table-pagination-label").textContent =
+          paginationLabel;
       }
       function getDataUsuarios() {
         $f7.tools
@@ -431,6 +428,8 @@
             `/usuario?page=${currentPage}&perPage=${perPage}&search=${searchInput}`
           )
           .then((response) => {
+            console.log("Respuesta completa del backend:", response); // Log para depuración
+
             if (response.success == true) {
               usuariosData = response.data || [];
               totalItems = response.pagination.total || 0;

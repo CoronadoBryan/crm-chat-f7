@@ -60,14 +60,18 @@
 <script>
 export default (props, { $, $f7, $f7ready, $f7router, $on }) => {
     const {usuarioId} = props;
-        let permisoChangeTimeout = null; 
+    let permisoChangeTimeout = null; 
     $f7ready(function() {
         $on('pageInit', function(tab) {
+            console.log("Page initialized for user ID:", usuarioId);
             getPermisosUsuario();
+            
             $("#permisos-lista").on('change', 'input[type="checkbox"]', function() {
                 const $row = $(this).closest('tr');
                 const column = $(this).data('column');
                 const checked = $(this).is(':checked');
+                console.log("Checkbox changed:", { column, checked });
+
                 if (column == 'acc_read' && checked == false) {
                     if ($row.find('.toggle-create').is(':checked')) {
                         $row.find('.toggle-create').prop('checked', false).trigger('change');
@@ -103,14 +107,17 @@ export default (props, { $, $f7, $f7ready, $f7router, $on }) => {
                     const acc_update = $row.find('.toggle-edit').is(':checked');
                     const acc_delete = $row.find('.toggle-delete').is(':checked');
 
+                    console.log("Updating permission:", { permisoId, acc_read, acc_create, acc_update, acc_delete });
+
                     $f7.tools.sendRequest('PUT', `/usuario/permiso_especial`, {
                         id_usuario: usuarioId,
                         id_permiso: permisoId,
-                        acc_read:acc_read,
-                        acc_create:acc_create,
-                        acc_update:acc_update,
-                        acc_delete:acc_delete
+                        acc_read: acc_read,
+                        acc_create: acc_create,
+                        acc_update: acc_update,
+                        acc_delete: acc_delete
                     }).then(response => {
+                        console.log("Response from PUT /usuario/permiso_especial:", response);
                         if (response.success != true) {
                             $f7.notification.create({
                                 title: 'Error',
@@ -133,13 +140,17 @@ export default (props, { $, $f7, $f7ready, $f7router, $on }) => {
         });
 
         function getPermisosUsuario() {
+            console.log("Fetching permissions for user ID:", usuarioId);
             $f7.tools.sendRequest('GET', `/usuario/permiso_especial/${usuarioId}`).then((response) => {
+                console.log("Response from GET /usuario/permiso_especial:", response);
                 if (response.success == true) {
                     const permisos = response.data;
+                    console.log("Permissions data received:", permisos);
                     $("#nombre-usuario").text(permisos.usuario || 'Usuario Desconocido');
                     let rows = '';
                     if (Array.isArray(permisos.permisos)) {
                         permisos.permisos.forEach(permiso => {
+                            console.log("Processing permission:", permiso);
                             rows += `
                                 <tr data-id="${permiso.id}">
                                     <td class="checkbox-cell d-none">
@@ -178,6 +189,7 @@ export default (props, { $, $f7, $f7ready, $f7router, $on }) => {
                     }
                     $('#permisos-lista').html(rows);
                 } else {
+                    console.warn("Failed to fetch permissions:", response.error);
                     $f7.notification.create({
                         title: 'Error',
                         text: response.error || 'No se pudieron cargar los permisos',
@@ -186,7 +198,7 @@ export default (props, { $, $f7, $f7ready, $f7router, $on }) => {
                     }).open();
                 }
             }).catch((error) => {
-                console.error(error);
+                console.error("Error fetching permissions:", error);
                 $f7.notification.create({
                     title: 'Error',
                     text: 'Error al obtener los permisos del usuario',
