@@ -75,6 +75,17 @@
   .mensaje-finalizada-icon {
     color: #4caf50;
   }
+
+  .resend-button {
+    background-color: #ff9800;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 5px;
+  }
 </style>
 
 <script>
@@ -88,6 +99,7 @@
     mensajeLeido,
     getConversaciones,
   } from "../js/services/index.js";
+  import { reenviarMensaje } from "../js/services/mensajeService.js";
 
   export default (props, { $f7, $el, $on }) => {
     // --- Estado de la aplicación ---
@@ -285,23 +297,54 @@
         (a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0)
       );
 
-      const messagesToAdd = mensajesOrdenados.map((msg) => {
+      const messagesToAdd = mensajesOrdenados.map((msg, index) => {
         const esEnviado = msg.contesta !== "cliente";
+        const resendButton =
+          msg.id_estado === 0
+            ? `<button class='button button-fill color-orange resend-button' data-index='${index}'>Reenviar</button>`
+            : "";
+
         return {
           text: esEnviado
-            ? msg.mensaje + getEstadoIcono(msg.id_estado)
+            ? msg.mensaje + getEstadoIcono(msg.id_estado) + resendButton
             : msg.mensaje,
           type: esEnviado ? "sent" : "received",
           name: msg.contesta === "cliente" ? "Cliente" : "Yo",
-          isHtml: esEnviado,
+          isHtml: true,
           footer: crearFooterTiempo(msg.created_at),
         };
       });
 
       messages.addMessages(messagesToAdd);
+
+      // Agregar eventos a los botones de reenviar
+      const resendButtons = document.querySelectorAll(".resend-button");
+      resendButtons.forEach((button) => {
+        button.addEventListener("click", (e) => {
+          const index = e.target.getAttribute("data-index");
+          handleResendMessage(index);
+        });
+      });
+
       console.log(
-        `🎨 Renderizados ${messagesToAdd.length} mensajes con timestamps individuales`
+        `🎨 Renderizados ${messagesToAdd.length} mensajes con botones de reenvío cuando es necesario`
       );
+    };
+
+    const handleResendMessage = async (index) => {
+      const msg = mensajesData[index];
+      if (!msg || msg.id_estado !== 0) return;
+
+      try {
+        console.log(`🔄 Reintentando enviar mensaje con ID ${msg.id}`);
+        await reenviarMensaje(msg.id);
+        mensajesData[index].id_estado = 1; // Cambiar a estado enviado
+        actualizarEstadoEnUI(index, 1);
+        console.log(`✅ Mensaje con ID ${msg.id} reenviado correctamente`);
+      } catch (error) {
+        console.error(`❌ Error al reenviar mensaje con ID ${msg.id}:`, error);
+        $f7.dialog.alert("No se pudo reenviar el mensaje. Intenta nuevamente.");
+      }
     };
 
     const loadMessages = async () => {
@@ -430,8 +473,8 @@
 
     // --- Socket ---
     const conectarSocket = () => {
-      //socket = io("https://vip2cars.pe:3000/");
-      socket = io("https://socket-5b6n.onrender.com");
+      socket = io("https://vip2cars.pe:3000/");
+      //socket = io("https://socket-5b6n.onrender.com");
       window.socket = socket;
 
       socket.on("nuevo_mensaje", async (data) => {

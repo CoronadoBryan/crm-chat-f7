@@ -466,8 +466,8 @@
       console.log("Iniciando aplicación con funcionalidad de chat...");
 
       // Conexión en tiempo real con el servidor
-      //socket = io("https://vip2cars.pe:3000/");
-      socket = io("https://socket-5b6n.onrender.com");
+      socket = io("https://vip2cars.pe:3000/");
+      //socket = io("https://socket-5b6n.onrender.com");
 
       socket.on("conversacion_asignada", (data) => {
         const usuarioId = Number(localStorage.getItem("usuarioId"));
