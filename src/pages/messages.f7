@@ -38,6 +38,13 @@
     <!-- Messagebar -->
     <div class="toolbar messagebar" id="messagebar-container">
       <div class="toolbar-inner">
+        <button
+          class="button button-outline color-blue quick-messages-button"
+          style="width: auto; padding: 5px 10px; font-size: 12px"
+          @click="${handleShowModal}"
+        >
+          Mensajes Rápidos
+        </button>
         <div class="messagebar-area">
           <textarea
             class="resizable chat-message-input"
@@ -100,6 +107,7 @@
     getConversaciones,
   } from "../js/services/index.js";
   import { reenviarMensaje } from "../js/services/mensajeService.js";
+  import { mostrarModalSimple } from "../js/components/index.js";
 
   export default (props, { $f7, $el, $on }) => {
     // --- Estado de la aplicación ---
@@ -648,6 +656,16 @@
       if (socket) socket.disconnect();
       mensajesData = [];
     });
+
+    const handleShowModal = () => {
+      mostrarModalSimple($f7, (mensaje) => {
+        const textarea = document.querySelector(".chat-message-input");
+        if (textarea) {
+          textarea.value = mensaje;
+          textarea.focus();
+        }
+      });
+    };
 
     return $render;
   };
