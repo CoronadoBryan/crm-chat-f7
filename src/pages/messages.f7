@@ -38,13 +38,14 @@
     <!-- Messagebar -->
     <div class="toolbar messagebar" id="messagebar-container">
       <div class="toolbar-inner">
-        <button
-          class="button button-outline color-blue quick-messages-button"
-          style="width: auto; padding: 5px 10px; font-size: 12px"
+        <a
+          class="link icon-only"
           @click="${handleShowModal}"
+          title="Mensajes Rápidos"
+          style="margin-right: 8px;"
         >
-          Mensajes Rápidos
-        </button>
+          <i class="icon f7-icons color-blue">text_bubble_fill</i>
+        </a>
         <div class="messagebar-area">
           <textarea
             class="resizable chat-message-input"
@@ -64,36 +65,7 @@
   </div>
 </template>
 
-<style>
-  .mensaje-finalizada-container {
-    display: none;
-    background: #f5f5f5;
-    padding: 15px;
-    text-align: center;
-    border-bottom: 1px solid #ddd;
-  }
 
-  .mensaje-finalizada-text {
-    margin: 0;
-    color: #666;
-    font-size: 14px;
-  }
-
-  .mensaje-finalizada-icon {
-    color: #4caf50;
-  }
-
-  .resend-button {
-    background-color: #ff9800;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 5px 10px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-left: 5px;
-  }
-</style>
 
 <script>
   import io from "socket.io-client";
@@ -341,17 +313,69 @@
 
     const handleResendMessage = async (index) => {
       const msg = mensajesData[index];
-      if (!msg || msg.id_estado !== 0) return;
+      if (!msg || msg.id_estado !== 0) {
+        console.warn('⚠️ El mensaje no está en estado fallido, no se puede reenviar');
+        $f7.dialog.alert('Este mensaje ya no se puede reenviar');
+        return;
+      }
+
+      // Verificar si el mensaje es muy reciente (evitar spam)
+      const ahora = moment();
+      const tiempoMensaje = moment(msg.created_at);
+      const diferencia = ahora.diff(tiempoMensaje, 'seconds');
+      
+      if (diferencia < 5) {
+        console.warn('⚠️ Mensaje muy reciente, espera un momento');
+        $f7.dialog.alert('Espera un momento antes de reenviar');
+        return;
+      }
 
       try {
         console.log(`🔄 Reintentando enviar mensaje con ID ${msg.id}`);
+        
+        // Mostrar loading
+        $f7.preloader.show();
+        
+        // Cambiar estado temporalmente para evitar clics múltiples
+        const botonReenviar = document.querySelector(`[data-index="${index}"]`);
+        if (botonReenviar) {
+          botonReenviar.disabled = true;
+          botonReenviar.textContent = 'Enviando...';
+        }
+        
         await reenviarMensaje(msg.id);
-        mensajesData[index].id_estado = 1; // Cambiar a estado enviado
+        
+        // Actualizar estado local
+        mensajesData[index].id_estado = 1;
         actualizarEstadoEnUI(index, 1);
+        
         console.log(`✅ Mensaje con ID ${msg.id} reenviado correctamente`);
+        
+        $f7.toast.create({
+          text: 'Mensaje reenviado correctamente',
+          position: 'top',
+          closeTimeout: 2000
+        }).open();
+        
       } catch (error) {
         console.error(`❌ Error al reenviar mensaje con ID ${msg.id}:`, error);
-        $f7.dialog.alert("No se pudo reenviar el mensaje. Intenta nuevamente.");
+        
+        // Mostrar error específico si está disponible
+        const errorMessage = error.response?.data?.error || 
+                            error.response?.data?.message || 
+                            'No se pudo reenviar el mensaje';
+        
+        $f7.dialog.alert(`Error: ${errorMessage}`);
+        
+        // Restaurar botón si falló
+        const botonReenviar = document.querySelector(`[data-index="${index}"]`);
+        if (botonReenviar) {
+          botonReenviar.disabled = false;
+          botonReenviar.textContent = 'Reenviar';
+        }
+        
+      } finally {
+        $f7.preloader.hide();
       }
     };
 
@@ -658,6 +682,18 @@
     });
 
     const handleShowModal = () => {
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+      
+      const iconEl = document.querySelector('[title="Mensajes Rápidos"] i');
+      if (iconEl) {
+        iconEl.style.transform = 'scale(1.2)';
+        setTimeout(() => {
+          iconEl.style.transform = 'scale(1)';
+        }, 150);
+      }
+      
       mostrarModalSimple($f7, (mensaje) => {
         const textarea = document.querySelector(".chat-message-input");
         if (textarea) {
