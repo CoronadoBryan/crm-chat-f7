@@ -82,23 +82,20 @@
   import { mostrarModalSimple } from "../js/components/index.js";
 
   export default (props, { $f7, $el, $on }) => {
-    // --- Estado de la aplicación ---
-    let messagebar,
-      messages,
-      socket = null;
+    // ✅ ESTADO DE LA APLICACIÓN
+    let messagebar, messages, socket = null;
     let mensajesData = [];
     let enviandoMensaje = false;
-    let conversacionId,
-      telefono = "Chat";
+    let conversacionId, telefono = "Chat";
     let conversacionData = null;
     let conversacionFinalizada = false;
 
-    // Configurar Moment.js
+    // ✅ CONFIGURACIÓN INICIAL
     moment.locale("es");
 
-    // --- Utilidades ---
+    // ✅ UTILIDADES DE FECHA Y FORMATO
     const formatearFecha = (fecha) => {
-      let dateString = fecha?.date || fecha;
+      const dateString = fecha?.date || fecha;
       const momentDate = moment(dateString);
 
       if (!momentDate.isValid()) {
@@ -114,9 +111,7 @@
       } else if (momentDate.isSame(moment().subtract(1, "day"), "day")) {
         hora = `Ayer ${momentDate.format("HH:mm")}`;
       } else if (momentDate.isSame(ahora, "week")) {
-        const dia =
-          momentDate.format("dddd").charAt(0).toUpperCase() +
-          momentDate.format("dddd").slice(1);
+        const dia = momentDate.format("dddd").charAt(0).toUpperCase() + momentDate.format("dddd").slice(1);
         hora = `${dia} ${momentDate.format("HH:mm")}`;
       } else if (momentDate.isSame(ahora, "year")) {
         hora = `${momentDate.format("DD/MM")} ${momentDate.format("HH:mm")}`;
@@ -125,7 +120,7 @@
       }
 
       return {
-        hora: hora,
+        hora,
         completa: momentDate.format("DD/MM/YYYY HH:mm"),
         timestamp: momentDate.valueOf(),
       };
@@ -146,16 +141,18 @@
       return iconos[id_estado] || "";
     };
 
-    const getElementosPorId = () => ({
+    // ✅ GESTIÓN DE ELEMENTOS DOM
+    const getElementosDom = () => ({
       btnFinalizar: document.getElementById("btn-finalizar"),
       messagebarContainer: document.getElementById("messagebar-container"),
       mensajeFinalizada: document.getElementById("mensaje-finalizada"),
       messagesContent: document.getElementById("messages-content"),
     });
 
-    const actualizarEstadoEnUI = (key, id_estado) => {
+    const actualizarEstadoEnUI = (index, id_estado) => {
       const messageEls = $el.value[0].querySelectorAll(".message");
-      const messageEl = messageEls[key];
+      const messageEl = messageEls[index];
+      
       if (messageEl) {
         const textEl = messageEl.querySelector(".message-text");
         if (textEl) {
@@ -166,7 +163,7 @@
     };
 
     const actualizarUISegunEstado = () => {
-      const elementos = getElementosPorId();
+      const elementos = getElementosDom();
 
       if (conversacionFinalizada) {
         elementos.btnFinalizar?.style.setProperty("display", "none");
@@ -181,7 +178,7 @@
       }
     };
 
-    // --- Funciones principales ---
+    // ✅ GESTIÓN DE CONVERSACIÓN
     const handleFinalizarConversacion = () => {
       $f7.dialog.confirm(
         "¿Estás seguro de que deseas finalizar esta conversación?",
@@ -190,37 +187,25 @@
           try {
             $f7.preloader.show();
             const usuarioId = Number(localStorage.getItem("usuarioId"));
-            const response = await finalizarConversacion(
-              conversacionId,
-              usuarioId
-            );
+            const response = await finalizarConversacion(conversacionId, usuarioId);
 
             if (response.success) {
-              $f7.toast
-                .create({
-                  text: "Conversación finalizada exitosamente",
-                  closeTimeout: 1000,
-                  position: "top",
-                })
-                .open();
+              $f7.toast.create({
+                text: "Conversación finalizada exitosamente",
+                closeTimeout: 1000,
+                position: "top",
+              }).open();
 
               if (window.cargarDatos) window.cargarDatos();
 
-              // Espera un momento para mostrar el toast y luego recarga la página completamente
               setTimeout(() => {
                 window.location.reload();
               }, 1000);
-
-              return;
             } else {
-              throw new Error(
-                response.message || "Error al finalizar conversación"
-              );
+              throw new Error(response.message || "Error al finalizar conversación");
             }
           } catch (error) {
-            $f7.dialog.alert(
-              "No se pudo finalizar la conversación. Intenta nuevamente."
-            );
+            $f7.dialog.alert("No se pudo finalizar la conversación. Intenta nuevamente.");
           } finally {
             $f7.preloader.hide();
           }
@@ -231,29 +216,22 @@
     const loadConversacionData = async () => {
       try {
         const conversaciones = await getConversaciones();
-        conversacionData = conversaciones.find(
-          (conv) => conv.conversacionId == conversacionId
-        );
+        conversacionData = conversaciones.find(conv => conv.conversacionId == conversacionId);
 
         if (conversacionData) {
           telefono = conversacionData.telefono || "Sin teléfono";
           conversacionFinalizada = conversacionData.estadoId === 4;
 
-          console.log(
-            `📊 Estado de conversación ${conversacionId}: ${conversacionData.estadoId} (Finalizada: ${conversacionFinalizada})`
-          );
+          console.log(`📊 Estado de conversación ${conversacionId}: ${conversacionData.estadoId} (Finalizada: ${conversacionFinalizada})`);
 
           const navbarTitle = document.querySelector(".navbar .title");
           if (navbarTitle) {
-            navbarTitle.textContent =
-              telefono + (conversacionFinalizada ? " (Finalizada)" : "");
+            navbarTitle.textContent = telefono + (conversacionFinalizada ? " (Finalizada)" : "");
           }
 
           actualizarUISegunEstado();
         } else {
-          console.warn(
-            `⚠️ No se encontraron datos para conversación ${conversacionId}`
-          );
+          console.warn(`⚠️ No se encontraron datos para conversación ${conversacionId}`);
         }
       } catch (error) {
         console.error("❌ Error al cargar datos de conversación:", error);
@@ -261,16 +239,14 @@
     };
 
     const handleHistorialFinalizada = () => {
-      console.log(
-        `📜 Navegando al historial de conversación: ${conversacionId}`
-      );
-      $f7.views.main.router.navigate(
-        `/historial-finalizado/${conversacionId}/`
-      );
+      console.log(`📜 Navegando al historial de conversación: ${conversacionId}`);
+      $f7.views.main.router.navigate(`/historial-finalizado/${conversacionId}/`);
     };
 
+    // ✅ GESTIÓN DE MENSAJES
     const renderMessages = () => {
       if (!messages || !mensajesData.length) return;
+      
       messages.removeMessages();
 
       const mensajesOrdenados = [...mensajesData].sort(
@@ -279,13 +255,12 @@
 
       const messagesToAdd = mensajesOrdenados.map((msg, index) => {
         const esEnviado = msg.contesta !== "cliente";
-        const resendButton =
-          msg.id_estado === 0
-            ? `<button class='button button-fill color-orange resend-button' data-index='${index}'>Reenviar</button>`
-            : "";
+        const resendButton = msg.id_estado === 0 
+          ? `<button class='button button-fill color-orange resend-button' data-index='${index}'>Reenviar</button>`
+          : "";
 
         return {
-          text: esEnviado
+          text: esEnviado 
             ? msg.mensaje + getEstadoIcono(msg.id_estado) + resendButton
             : msg.mensaje,
           type: esEnviado ? "sent" : "received",
@@ -297,35 +272,31 @@
 
       messages.addMessages(messagesToAdd);
 
-      // Agregar eventos a los botones de reenviar
-      const resendButtons = document.querySelectorAll(".resend-button");
-      resendButtons.forEach((button) => {
+      // Configurar eventos de reenvío
+      document.querySelectorAll(".resend-button").forEach(button => {
         button.addEventListener("click", (e) => {
           const index = e.target.getAttribute("data-index");
           handleResendMessage(index);
         });
       });
 
-      console.log(
-        `🎨 Renderizados ${messagesToAdd.length} mensajes con botones de reenvío cuando es necesario`
-      );
+      console.log(`🎨 Renderizados ${messagesToAdd.length} mensajes`);
     };
 
     const handleResendMessage = async (index) => {
       const msg = mensajesData[index];
+      
       if (!msg || msg.id_estado !== 0) {
-        console.warn('⚠️ El mensaje no está en estado fallido, no se puede reenviar');
         $f7.dialog.alert('Este mensaje ya no se puede reenviar');
         return;
       }
 
-      // Verificar si el mensaje es muy reciente (evitar spam)
+      // Verificar tiempo mínimo entre reenvíos
       const ahora = moment();
       const tiempoMensaje = moment(msg.created_at);
       const diferencia = ahora.diff(tiempoMensaje, 'seconds');
       
       if (diferencia < 5) {
-        console.warn('⚠️ Mensaje muy reciente, espera un momento');
         $f7.dialog.alert('Espera un momento antes de reenviar');
         return;
       }
@@ -333,10 +304,8 @@
       try {
         console.log(`🔄 Reintentando enviar mensaje con ID ${msg.id}`);
         
-        // Mostrar loading
         $f7.preloader.show();
         
-        // Cambiar estado temporalmente para evitar clics múltiples
         const botonReenviar = document.querySelector(`[data-index="${index}"]`);
         if (botonReenviar) {
           botonReenviar.disabled = true;
@@ -345,11 +314,8 @@
         
         await reenviarMensaje(msg.id);
         
-        // Actualizar estado local
         mensajesData[index].id_estado = 1;
         actualizarEstadoEnUI(index, 1);
-        
-        console.log(`✅ Mensaje con ID ${msg.id} reenviado correctamente`);
         
         $f7.toast.create({
           text: 'Mensaje reenviado correctamente',
@@ -358,22 +324,19 @@
         }).open();
         
       } catch (error) {
-        console.error(`❌ Error al reenviar mensaje con ID ${msg.id}:`, error);
+        console.error(`❌ Error al reenviar mensaje:`, error);
         
-        // Mostrar error específico si está disponible
         const errorMessage = error.response?.data?.error || 
                             error.response?.data?.message || 
                             'No se pudo reenviar el mensaje';
         
         $f7.dialog.alert(`Error: ${errorMessage}`);
         
-        // Restaurar botón si falló
         const botonReenviar = document.querySelector(`[data-index="${index}"]`);
         if (botonReenviar) {
           botonReenviar.disabled = false;
           botonReenviar.textContent = 'Reenviar';
         }
-        
       } finally {
         $f7.preloader.hide();
       }
@@ -383,15 +346,13 @@
       try {
         mensajesData = (await getMensajesPorConversacion(conversacionId)) || [];
         console.log(`📋 Cargados ${mensajesData.length} mensajes`);
+        
         renderMessages();
 
-        const mensajesNoLeidos = mensajesData.filter(
-          (msg) => msg.id_estado === 3
-        );
+        // Marcar mensajes no leídos como leídos
+        const mensajesNoLeidos = mensajesData.filter(msg => msg.id_estado === 3);
         if (mensajesNoLeidos.length > 0) {
-          await Promise.all(
-            mensajesNoLeidos.map((msg) => mensajeLeido(msg.id))
-          );
+          await Promise.all(mensajesNoLeidos.map(msg => mensajeLeido(msg.id)));
           setTimeout(() => {
             if (window.cargarDatos) window.cargarDatos();
           }, 200);
@@ -403,35 +364,16 @@
     };
 
     const sendMessage = async (messageText) => {
-      console.log("🔹 Intentando enviar mensaje:", messageText);
-      console.log("🔹 Estado enviandoMensaje:", enviandoMensaje);
-      console.log("🔹 conversacionId actual:", conversacionId);
-
-      if (!messageText?.trim()) {
-        console.warn("⚠️ Mensaje vacío, no se envía.");
-        return;
-      }
-
-      if (!conversacionId) {
-        console.error(
-          "❌ No hay conversacionId definido, no se puede enviar mensaje."
-        );
-        $f7.dialog.alert("No se puede enviar mensaje: conversación no válida.");
-        return;
-      }
-
-      if (enviandoMensaje) {
-        console.warn("⚠️ Ya se está enviando un mensaje, espera un momento.");
+      if (!messageText?.trim() || !conversacionId || enviandoMensaje) {
         return;
       }
 
       enviandoMensaje = true;
       console.log("📤 Enviando:", messageText);
 
-      const ahora = moment();
-      const tiempoActual = ahora.toISOString();
+      const tiempoActual = moment().toISOString();
 
-      // Agregar mensaje inmediatamente a la UI
+      // Agregar mensaje a UI inmediatamente
       messages.addMessage({
         text: messageText,
         type: "sent",
@@ -439,7 +381,6 @@
         footer: crearFooterTiempo(tiempoActual),
       });
 
-      // Agregar a los datos locales
       mensajesData.push({
         id: null,
         mensaje: messageText,
@@ -457,12 +398,13 @@
           id_mensaje_responde: null,
           id_estado: 1,
         };
-        console.log("🔹 Payload a enviar:", payload);
+        
         await enviarMensaje(payload);
+        
         setTimeout(() => {
           enviandoMensaje = false;
-          console.log("🔹 enviandoMensaje liberado tras timeout");
         }, 2000);
+        
         console.log("✅ Mensaje enviado correctamente");
       } catch (error) {
         $f7.dialog.alert("No se pudo enviar el mensaje");
@@ -473,19 +415,17 @@
       }
     };
 
+    // ✅ EVENTOS DE INTERFAZ
+    const getTextareaActivo = () => {
+      const allTextareas = Array.from(document.querySelectorAll(".chat-message-input"))
+        .filter(ta => ta.offsetParent !== null && !ta.disabled && !ta.readOnly);
+      
+      return allTextareas.find(ta => document.activeElement === ta) || 
+             allTextareas[allTextareas.length - 1];
+    };
+
     const handleSendClick = () => {
-      // Busca todos los textareas visibles con la clase correcta
-      const allTextareas = Array.from(
-        document.querySelectorAll(".chat-message-input")
-      ).filter(
-        (ta) => ta.offsetParent !== null && !ta.disabled && !ta.readOnly
-      );
-
-      // Busca el que tiene el foco, si no, el último visible
-      let textarea =
-        allTextareas.find((ta) => document.activeElement === ta) ||
-        allTextareas[allTextareas.length - 1];
-
+      const textarea = getTextareaActivo();
       if (!textarea) return;
 
       const messageText = textarea.value.trim();
@@ -503,17 +443,61 @@
       }
     };
 
-    // --- Socket ---
+    // ✅ MODAL DE PLANTILLAS
+    const handleShowModal = () => {
+      if (navigator.vibrate) navigator.vibrate(50);
+      
+      const iconEl = document.querySelector('[title="Mensajes Rápidos"] i');
+      if (iconEl) {
+        iconEl.style.transform = 'scale(1.2)';
+        setTimeout(() => iconEl.style.transform = 'scale(1)', 150);
+      }
+      
+      mostrarModalSimple($f7, (mensaje) => {
+        const currentPage = $el.value[0];
+        
+        // Verificar si estamos en la página actual
+        if (!currentPage.classList.contains('page-current')) {
+          const activePage = document.querySelector('.page-current');
+          if (activePage) {
+            const activeTextarea = activePage.querySelector('.chat-message-input');
+            if (activeTextarea && !activeTextarea.disabled && !activeTextarea.readOnly) {
+              activeTextarea.value = mensaje;
+              activeTextarea.focus();
+              console.log("✅ Plantilla insertada en página activa");
+              return;
+            }
+          }
+        }
+        
+        // Buscar textarea en página actual
+        const textarea = currentPage.querySelector('.chat-message-input');
+        if (textarea && textarea.offsetParent !== null && !textarea.disabled && !textarea.readOnly) {
+          textarea.value = mensaje;
+          textarea.focus();
+          console.log("✅ Plantilla insertada en textarea de página actual");
+        } else {
+          // Último recurso
+          const pageActual = document.querySelector('.page-current .chat-message-input');
+          if (pageActual && !pageActual.disabled && !pageActual.readOnly) {
+            pageActual.value = mensaje;
+            pageActual.focus();
+            console.log("✅ Plantilla insertada usando .page-current");
+          }
+        }
+      });
+    };
+
+    // ✅ SOCKET CONNECTION
     const conectarSocket = () => {
-      socket = io("https://vip2cars.pe:3000/");
-      //socket = io("https://socket-5b6n.onrender.com");
+      socket = io("https://socket-5b6n.onrender.com");
       window.socket = socket;
 
       socket.on("nuevo_mensaje", async (data) => {
         console.log("📨 Mensaje recibido:", data);
 
-        if (data.id_conversacion != conversacionId) return;
-        if (data.contesta === "usuario" && enviandoMensaje) return;
+        if (data.id_conversacion != conversacionId || 
+           (data.contesta === "usuario" && enviandoMensaje)) return;
 
         if (["cliente", "bot"].includes(data.contesta)) {
           const nuevoMensaje = {
@@ -523,8 +507,8 @@
             id: data.id,
             id_estado: data.id_estado,
           };
+          
           mensajesData.push(nuevoMensaje);
-
           const footerTiempo = crearFooterTiempo(nuevoMensaje.created_at);
 
           if (data.contesta === "cliente") {
@@ -534,6 +518,24 @@
               name: "Cliente",
               footer: footerTiempo,
             });
+
+            // Marcar como leído automáticamente
+            if (data.id) {
+              try {
+                await mensajeLeido(data.id);
+                setTimeout(() => {
+                  if (window.cargarDatos) window.cargarDatos();
+                }, 200);
+              } catch (error) {
+                console.error("❌ Error al marcar mensaje como leído:", error);
+              }
+            }
+
+            $f7.toast.create({
+              text: "Nuevo mensaje del cliente",
+              closeTimeout: 2000,
+              position: "top",
+            }).open();
           } else if (data.contesta === "bot") {
             messages.addMessage({
               text: nuevoMensaje.mensaje + getEstadoIcono(data.id_estado),
@@ -543,41 +545,17 @@
               footer: footerTiempo,
             });
           }
-
-          if (data.contesta === "cliente" && data.id) {
-            try {
-              console.log(
-                `🔵 Marcando mensaje ${data.id} como leído automáticamente`
-              );
-              await mensajeLeido(data.id);
-              setTimeout(() => {
-                if (window.cargarDatos) window.cargarDatos();
-              }, 200);
-            } catch (error) {
-              console.error("❌ Error al marcar mensaje como leído:", error);
-            }
-          }
-
-          if (data.contesta === "cliente") {
-            $f7.toast
-              .create({
-                text: "Nuevo mesdfgnsaje del cliente",
-                closeTimeout: 2000,
-                position: "top",
-              })
-              .open();
-          }
         }
       });
 
       socket.on("mensaje_actualizado", (data) => {
         console.log("📦 Estado actualizado:", data);
-        let idx = mensajesData.findIndex((msg) => msg.id === data.id);
+        let idx = mensajesData.findIndex(msg => msg.id === data.id);
 
         if (idx >= 0) {
           mensajesData[idx].id_estado = data.id_estado;
         } else {
-          idx = mensajesData.findIndex((msg) => msg.id === null);
+          idx = mensajesData.findIndex(msg => msg.id === null);
           if (idx >= 0) {
             mensajesData.splice(idx, 1);
             mensajesData.push({
@@ -594,43 +572,15 @@
       });
     };
 
-    // --- Ciclo de vida ---
-    $on("pageInit", async (page) => {
-      console.log("🔄 pageInit ejecutado");
-      // Limpia estado y destruye instancias anteriores
-      if (messagebar) messagebar.destroy();
-      if (messages) messages.destroy();
-      if (socket) socket.disconnect();
-      mensajesData = [];
-      enviandoMensaje = false;
-
-      conversacionId =
-        page.route?.params?.conversacionId ||
-        $f7.views.main.router.currentRoute?.params?.conversacionId;
-
-      console.log("🔄 Nuevo conversacionId:", conversacionId);
-
-      if (!conversacionId) {
-        $f7.dialog.alert("No se pudo obtener el ID de conversación");
-        return;
-      }
-
-      messagebar = $f7.messagebar.create({ el: $el.value.find(".messagebar") });
-      messages = $f7.messages.create({ el: $el.value.find(".messages") });
-
-      // Limpia mensajes del DOM inmediatamente
-      messages.removeMessages();
-
+    // ✅ CONFIGURACIÓN DE EVENTOS DEL MESSAGEBAR
+    const configurarEventosMessagebar = () => {
       setTimeout(() => {
         const messagebarEl = $el.value[0].querySelector(".messagebar");
-        let textarea = null;
-        if (messagebarEl) {
-          // Busca el textarea visible por clase
-          textarea = Array.from(
-            messagebarEl.querySelectorAll(".chat-message-input")
-          ).find((ta) => ta.offsetParent !== null);
-        }
-        // Lógica para finalizadas: deshabilita textarea y botón si la conversación está finalizada
+        if (!messagebarEl) return;
+
+        const textarea = messagebarEl.querySelector(".chat-message-input");
+        const sendBtn = messagebarEl.querySelector(".link.icon-only");
+
         if (textarea) {
           if (conversacionFinalizada) {
             textarea.disabled = true;
@@ -640,12 +590,11 @@
             textarea.readOnly = false;
             textarea.focus();
           }
+          
           textarea.removeEventListener("keypress", handleKeyPress);
           textarea.addEventListener("keypress", handleKeyPress);
         }
-        const sendBtn = messagebarEl
-          ? messagebarEl.querySelector(".link.icon-only")
-          : null;
+
         if (sendBtn) {
           if (conversacionFinalizada) {
             sendBtn.style.pointerEvents = "none";
@@ -654,54 +603,61 @@
             sendBtn.style.pointerEvents = "";
             sendBtn.style.opacity = "";
           }
+          
           sendBtn.removeEventListener("click", handleSendClick);
           sendBtn.addEventListener("click", handleSendClick);
         }
-      }, 0);
+      }, 100);
+    };
+
+    // ✅ LIMPIEZA DE RECURSOS
+    const limpiarRecursos = () => {
+      enviandoMensaje = false;
+      
+      const messagebarEl = $el.value[0]?.querySelector(".messagebar");
+      if (messagebarEl) {
+        const textarea = messagebarEl.querySelector(".chat-message-input");
+        const sendBtn = messagebarEl.querySelector(".link.icon-only");
+        
+        if (textarea) textarea.removeEventListener("keypress", handleKeyPress);
+        if (sendBtn) sendBtn.removeEventListener("click", handleSendClick);
+      }
+
+      if (messagebar) messagebar.destroy();
+      if (messages) messages.destroy();
+      if (socket) socket.disconnect();
+      
+      mensajesData = [];
+    };
+
+    // ✅ CICLO DE VIDA
+    $on("pageInit", async (page) => {
+      console.log("🔄 pageInit ejecutado");
+      
+      limpiarRecursos();
+
+      conversacionId = page.route?.params?.conversacionId || 
+                     $f7.views.main.router.currentRoute?.params?.conversacionId;
+
+      if (!conversacionId) {
+        $f7.dialog.alert("No se pudo obtener el ID de conversación");
+        return;
+      }
+
+      console.log("🔄 Nuevo conversacionId:", conversacionId);
+
+      messagebar = $f7.messagebar.create({ el: $el.value.find(".messagebar") });
+      messages = $f7.messages.create({ el: $el.value.find(".messages") });
+      messages.removeMessages();
+
+      configurarEventosMessagebar();
 
       await loadConversacionData();
       conectarSocket();
       await loadMessages();
     });
 
-    $on("pageBeforeRemove", () => {
-      enviandoMensaje = false;
-      const messagebarEl = $el.value[0].querySelector(".messagebar");
-      const textarea = messagebarEl
-        ? messagebarEl.querySelector("#message-input")
-        : null;
-      if (textarea) textarea.removeEventListener("keypress", handleKeyPress);
-      const sendBtn = messagebarEl
-        ? messagebarEl.querySelector(".link.icon-only")
-        : null;
-      if (sendBtn) sendBtn.removeEventListener("click", handleSendClick);
-      if (messagebar) messagebar.destroy();
-      if (messages) messages.destroy();
-      if (socket) socket.disconnect();
-      mensajesData = [];
-    });
-
-    const handleShowModal = () => {
-      if (navigator.vibrate) {
-        navigator.vibrate(50);
-      }
-      
-      const iconEl = document.querySelector('[title="Mensajes Rápidos"] i');
-      if (iconEl) {
-        iconEl.style.transform = 'scale(1.2)';
-        setTimeout(() => {
-          iconEl.style.transform = 'scale(1)';
-        }, 150);
-      }
-      
-      mostrarModalSimple($f7, (mensaje) => {
-        const textarea = document.querySelector(".chat-message-input");
-        if (textarea) {
-          textarea.value = mensaje;
-          textarea.focus();
-        }
-      });
-    };
+    $on("pageBeforeRemove", limpiarRecursos);
 
     return $render;
   };

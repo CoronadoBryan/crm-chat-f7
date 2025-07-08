@@ -207,7 +207,6 @@
     font-weight: 700;
     color: #2d3748;
     margin: 0 0 16px 0;
-    border-left: 4px solid #667eea;
     padding-left: 12px;
   }
 

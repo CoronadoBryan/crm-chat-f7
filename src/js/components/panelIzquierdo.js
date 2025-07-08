@@ -209,9 +209,8 @@ export function panelIzquierdo({
           panelDerecho(panelDatos, conv, perfil);
         }
 
-        // ✅ ESTRATEGIA DE NAVEGACIÓN MEJORADA
+        // ✅ ESTRATEGIA DE NAVEGACIÓN MEJORADA PARA FRAMEWORK7 CORE
         if (yaEnMensajes) {
-          // Si ya estamos en una página de mensajes, REEMPLAZAR
           console.log("🔄 REEMPLAZANDO página de mensajes existente");
 
           $f7.views.main.router.navigate(`/messages/${convId}/`, {
@@ -220,15 +219,29 @@ export function panelIzquierdo({
             force: true,
             replace: true,
             clearPreviousHistory: false,
+            animate: false,
+            // ✅ LIMPIAR CACHE DE PÁGINAS ANTERIORES
+            on: {
+              pageAfterIn: function() {
+                // Limpiar páginas anteriores del DOM después de navegar
+                const previousPages = document.querySelectorAll('.page-previous');
+                previousPages.forEach(page => {
+                  if (page.querySelector('.messages')) {
+                    console.log("🧹 Limpiando página anterior del DOM");
+                    page.remove();
+                  }
+                });
+              }
+            }
           });
         } else {
-          // Si venimos de otra página, navegación normal
           console.log("➡️ NAVEGANDO a nueva página de mensajes");
 
           $f7.views.main.router.navigate(`/messages/${convId}/`, {
             reloadAll: true,
             ignoreCache: true,
             force: true,
+            animate: false
           });
         }
       } catch (error) {
