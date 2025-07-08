@@ -26,3 +26,10 @@ export async function reenviarMensaje(mensajeId) {
   console.log(`Reenviando mensaje con ID: ${mensajeId}`, res.data);
   return res.data;
 }
+
+
+export async function getPlantillasPorCategoria() {
+  const res = await config.api.get("/mensaje/plantilla/listarPorCategoria");
+  console.log("Respuesta de plantillas:", res.data);
+  return res.data;
+}
