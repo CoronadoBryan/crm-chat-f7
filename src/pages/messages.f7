@@ -16,6 +16,18 @@
         </div>
         <div class="title">${telefono}</div>
         <div class="right">
+          <!-- ✅ BOTÓN DE LLAMADA -->
+          <a 
+            href="#" 
+            class="link icon-only" 
+            @click="${handlePhoneCall}"
+            id="btn-llamada"
+            title="Llamar"
+            style="margin-right: 8px;"
+          >
+            <i class="icon f7-icons" id="phone-icon" style="color: #333;">phone</i>
+          </a>
+          
           <button
             class="button button-fill color-red"
             @click="${handleFinalizarConversacion}"
@@ -65,8 +77,6 @@
   </div>
 </template>
 
-
-
 <script>
   import io from "socket.io-client";
   import moment from "moment";
@@ -90,8 +100,306 @@
     let conversacionData = null;
     let conversacionFinalizada = false;
 
+    // Variables de estado para llamadas
+    let zadarmaReady = false;
+    let callInProgress = false;
+
     // ✅ CONFIGURACIÓN INICIAL
     moment.locale("es");
+
+    // Extraer número limpio para llamadas
+    const extractPhoneNumber = (telefono) => {
+      if (!telefono || telefono === "Chat" || telefono === "Sin teléfono") {
+        return null;
+      }
+      
+      const numeroLimpio = telefono.replace(/\D/g, '');
+      
+      if (numeroLimpio.length < 9) {
+        return null;
+      }
+      
+      if (numeroLimpio.startsWith('51') && numeroLimpio.length >= 11) {
+        return numeroLimpio;
+      }
+      
+      if (numeroLimpio.length === 9) {
+        return '51' + numeroLimpio;
+      }
+      
+      return numeroLimpio;
+    };
+
+    // ✅ ACTUALIZAR ICONO CON COLORES DINÁMICOS
+    const updatePhoneIcon = (estado) => {
+      const phoneIcon = document.getElementById('phone-icon');
+      const btnLlamada = document.getElementById('btn-llamada');
+      
+      if (!phoneIcon || !btnLlamada) return;
+
+      // Remover animaciones previas
+      phoneIcon.classList.remove('phone-pulse', 'phone-ring');
+
+      switch (estado) {
+        case 'calling':
+          phoneIcon.style.color = '#ff9500'; // Naranja
+          phoneIcon.textContent = 'phone_fill';
+          phoneIcon.classList.add('phone-pulse');
+          btnLlamada.title = 'Llamando...';
+          break;
+          
+        case 'ringing':
+          phoneIcon.style.color = '#007aff'; // Azul
+          phoneIcon.textContent = 'phone_fill';
+          phoneIcon.classList.add('phone-ring');
+          btnLlamada.title = 'Timbrando...';
+          break;
+          
+        case 'active':
+          phoneIcon.style.color = '#34c759'; // Verde brillante
+          phoneIcon.textContent = 'phone_fill';
+          btnLlamada.title = 'Colgar llamada';
+          break;
+          
+        case 'error':
+          phoneIcon.style.color = '#ff3b30'; // Rojo
+          phoneIcon.textContent = 'phone_down_fill';
+          btnLlamada.title = 'Error en llamada';
+          break;
+          
+        default:
+          phoneIcon.style.color = '#333'; // Negro
+          phoneIcon.textContent = 'phone';
+          btnLlamada.title = 'Llamar';
+          break;
+      }
+    };
+
+    // ✅ FUNCIÓN PRINCIPAL DE LLAMADA CON LOGS DETALLADOS
+    const handlePhoneCall = async () => {
+      console.log("📞 ========== INICIO DIAGNÓSTICO DE LLAMADA ==========");
+      console.log("📞 Botón de llamada presionado");
+      console.log("🔍 DIAGNÓSTICO INICIAL:");
+      console.log("  - zadarmaReady:", zadarmaReady);
+      console.log("  - callInProgress:", callInProgress);
+      console.log("  - window.zadarmaWidget existe:", !!window.zadarmaWidget);
+      console.log("  - window.zadarmaWidgetFn existe:", !!window.zadarmaWidgetFn);
+
+      // Si hay llamada activa, colgar
+      if (callInProgress) {
+        console.log("📞 Colgar llamada activa detectada");
+        
+        try {
+          if (window.zadarmaWidget && typeof window.zadarmaWidget.hangup === 'function') {
+            console.log("🔧 Colgando con widget...");
+            window.zadarmaWidget.hangup();
+          }
+          
+          callInProgress = false;
+          updatePhoneIcon('default');
+          
+          $f7.toast.create({
+            text: 'Llamada terminada',
+            position: 'top',
+            closeTimeout: 2000
+          }).open();
+          
+        } catch (error) {
+          console.error("❌ Error al colgar:", error);
+          callInProgress = false;
+          updatePhoneIcon('default');
+        }
+        return;
+      }
+
+      // Obtener número
+      const numeroLimpio = extractPhoneNumber(telefono);
+      console.log("📋 DATOS DE LLAMADA:");
+      console.log("  - telefono original:", telefono);
+      console.log("  - numeroLimpio:", numeroLimpio);
+      
+      if (!numeroLimpio) {
+        console.log("❌ NÚMERO INVÁLIDO");
+        $f7.dialog.alert(`No se encontró un número válido para llamar.\n\nNúmero actual: "${telefono}"`);
+        return;
+      }
+
+      console.log(`🎯 INICIANDO LLAMADA REAL A: ${numeroLimpio}`);
+      updatePhoneIcon('calling');
+
+      // ✅ VERIFICAR WIDGET EXISTENTE
+      if (window.zadarmaWidget) {
+        console.log("✅ Widget encontrado!");
+        console.log("  - Métodos:", Object.keys(window.zadarmaWidget));
+        
+        if (typeof window.zadarmaWidget.call === 'function') {
+          console.log("🚀 INTENTANDO LLAMADA CON WIDGET EXISTENTE");
+          
+          try {
+            console.log(`  - Ejecutando: window.zadarmaWidget.call("${numeroLimpio}")`);
+            const resultado = window.zadarmaWidget.call(numeroLimpio);
+            
+            console.log("  - Resultado:", resultado);
+            callInProgress = true;
+            updatePhoneIcon('active');
+            
+            console.log("✅ LLAMADA INICIADA EXITOSAMENTE");
+            
+            $f7.toast.create({
+              text: `📞 Llamando a ${numeroLimpio}... (REAL)`,
+              position: 'top',
+              closeTimeout: 3000
+            }).open();
+
+            // Auto-reset después de 60 segundos
+            setTimeout(() => {
+              if (callInProgress) {
+                console.log("⏰ Auto-reset por timeout");
+                callInProgress = false;
+                updatePhoneIcon('default');
+              }
+            }, 60000);
+            
+            return;
+            
+          } catch (error) {
+            console.error("❌ ERROR AL LLAMAR:", error);
+            updatePhoneIcon('error');
+            setTimeout(() => updatePhoneIcon('default'), 3000);
+          }
+        }
+      }
+
+      // ✅ CREAR WIDGET SI NO EXISTE
+      if (window.zadarmaWidgetFn) {
+        console.log("🚀 Creando widget dinámicamente...");
+        
+        try {
+          window.zadarmaWidgetFn(
+            '74f6a50ca3cb609de24eac1af3eee1f48e7aa6b9df983786525da39d8155ea3067b649dccf9900bc4c0ce1ef4dc91a3960b743e96c70bc5b01b4a7241640af39',
+            '517653-100',
+            'square',
+            'es',
+            true,
+            { right: '10px', bottom: '5px' }
+          );
+          
+          console.log("✅ zadarmaWidgetFn ejecutado");
+          
+          // Esperar a que se cree el widget
+          let intentos = 0;
+          const verificarWidget = () => {
+            intentos++;
+            console.log(`🔍 Verificando widget (intento ${intentos}/20)`);
+            
+            if (window.zadarmaWidget && typeof window.zadarmaWidget.call === 'function') {
+              console.log("🎉 WIDGET CREADO!");
+              
+              try {
+                window.zadarmaWidget.call(numeroLimpio);
+                callInProgress = true;
+                updatePhoneIcon('active');
+                
+                console.log("✅ LLAMADA REAL EXITOSA!");
+                
+                $f7.toast.create({
+                  text: `📞 Llamando a ${numeroLimpio}... (WIDGET NUEVO)`,
+                  position: 'top',
+                  closeTimeout: 3000
+                }).open();
+
+                // Ocultar widget después de usar
+                setTimeout(() => {
+                  const widgets = document.querySelectorAll('[id*="zadarma"], [class*="zadarma"]');
+                  widgets.forEach(w => {
+                    w.style.cssText = `
+                      position: fixed !important;
+                      top: -9999px !important;
+                      left: -9999px !important;
+                      opacity: 0 !important;
+                      pointer-events: none !important;
+                      z-index: -9999 !important;
+                      visibility: hidden !important;
+                    `;
+                  });
+                }, 2000);
+                
+              } catch (callError) {
+                console.error("❌ ERROR EN LLAMADA CON WIDGET NUEVO:", callError);
+                updatePhoneIcon('error');
+                setTimeout(() => updatePhoneIcon('default'), 3000);
+                
+                $f7.dialog.alert(`Error al llamar: ${callError.message}`);
+              }
+              
+            } else if (intentos < 20) {
+              setTimeout(verificarWidget, 1000);
+            } else {
+              console.log("❌ TIMEOUT: Widget nunca se creó");
+              updatePhoneIcon('error');
+              setTimeout(() => updatePhoneIcon('default'), 3000);
+              
+              $f7.dialog.alert('El widget no se pudo inicializar correctamente');
+            }
+          };
+          
+          setTimeout(verificarWidget, 2000);
+          
+        } catch (error) {
+          console.error("❌ ERROR EJECUTANDO zadarmaWidgetFn:", error);
+          updatePhoneIcon('error');
+          setTimeout(() => updatePhoneIcon('default'), 3000);
+          
+          $f7.dialog.alert(`Error: ${error.message}`);
+        }
+        
+      } else {
+        console.log("❌ zadarmaWidgetFn NO DISPONIBLE");
+        updatePhoneIcon('error');
+        setTimeout(() => updatePhoneIcon('default'), 3000);
+        
+        $f7.dialog.alert('Sistema de llamadas no disponible');
+      }
+      
+      console.log("📞 ========== FIN DIAGNÓSTICO ==========");
+    };
+
+    // ✅ CARGAR SCRIPTS DE ZADARMA DINÁMICAMENTE
+    const cargarScriptsZadarma = () => {
+      return new Promise((resolve, reject) => {
+        console.log("📦 Cargando scripts de Zadarma...");
+        
+        const script1 = document.createElement('script');
+        script1.src = 'https://my.zadarma.com/webphoneWebRTCWidget/v9/js/loader-phone-lib.js?sub_v=1&t=' + Date.now();
+        
+        script1.onload = () => {
+          console.log("✅ Script 1 cargado");
+          
+          const script2 = document.createElement('script');
+          script2.src = 'https://my.zadarma.com/webphoneWebRTCWidget/v9/js/loader-phone-fn.js?sub_v=1&t=' + Date.now();
+          
+          script2.onload = () => {
+            console.log("✅ Script 2 cargado");
+            console.log("  - zadarmaWidgetFn disponible:", !!window.zadarmaWidgetFn);
+            resolve();
+          };
+          
+          script2.onerror = (error) => {
+            console.error("❌ Error cargando script 2:", error);
+            reject(new Error('Error cargando script 2'));
+          };
+          
+          document.head.appendChild(script2);
+        };
+        
+        script1.onerror = (error) => {
+          console.error("❌ Error cargando script 1:", error);
+          reject(new Error('Error cargando script 1'));
+        };
+        
+        document.head.appendChild(script1);
+      });
+    };
 
     // ✅ UTILIDADES DE FECHA Y FORMATO
     const formatearFecha = (fecha) => {
@@ -291,7 +599,6 @@
         return;
       }
 
-      // Verificar tiempo mínimo entre reenvíos
       const ahora = moment();
       const tiempoMensaje = moment(msg.created_at);
       const diferencia = ahora.diff(tiempoMensaje, 'seconds');
@@ -349,7 +656,6 @@
         
         renderMessages();
 
-        // Marcar mensajes no leídos como leídos
         const mensajesNoLeidos = mensajesData.filter(msg => msg.id_estado === 3);
         if (mensajesNoLeidos.length > 0) {
           await Promise.all(mensajesNoLeidos.map(msg => mensajeLeido(msg.id)));
@@ -373,7 +679,6 @@
 
       const tiempoActual = moment().toISOString();
 
-      // Agregar mensaje a UI inmediatamente
       messages.addMessage({
         text: messageText,
         type: "sent",
@@ -456,7 +761,6 @@
       mostrarModalSimple($f7, (mensaje) => {
         const currentPage = $el.value[0];
         
-        // Verificar si estamos en la página actual
         if (!currentPage.classList.contains('page-current')) {
           const activePage = document.querySelector('.page-current');
           if (activePage) {
@@ -470,14 +774,12 @@
           }
         }
         
-        // Buscar textarea en página actual
         const textarea = currentPage.querySelector('.chat-message-input');
         if (textarea && textarea.offsetParent !== null && !textarea.disabled && !textarea.readOnly) {
           textarea.value = mensaje;
           textarea.focus();
           console.log("✅ Plantilla insertada en textarea de página actual");
         } else {
-          // Último recurso
           const pageActual = document.querySelector('.page-current .chat-message-input');
           if (pageActual && !pageActual.disabled && !pageActual.readOnly) {
             pageActual.value = mensaje;
@@ -519,7 +821,6 @@
               footer: footerTiempo,
             });
 
-            // Marcar como leído automáticamente
             if (data.id) {
               try {
                 await mensajeLeido(data.id);
@@ -623,9 +924,20 @@
         if (sendBtn) sendBtn.removeEventListener("click", handleSendClick);
       }
 
-      if (messagebar) messagebar.destroy();
-      if (messages) messages.destroy();
-      if (socket) socket.disconnect();
+      if (messagebar && typeof messagebar.destroy === 'function') {
+        messagebar.destroy();
+        messagebar = null;
+      }
+      
+      if (messages && typeof messages.destroy === 'function') {
+        messages.destroy();
+        messages = null;
+      }
+      
+      if (socket) {
+        socket.disconnect();
+        socket = null;
+      }
       
       mensajesData = [];
     };
@@ -655,6 +967,62 @@
       await loadConversacionData();
       conectarSocket();
       await loadMessages();
+
+      // ✅ INICIALIZAR ZADARMA
+      console.log("🚀 INICIALIZACIÓN ZADARMA");
+      
+      setTimeout(async () => {
+        if (!window.zadarmaWidgetFn) {
+          console.log("📦 Cargando scripts de Zadarma...");
+          try {
+            await cargarScriptsZadarma();
+          } catch (error) {
+            console.error("❌ Error cargando scripts:", error);
+          }
+        }
+        
+        if (window.zadarmaWidgetFn) {
+          try {
+            console.log("🚀 Ejecutando zadarmaWidgetFn...");
+            
+            window.zadarmaWidgetFn(
+              '74f6a50ca3cb609de24eac1af3eee1f48e7aa6b9df983786525da39d8155ea3067b649dccf9900bc4c0ce1ef4dc91a3960b743e96c70bc5b01b4a7241640af39',
+              '517653-100',
+              'square',
+              'es',
+              true,
+              { right: '10px', bottom: '5px' }
+            );
+            
+            console.log("✅ zadarmaWidgetFn ejecutado");
+            
+            setTimeout(() => {
+              if (window.zadarmaWidget) {
+                console.log("🎉 ZADARMA WIDGET LISTO!");
+                console.log("  - Métodos:", Object.keys(window.zadarmaWidget));
+                zadarmaReady = true;
+                
+                // Ocultar widget por defecto
+                const widgets = document.querySelectorAll('[id*="zadarma"], [class*="zadarma"]');
+                widgets.forEach(w => {
+                  w.style.cssText = `
+                    position: fixed !important;
+                    top: -9999px !important;
+                    left: -9999px !important;
+                    opacity: 0 !important;
+                    pointer-events: none !important;
+                    z-index: -9999 !important;
+                    visibility: hidden !important;
+                  `;
+                });
+              }
+            }, 3000);
+            
+          } catch (error) {
+            console.error("❌ Error inicializando widget:", error);
+          }
+        }
+      }, 2000);
     });
 
     $on("pageBeforeRemove", limpiarRecursos);
@@ -662,3 +1030,43 @@
     return $render;
   };
 </script>
+
+<style>
+@keyframes phone-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes phone-ring {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-10deg); }
+  75% { transform: rotate(10deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.phone-pulse {
+  animation: phone-pulse 1s infinite;
+}
+
+.phone-ring {
+  animation: phone-ring 0.5s infinite;
+}
+
+#phone-icon {
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+/* Ocultar widgets de Zadarma por defecto */
+[id*="zadarma"], 
+[class*="zadarma"], 
+iframe[src*="zadarma"] {
+  position: fixed !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: -9999 !important;
+  visibility: hidden !important;
+}
+</style>
