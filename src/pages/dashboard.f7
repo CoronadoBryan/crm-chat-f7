@@ -10,10 +10,10 @@
             <p id="nombre-usuario">Cargando...</p>
             <span id="fecha-actual">Cargando...</span>
           </div>
-          <div class="status">
+          <!-- <div class="status">
             <div class="dot"></div>
             <span>En línea</span>
-          </div>
+          </div> -->
         </div>
         
         <div class="activity-card">

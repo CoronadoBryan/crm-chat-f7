@@ -1,6 +1,9 @@
 import MessagesPage from "../pages/messages.f7";
 import HistorialFinalizadoPage from "../pages/historial-finalizado.f7";
 import Dashboard from "../pages/dashboard.f7";
+import PerfilUsuario from "../pages/usuarios/perfil.f7";
+import CambiarContrasena from "../pages/usuarios/cambiar-contraseña.f7";
+import editarPerfil from "../pages/usuarios/editar-perfil.f7";
 
 var routes = [
   {
@@ -17,18 +20,18 @@ var routes = [
   {
     path: '/usuario/perfil',
     panel: {
-        componentUrl: '../pages/usuarios/perfil.f7',
+        component: PerfilUsuario,
         //            backdrop: true,
     },
   },
   {
     path: '/usuario/editar-perfil',
-    componentUrl: '../pages/usuarios/editar-perfil.f7',
+    component: editarPerfil,
   },
   {
     path: '/usuario/cambiar-contraseña',
       panel : {
-        componentUrl: '../pages/usuarios/cambiar-contraseña.f7',
+        component: CambiarContrasena,
     },
   },
   {
